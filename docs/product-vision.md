@@ -1,54 +1,47 @@
 # Product Vision
 
-## Vision
+FutureMe Financial helps a household answer one difficult question: **What happens to our financial future if we do this?**
 
-FutureMe Financial helps people make consequential financial decisions with more clarity, confidence, and agency.
+## Problem
 
-The product is not another transaction dashboard. It is a decision environment that lets a household ask, "What happens to my future if I do this?"
+Major choices combine income, fixed obligations, debt, liquidity, investments, family needs, and uncertainty. Most finance products show balances or isolate one calculator. Spreadsheets are brittle, and black-box recommendations are difficult to trust.
 
-## Customer problem
+## Product promise
 
-Major life choices are financially interconnected:
+FutureMe provides a synchronized decision workspace on Android, iOS, and web:
 
-- A move changes income, taxes, housing, and support systems.
-- A home purchase changes liquidity, debt, and concentration risk.
-- Paying off debt changes cash flow and reserves.
-- A child changes recurring expenses and resilience requirements.
-- Higher investing improves potential long-term wealth but lowers present flexibility.
+- Build one understandable financial twin
+- Simulate a meaningful life decision in seconds
+- See cash-flow, runway, debt, net-worth, and risk effects together
+- Compare two paths using the same assumptions
+- Ask plain-English questions grounded in the model
+- Understand why a recommendation was made
 
-Most tools isolate one variable or produce opaque recommendations. Customers need a transparent model that explains both outcomes and tradeoffs.
+## Principles
 
-## Product principles
+1. **Calculators calculate; AI explains.**
+2. **One scenario model across every channel.**
+3. **Show assumptions and tradeoffs, not false certainty.**
+4. **Deliver value before requesting bank access.**
+5. **Collect the minimum data required.**
+6. **Use calm, non-judgmental language in stressful moments.**
+7. **Treat accessibility and dark mode as product requirements.**
 
-1. **Explain the math.** Scores and recommendations must be traceable to inputs and assumptions.
-2. **Simulate before connecting.** The product should deliver value with mock or manually entered data before requesting bank access.
-3. **AI explains; calculators calculate.** Generative systems never become the source of financial figures.
-4. **Privacy is a product feature.** Collect the minimum data required and make consent explicit.
-5. **Design for stressful moments.** Language should be calm, clear, and non-judgmental.
-6. **Show tradeoffs, not certainty.** Long-range projections are scenarios, not promises.
+## Users
 
-## Target users
-
-- Households considering a major financial decision
+- Households planning a home, move, family change, debt payoff, or investment increase
 - Financial wellness customers at banks and credit unions
-- Bankers conducting guided planning conversations
-- Product teams evaluating next-best-action experiences
+- Bankers facilitating guided planning conversations
+- Product leaders evaluating next-best-action experiences
 
 ## MVP success
 
-The MVP succeeds when a user can:
-
-- Understand their current financial health
-- Simulate a decision in seconds
-- See its cash-flow, liquidity, debt, risk, and five-year effects
-- Compare two choices
-- Explain why the model prefers one path
+A user can open any client and receive materially identical output for the same demo profile and scenario. They can explain the recommendation using visible cash-flow, reserve, projection, and risk factors.
 
 ## Non-goals
 
-- Investment advice
-- Tax preparation
+- Investment, tax, legal, or lending advice
 - Credit underwriting
-- Automated trading
-- Real-money movement
+- Automated trading or money movement
 - Production storage of customer financial data
+- Real bank or AI integrations in the prototype

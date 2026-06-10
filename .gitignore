@@ -5,11 +5,18 @@
 **/build/
 local.properties
 *.iml
+kotlin-js-store/
 
 # Generated artifacts
 captures/
 *.apk
 *.aab
+**/node_modules/
+**/dist/
+*.tsbuildinfo
+DerivedData/
+*.xcuserstate
+xcuserdata/
 
 # Signing and secrets
 *.jks

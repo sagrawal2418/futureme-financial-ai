@@ -26,5 +26,7 @@ FutureMe Financial currently uses mock data only.
 - Never commit signing keys, keystores, API keys, or `.env` files.
 - Treat future financial-data connectors as privileged infrastructure.
 - Keep AI providers downstream of deterministic calculator outputs.
+- Keep bank and AI credentials in backend-managed secret storage, never in mobile or web clients.
+- Preserve the separation between `UserIdentity` and `FinancialProfile`.
 
 This prototype has not undergone a formal security, privacy, regulatory, or compliance review and must not be used with real customer data.

@@ -1,181 +1,202 @@
 # FutureMe Financial
 
-> An AI-ready financial digital twin that helps people understand the long-term impact of major life decisions before they commit.
+> A cross-platform financial digital twin that helps households simulate major decisions before they commit.
 
-![FutureMe Financial Android dashboard placeholder](docs/screenshots/android-dashboard-placeholder.svg)
+[![Product CI](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/product-ci.yml/badge.svg)](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/product-ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 **Educational simulation only, not financial advice.**
 
-## Problem statement
+## Product
 
-Most consumer finance tools report what already happened. They show balances, transactions, and budgets, but they do not help a household reason clearly about decisions such as relocating, refinancing, eliminating debt, growing a family, or investing more.
+Traditional finance apps explain the past. FutureMe models the future.
 
-Those decisions combine cash flow, liquidity, debt, assets, risk, and time. Spreadsheet modeling is difficult to maintain, while black-box recommendations are hard to trust.
+The seeded demo household can test buying a home, refinancing, paying off debt, losing a job, relocating, having a child, or investing more. Every client presents the same monthly cash-flow impact, emergency runway, debt timeline, five-year net-worth projection, health score, risk factors, tradeoffs, and recommendation.
 
-## Solution overview
+The MVP uses mock data only. It has no Plaid dependency, bank credentials, customer PII, or live AI call.
 
-FutureMe Financial creates a deterministic financial digital twin from mock household data. Users can run structured what-if scenarios and compare:
+## Highlights
 
-- Monthly cash-flow impact
-- Emergency-fund runway
-- Debt-payoff estimate
-- One-, three-, and five-year net-worth projections
-- Financial health score
-- Explainable risk score and contributing factors
-- Plain-English mock recommendation
-
-The MVP is intentionally local-first. It uses no bank credentials, no Plaid connection, and no real customer data. The explanation layer is replaceable, but financial figures always come from tested formulas.
-
-## Key features
-
-- Polished Jetpack Compose dashboard
-- Mock household financial profile
-- Scenario list and detailed simulation results
-- Side-by-side scenario comparison with projection chart
-- Transparent financial health and risk scoring
-- Loading, empty, and recoverable error states
-- System-aware light and dark themes
-- Accessibility labels for scores, charts, navigation, and scenarios
-- Clean Architecture boundaries with MVVM presentation
-- Pure unit-tested financial formulas
-- GitHub Actions build and test workflow
-
-## Architecture overview
-
-```mermaid
-flowchart LR
-    UI["Jetpack Compose UI"] --> VM["MVVM presentation state"]
-    VM --> UC["Use cases"]
-    UC --> CALC["Financial calculator"]
-    UC --> REPO["FinancialRepository"]
-    CALC --> MATH["Pure FinancialMath formulas"]
-    CALC --> EXPLAIN["Explanation provider"]
-    REPO --> MOCK["Mock data adapter"]
-    EXPLAIN --> MOCKAI["Deterministic mock explanation"]
-```
-
-The dependency direction points inward. UI code does not calculate financial results, and data adapters do not own business rules.
-
-See [docs/architecture.md](docs/architecture.md) for package boundaries, state flow, assumptions, and extension points.
-
-## Tech stack
-
-| Area | Technology |
-| --- | --- |
-| Language | Kotlin |
-| UI | Jetpack Compose + Material 3 |
-| Presentation | MVVM with explicit UI state |
-| Architecture | Clean Architecture + repository/use-case boundaries |
-| Dependency injection | Lightweight manual application container |
-| Testing | JUnit 4 |
-| Build | Gradle Kotlin DSL + version catalog |
-| CI | GitHub Actions |
-
-## Repository structure
-
-```text
-.
-├── app/src/main/kotlin/com/futureme/financialai/
-│   ├── data/          # Mock adapters and dependency container
-│   ├── domain/        # Pure financial formulas and calculator
-│   ├── model/         # Immutable domain models
-│   ├── presentation/  # ViewModel and UI state
-│   ├── repository/    # Repository contracts
-│   ├── usecase/       # Application orchestration
-│   ├── ui/            # Compose screens, components, and theme
-│   └── util/          # Formatting helpers
-├── docs/
-└── .github/workflows/
-```
-
-## Demo scenario
-
-The seeded `Lee household` profile includes:
-
-- $242,000 annual gross income
-- $14,250 monthly take-home income
-- $96,500 liquid savings
-- $18,400 credit-card debt at 20.99% APR
-- Mortgage, home equity, retirement contributions, investments, and one dependent
-
-Example: **Move to Austin, TX**
-
-The simulator models lower recurring housing costs, a modest income adjustment, moving costs, five-year net-worth impact, reserve runway, and relocation risk. The comparison screen evaluates that path against paying off high-interest debt using the same assumptions.
-
-Additional scenarios cover refinancing, having a child, increasing investments, and a six-month job loss.
+- Native Android with Jetpack Compose and MVVM
+- Native iOS with SwiftUI and Apple Charts
+- Responsive React and TypeScript web dashboard
+- Kotlin Multiplatform core shared by every client
+- Seven scenario families with side-by-side comparison
+- Explainable health and risk scores
+- Scenario-aware mock AI assistant with free-form questions
+- Loading, empty, error, dark-mode, and accessible UI states
+- Pure unit-tested financial calculations
+- Encryption-ready secure storage boundary
+- OpenAPI contract for future backend adapters
 
 ## Screenshots
 
-| Dashboard | Scenario detail | Comparison |
+| Android | iOS | Web |
 | --- | --- | --- |
-| Replace with emulator capture | Replace with emulator capture | Replace with emulator capture |
+| ![Android dashboard placeholder](docs/screenshots/android-dashboard-placeholder.svg) | ![iOS dashboard placeholder](docs/screenshots/ios-dashboard-placeholder.svg) | ![Web dashboard placeholder](docs/screenshots/web-dashboard-placeholder.svg) |
 
-Screenshot assets belong in `docs/screenshots/`.
+Replace the placeholders with release captures as the product evolves.
 
-## Setup instructions
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph Clients
+        ANDROID["Android<br/>Compose + MVVM"]
+        IOS["iOS<br/>SwiftUI + MVVM"]
+        WEB["Web<br/>React + TypeScript"]
+    end
+
+    ANDROID --> PRODUCT["FutureMeProduct facade"]
+    IOS --> PRODUCT
+    WEB --> BRIDGE["Kotlin/JS JSON bridge"] --> PRODUCT
+
+    PRODUCT --> ENGINE["Scenario engine"]
+    PRODUCT --> ASSISTANT["Mock AI assistant"]
+    ENGINE --> CALC["Pure calculators"]
+    ENGINE --> MODELS["Shared models"]
+    ASSISTANT --> ENGINE
+    PRODUCT --> MOCK["Seeded mock data"]
+    PRODUCT --> TOKENS["Shared design tokens"]
+
+    API["Backend OpenAPI contract"] -. future adapter .-> PRODUCT
+    PLAID["Plaid provider"] -. future .-> API
+    AZURE["Azure OpenAI provider"] -. future .-> API
+```
+
+Financial figures are produced only by `shared/calculators` and `shared/scenario-engine`. AI explains calculator output; it never invents balances or projections.
+
+See [Architecture](docs/architecture.md), [Product Vision](docs/product-vision.md), and [Roadmap](docs/roadmap.md).
+
+## Repository
+
+```text
+apps/
+├── android/                  # Jetpack Compose presentation
+├── ios/                      # SwiftUI presentation
+└── web/                      # React dashboard
+shared/
+├── models/                   # Cross-platform contracts
+├── calculators/              # Pure financial formulas
+├── scenario-engine/          # Projection and comparison policy
+├── mock-data/                # One canonical demo household
+├── ai-assistant/             # Deterministic mock assistant
+├── design-tokens/            # Shared visual semantics
+├── domain/                   # Product facade and common tests
+└── web-bridge/               # Kotlin/JS JSON boundary
+backend/
+├── api/                      # OpenAPI contract
+├── services/                 # Future provider boundaries
+└── mock-ai/                  # Mock AI service notes
+docs/
+```
+
+The logical shared directories compile as one KMP Gradle module, `:shared`, so Android, iOS, and JavaScript receive the same implementation.
+
+## Demo
+
+The `Lee household` starts with:
+
+- $242,000 gross annual income
+- $14,250 monthly take-home income
+- $96,500 liquid savings
+- $18,400 credit-card debt at 20.99% APR
+- $735,000 property value and $451,000 mortgage
+- $286,000 invested and $1,850 monthly retirement contribution
+
+Try **Move to Austin, TX vs Stay in New Jersey**. The same comparison object and risk-adjusted recommendation render in all three clients. Then ask the assistant, “Should I pay off debt or invest more?”
+
+## Setup
 
 ### Requirements
 
-- Android Studio with Android SDK 36
 - JDK 17
-- Android 8.0 or newer emulator/device
+- Android Studio with Android SDK 36
+- Node.js 22.12 or newer
+- Xcode 16 or newer for the iOS app
 
-### Android Studio
-
-1. Clone the repository.
-2. Open the repository root in Android Studio.
-3. Allow Gradle sync to complete.
-4. Run the `app` configuration.
-
-### Command line
+If macOS cannot find Java, use Android Studio's bundled JDK:
 
 ```bash
-./gradlew testDebugUnitTest
-./gradlew assembleDebug
+export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ```
 
-The debug APK is generated at:
+### Shared core and Android
 
-```text
-app/build/outputs/apk/debug/app-debug.apk
+```bash
+./gradlew :shared:testDebugUnitTest
+./gradlew :apps:android:assembleDebug
 ```
 
-## Testing strategy
+Open the repository root in Android Studio and run `apps:android`.
 
-`FinancialMathTest` covers:
+### iOS
 
-- Monthly cash flow
-- Emergency-fund runway
-- Debt-payoff logic and negative amortization
-- Five-year net-worth projection
-- Risk-score factors, severity, and score cap
+```bash
+open apps/ios/FutureMeFinancial.xcodeproj
+```
 
-The domain is deterministic so test failures describe calculation changes rather than network or AI variability.
+Select an iPhone simulator and run `FutureMeFinancial`. The Xcode build phase compiles and embeds the KMP framework automatically.
+
+If Command Line Tools are selected instead of Xcode:
+
+```bash
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+```
+
+### Web
+
+```bash
+./gradlew :shared:jsBrowserProductionLibraryDistribution
+cd apps/web
+npm install
+npm run dev
+```
+
+`npm run dev` builds the Kotlin/JS package before starting Vite. Open [http://localhost:5173](http://localhost:5173).
+
+### Verification
+
+```bash
+./gradlew :shared:testDebugUnitTest :apps:android:assembleDebug
+cd apps/web && npm test && npm run build
+```
+
+## Testing
+
+Shared tests cover:
+
+- Monthly cash flow and emergency runway
+- Monthly compounding
+- Debt payoff and negative amortization
+- Net worth and annual projection points
+- Health and explainable risk scoring
+- Scenario comparison policy
+- All seven scenario families
+- Scenario-aware assistant responses
+
+Web tests verify the generated Kotlin/JS contract. Android and iOS intentionally contain no duplicate formula implementation.
+
+## Privacy
+
+- Mock data only
+- No account numbers, tokens, or real credentials
+- Identity is separated from financial profile data
+- Android application DI and iOS Keychain abstractions are provider-ready
+- Future bank and AI adapters remain outside the deterministic calculation core
+
+See [SECURITY.md](SECURITY.md).
 
 ## Roadmap
 
-1. Add editable profile and scenario inputs with validation.
-2. Persist local profiles and scenarios using encrypted storage.
-3. Add Monte Carlo ranges and versioned assumption policies.
-4. Introduce a governed Azure OpenAI explanation adapter grounded only in calculator output.
-5. Extract shared domain logic for native iOS and a web dashboard.
-6. Add opt-in Plaid connectivity only after consent, security, and compliance foundations are complete.
-
-See [docs/roadmap.md](docs/roadmap.md) for milestones and enterprise banking opportunities.
-
-## Privacy and security
-
-- Mock data only
-- No real bank credentials
-- No Plaid dependency
-- No account numbers or access tokens
-- Financial calculations remain independent of any future AI provider
-- Security reports follow [SECURITY.md](SECURITY.md)
+1. Editable, validated profiles and custom scenarios
+2. Encrypted local persistence and consent controls
+3. Monte Carlo ranges and versioned assumptions
+4. Opt-in Plaid aggregation through a governed backend
+5. Azure OpenAI explanations grounded in signed calculator output
+6. Real-time alerts and refinance/debt opportunities
+7. Enterprise banking workflows, audit, tenancy, and model-risk governance
 
 ## Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before opening a pull request.
-
-## License
-
-Licensed under the [MIT License](LICENSE).
+Read [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Licensed under the [MIT License](LICENSE).

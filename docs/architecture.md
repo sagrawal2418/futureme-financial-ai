@@ -1,92 +1,99 @@
 # Architecture
 
-## Goals
+## Decision
 
-- Keep financial behavior deterministic, explainable, and testable.
-- Keep Android UI native and presentation state explicit.
-- Separate business rules from mock data and framework code.
-- Make future AI and financial-data providers replaceable.
-- Preserve a straightforward path toward Kotlin Multiplatform.
+FutureMe Financial uses native presentation on Android and iOS, React on web, and a Kotlin Multiplatform product core.
 
-## Package boundaries
+The core is deterministic and provider-independent. It owns models, formulas, projection policy, scenario comparison, seeded data, design semantics, and the mock assistant. Clients own rendering, navigation, platform accessibility, and secure-storage implementations.
 
-| Package | Responsibility |
-| --- | --- |
-| `model` | Immutable financial entities and result models |
-| `domain` | Pure formulas, projections, risk policy, and provider contracts |
-| `repository` | Financial data access contracts |
-| `data` | Mock data, repository adapters, mock explanation provider, DI container |
-| `usecase` | Application-level orchestration |
-| `presentation` | ViewModel, navigation state, loading/content/empty/error state |
-| `ui` | Compose screens, reusable components, accessibility, and theme |
-| `util` | Display-only formatting helpers |
+## Boundaries
+
+| Boundary | Responsibility | Must not own |
+| --- | --- | --- |
+| `shared/models` | Serializable product contracts | Calculations or UI |
+| `shared/calculators` | Pure formulas | Framework APIs |
+| `shared/scenario-engine` | Projection, tradeoff, and comparison policy | Client state |
+| `shared/mock-data` | Canonical demo profile and scenarios | Production credentials |
+| `shared/ai-assistant` | Grounded mock explanations | Financial arithmetic |
+| `shared/design-tokens` | Cross-platform visual semantics | Platform widgets |
+| `shared/domain` | `FutureMeProduct` facade and common tests | Presentation |
+| `shared/web-bridge` | JSON exports for React | Business rules |
+| `apps/*` | Native/responsive presentation | Formula forks |
+| `backend/*` | Future transport and provider contracts | A second calculator |
 
 ## Dependency flow
 
 ```mermaid
-flowchart TD
-    UI["ui"] --> PRESENTATION["presentation"]
-    PRESENTATION --> USECASE["usecase"]
-    USECASE --> DOMAIN["domain"]
-    USECASE --> REPOSITORY["repository"]
-    DATA["data"] --> REPOSITORY
-    DATA --> DOMAIN
-    UI --> MODEL["model"]
-    DOMAIN --> MODEL
-    REPOSITORY --> MODEL
+flowchart LR
+    UI["Platform UI"] --> VM["Presentation state"]
+    VM --> FACADE["FutureMeProduct"]
+    FACADE --> ENGINE["ScenarioEngine"]
+    FACADE --> AI["MockAiAssistantService"]
+    FACADE --> DATA["MockFinancialData"]
+    ENGINE --> MATH["FinancialMath"]
+    ENGINE --> MODELS["Shared models"]
+    AI --> ENGINE
+    WEB["React"] --> JSON["Kotlin/JS JSON bridge"] --> FACADE
 ```
 
-The `domain` package has no Android or Compose dependencies. Financial calculations can therefore move into a future shared module without rewriting the UI.
+Dependencies point toward shared business policy. Platform modules can be replaced without changing calculation behavior.
 
-## Presentation state
+## Client integration
 
-`FutureMeUiState` represents:
+### Android
 
-- `Loading`
-- `Content`
-- `Empty`
-- `Error`
+`FutureMeApplication` provides one `FutureMeProduct`. `FutureMeViewModel` translates shared models into navigation and chat state. Compose screens render immutable shared results.
 
-Content navigation is represented by `FutureMeScreen`. The MVP avoids a navigation framework to keep the sample focused; replacing this state with Navigation Compose does not change domain or use-case APIs.
+### iOS
+
+`FutureMeViewModel` owns SwiftUI state and calls the generated `Shared` framework. `KeychainSecureStore` demonstrates a platform secure-storage boundary while demo financial values remain in memory.
+
+### Web
+
+Kotlin/JS exports four JSON operations: bootstrap, simulate, compare, and ask. `src/shared.ts` is a typed serialization adapter. It mirrors contracts only and contains no formulas.
 
 ## Calculation policy
 
-The five-year projection:
+The five-year engine:
 
-1. Starts with liquid savings, investments, property, mortgage, and revolving debt.
+1. Builds opening cash, investments, property, mortgage, and revolving debt.
 2. Applies scenario upfront and balance-sheet changes.
-3. Projects monthly cash flow for 60 months.
+3. Projects cash flow monthly for 60 months.
 4. Compounds investments monthly.
-5. Uses a simplified 3% annual property appreciation assumption.
+5. Applies a documented 3% property-appreciation assumption.
 6. Uses a simplified mortgage-principal allocation.
-7. Services revolving debt using APR and scheduled payment.
-8. Emits annual points for years 0 through 5.
+7. Services revolving debt with APR and scheduled payment.
+8. Emits annual points from year zero through year five.
 
-The model intentionally simplifies taxes, transaction costs, rate changes, market volatility, and state-specific policy.
+This prototype intentionally simplifies taxes, transaction costs, rate changes, market volatility, and state-specific rules.
 
-## Explainable risk
+## Explainability
 
-Risk is computed from visible factors:
+Risk is the bounded sum of visible factors:
 
-- Base planning uncertainty
+- Planning uncertainty
 - Scenario complexity
 - Monthly cash-flow pressure
 - Emergency reserve coverage
-- High-interest debt
-- Upfront liquidity draw
+- High-interest revolving debt
+- Large upfront liquidity draw
 
-The score is bounded from 5 to 95 and mapped to low, moderate, elevated, or high risk. AI is not involved in the score.
+The assistant receives `ScenarioResult`; it does not recalculate financial figures. A future AI provider must preserve this grounding rule.
 
-## Provider strategy
+## Security posture
 
-`FinancialRepository` can later be implemented by:
+- `UserIdentity` and `FinancialProfile` are separate contracts.
+- No real customer data is persisted.
+- No bank or AI credential exists in client code.
+- Secure storage is abstracted per platform.
+- Future providers sit behind backend/service boundaries.
+- Calculation changes require tests and assumption documentation.
 
-- An encrypted local database
-- A backend API
-- An opt-in account aggregation adapter
+## Extension points
 
-`FinancialExplanationProvider` can later be implemented by a governed AI service. It should receive calculator outputs, assumption versions, and approved context only.
+- `FinancialDataProvider`: Plaid, open banking, manual entry, or enterprise core adapters
+- `FinancialExplanationProvider`: Azure OpenAI with prompt/model versioning and evaluations
+- `ScenarioPersistence`: encrypted local storage or backend sync
+- `AlertProvider`: balance, cash-flow, rate, and goal events
 
-## Future platform expansion
-
-The code contains a TODO to move immutable models, formulas, and use cases into Kotlin Multiplatform when iOS and web clients are introduced. Compose screens remain Android-specific; SwiftUI and React should consume the same business contracts.
+The OpenAPI contract in `backend/api/openapi.yaml` describes the intended transport without introducing a competing implementation.

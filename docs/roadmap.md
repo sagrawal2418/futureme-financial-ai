@@ -1,53 +1,54 @@
-# Roadmap
+# Future Roadmap
 
-## Milestone 1: Editable planning workspace
+## 1. Editable planning workspace
 
-- Profile editing and validation
-- Custom scenario inputs
-- Assumption review screen
-- Saved local scenarios
-- Expanded ViewModel and use-case tests
+- Validated profile editor on every client
+- Custom scenario inputs and assumption review
+- Saved comparisons and shareable summaries
+- Localization and expanded accessibility testing
 
-## Milestone 2: Deeper simulation engine
+## 2. Deeper modeling
 
-- Monte Carlo projection ranges
-- Inflation and salary-growth assumptions
-- Mortgage amortization schedules
-- Tax-aware relocation comparisons
-- Versioned calculation policy and migration tests
+- Monte Carlo confidence ranges
+- Inflation, salary growth, and market regimes
+- Mortgage amortization and refinance break-even
+- Tax-aware relocation and family-cost policies
+- Versioned assumptions with regression fixtures
 
-## Milestone 3: Privacy-ready persistence
+## 3. Privacy-ready persistence
 
-- Encrypted local database
-- Android Keystore-backed secrets
-- Data export and deletion
-- Consent and retention records
-- Threat model and privacy review
+- Encrypted local databases
+- Android Keystore and iOS Keychain-backed secrets
+- Consent, retention, export, and deletion workflows
+- Threat model, privacy review, and audit events
 
-## Milestone 4: Governed AI explanations
+## 4. Plaid integration
 
-- Azure OpenAI adapter behind `FinancialExplanationProvider`
-- Calculator-output grounding
-- Prompt and model versioning
-- Content filters and evaluation suite
-- Citation of assumptions and calculation factors
+- Opt-in account aggregation behind a backend provider
+- Read-only balances and categorized cash flow
+- Explicit consent and reconnect/revoke flows
+- Sandbox-first contract and security testing
 
-## Milestone 5: Cross-platform product
+## 5. Azure OpenAI integration
 
-- Kotlin Multiplatform domain module
-- Native SwiftUI iOS client
-- React web dashboard
-- Shared API contract
-- Cross-platform calculation parity tests
+- Provider adapter behind a governed explanation contract
+- Grounding only from signed calculator output
+- Prompt/model versioning, content filters, and evaluations
+- Human-readable citations to assumptions and risk factors
 
-## Later opportunities
+## 6. Real-time alerts
 
-- Opt-in Plaid account aggregation
-- Real-time cash-flow and balance alerts
-- Rate and refinance opportunity monitoring
+- Cash-flow deterioration and reserve warnings
+- Debt payoff opportunities
+- Rate and refinance monitoring
+- Goal drift and large-commitment notifications
+
+## 7. Enterprise banking
+
 - White-label financial wellness
-- Banker-assisted planning
-- Prequalification and next-best-action workflows
-- Enterprise audit, tenancy, observability, and model-risk governance
+- Banker-assisted planning and customer handoff
+- Next-best-action and prequalification journeys
+- Multi-tenant policy, audit, observability, and model-risk governance
+- Core banking and CRM provider adapters
 
-No real banking integration should be introduced until authentication, encryption, consent, retention, audit, and compliance foundations are reviewed.
+No real financial-data integration should ship before authentication, encryption, consent, retention, audit, and compliance foundations are reviewed.

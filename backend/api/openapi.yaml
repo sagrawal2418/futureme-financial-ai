@@ -1,0 +1,223 @@
+openapi: 3.1.0
+info:
+  title: FutureMe Financial API
+  version: 0.1.0
+  description: >
+    Provider-ready transport contract for the FutureMe product core.
+    The local MVP calls the shared Kotlin module directly.
+servers:
+  - url: http://localhost:8080
+paths:
+  /v1/bootstrap:
+    get:
+      operationId: getBootstrap
+      summary: Load the current product workspace
+      responses:
+        "200":
+          description: Seeded or authenticated product workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductBootstrap"
+  /v1/simulations:
+    post:
+      operationId: simulateScenario
+      summary: Simulate one scenario through the canonical engine
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scenarioId]
+              properties:
+                scenarioId:
+                  type: string
+      responses:
+        "200":
+          description: Deterministic scenario result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScenarioResult"
+  /v1/comparisons:
+    post:
+      operationId: compareScenarios
+      summary: Compare two scenarios using the same assumptions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [leftScenarioId, rightScenarioId]
+              properties:
+                leftScenarioId:
+                  type: string
+                rightScenarioId:
+                  type: string
+      responses:
+        "200":
+          description: Risk-adjusted comparison
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScenarioComparison"
+  /v1/assistant:
+    post:
+      operationId: askAssistant
+      summary: Explain product-core output in plain English
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties:
+                question:
+                  type: string
+                latestScenarioId:
+                  type: [string, "null"]
+      responses:
+        "200":
+          description: Grounded assistant response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssistantResponse"
+components:
+  schemas:
+    ProductBootstrap:
+      type: object
+      required: [identity, profile, dashboard, scenarios, recentScenarioResults, suggestedQuestions, disclaimer]
+      properties:
+        identity:
+          $ref: "#/components/schemas/UserIdentity"
+        profile:
+          $ref: "#/components/schemas/FinancialProfile"
+        dashboard:
+          $ref: "#/components/schemas/DashboardSnapshot"
+        scenarios:
+          type: array
+          items:
+            $ref: "#/components/schemas/Scenario"
+        recentScenarioResults:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioResult"
+        suggestedQuestions:
+          type: array
+          items:
+            $ref: "#/components/schemas/SuggestedQuestion"
+        disclaimer:
+          type: string
+    UserIdentity:
+      type: object
+      required: [ownerId, displayName, householdName]
+      properties:
+        ownerId: { type: string }
+        displayName: { type: string }
+        householdName: { type: string }
+    FinancialProfile:
+      type: object
+      additionalProperties: true
+      required: [profileId, ownerId, monthlyNetIncome, liquidSavings]
+      properties:
+        profileId: { type: string }
+        ownerId: { type: string }
+        monthlyNetIncome: { type: number }
+        liquidSavings: { type: number }
+    DashboardSnapshot:
+      type: object
+      additionalProperties: true
+      required: [healthScore, riskScore, monthlyCashFlow, currentNetWorth]
+      properties:
+        healthScore:
+          $ref: "#/components/schemas/FinancialHealthScore"
+        riskScore:
+          $ref: "#/components/schemas/RiskScore"
+        monthlyCashFlow: { type: number }
+        currentNetWorth: { type: number }
+    Scenario:
+      type: object
+      additionalProperties: true
+      required: [id, type, title, subtitle, rationale]
+      properties:
+        id: { type: string }
+        type:
+          type: string
+          enum: [BUY_HOME, REFINANCE_MORTGAGE, PAY_OFF_DEBT, JOB_LOSS, RELOCATE, HAVE_CHILD, INCREASE_INVESTMENTS]
+        title: { type: string }
+        subtitle: { type: string }
+        rationale: { type: string }
+    ScenarioResult:
+      type: object
+      additionalProperties: true
+      required: [scenario, projections, riskScore, healthScore, recommendation]
+      properties:
+        scenario:
+          $ref: "#/components/schemas/Scenario"
+        projections:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProjectionPoint"
+        riskScore:
+          $ref: "#/components/schemas/RiskScore"
+        healthScore:
+          $ref: "#/components/schemas/FinancialHealthScore"
+        recommendation: { type: string }
+    ScenarioComparison:
+      type: object
+      required: [left, right, preferredScenarioId, summary]
+      properties:
+        left:
+          $ref: "#/components/schemas/ScenarioResult"
+        right:
+          $ref: "#/components/schemas/ScenarioResult"
+        preferredScenarioId: { type: string }
+        summary: { type: string }
+    ProjectionPoint:
+      type: object
+      required: [year, baselineNetWorth, scenarioNetWorth]
+      properties:
+        year: { type: integer }
+        baselineNetWorth: { type: number }
+        scenarioNetWorth: { type: number }
+    RiskScore:
+      type: object
+      required: [value, level, summary, factors]
+      properties:
+        value: { type: integer, minimum: 0, maximum: 100 }
+        level: { type: string, enum: [LOW, MODERATE, ELEVATED, HIGH] }
+        summary: { type: string }
+        factors:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    FinancialHealthScore:
+      type: object
+      required: [value, label, summary]
+      properties:
+        value: { type: integer, minimum: 0, maximum: 100 }
+        label: { type: string }
+        summary: { type: string }
+    SuggestedQuestion:
+      type: object
+      required: [id, title, prompt, category]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        prompt: { type: string }
+        category: { type: string }
+    AssistantResponse:
+      type: object
+      required: [answer, suggestedActions]
+      properties:
+        answer: { type: string }
+        relatedScenarioId:
+          type: [string, "null"]
+        suggestedActions:
+          type: array
+          items: { type: string }

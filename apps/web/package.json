@@ -1,0 +1,28 @@
+{
+  "name": "futureme-financial-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "shared": "cd ../.. && ./gradlew :shared:jsBrowserProductionLibraryDistribution",
+    "dev": "npm run shared && vite",
+    "build": "npm run shared && tsc -b && vite build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "futureme-shared": "file:../../shared/build/dist/js/productionLibrary",
+    "lucide-react": "^1.17.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.0.2",
+    "jsdom": "^26.1.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.8"
+  }
+}

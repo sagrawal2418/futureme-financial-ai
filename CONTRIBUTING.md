@@ -1,47 +1,46 @@
-# Contributing to FutureMe Financial
+# Contributing
 
-Thanks for helping improve this educational fintech prototype.
+Thanks for improving FutureMe Financial.
 
-## Development principles
+## Engineering rules
 
-- Keep financial formulas deterministic and covered by unit tests.
-- Keep Compose UI free of business calculations.
-- Depend on repository and explanation contracts rather than concrete providers.
-- Use mock data only. Do not commit credentials, account numbers, tokens, or private financial records.
-- Preserve accessibility, dark mode, loading, empty, and error behavior.
-- Avoid describing simulation output as financial advice.
+- Keep all financial formulas in `shared/calculators`.
+- Keep scenario policy in `shared/scenario-engine`.
+- AI providers may explain shared results but may not generate financial figures.
+- Platform modules own UI and platform integrations only.
+- Use mock data. Never commit credentials or real financial records.
+- Preserve accessibility, dark mode, loading, empty, and error states.
+- Document assumption changes as product changes.
 
-## Local workflow
-
-1. Create a focused branch from `main`.
-2. Make the smallest coherent change.
-3. Add or update tests for financial behavior.
-4. Run:
+## Local checks
 
 ```bash
-./gradlew testDebugUnitTest assembleDebug
+./gradlew :shared:testDebugUnitTest :apps:android:assembleDebug
+cd apps/web
+npm install
+npm test
+npm run build
 ```
 
-5. Open a pull request with the problem, implementation, screenshots for UI changes, and verification performed.
+Open `apps/ios/FutureMeFinancial.xcodeproj` and build an iPhone simulator target for iOS changes.
 
-## Code style
+## Pull requests
 
-- Follow Kotlin coding conventions.
-- Prefer immutable models and pure functions.
-- Add comments only when they clarify a non-obvious decision or assumption.
-- Keep package boundaries aligned with `docs/architecture.md`.
-- Treat calculation-policy changes as product changes and document their assumptions.
+Include:
 
-## Pull request checklist
+- Problem and user impact
+- Architectural choice
+- Tests performed
+- Screenshots for UI changes
+- Calculation assumptions changed, if any
 
-- [ ] Unit tests pass
-- [ ] Debug APK builds
-- [ ] No real financial data or secrets were added
-- [ ] Accessibility labels were considered
-- [ ] Light and dark themes were checked
-- [ ] Documentation reflects user-visible or architectural changes
-- [ ] Educational disclaimer remains visible where recommendations appear
+## Checklist
 
-## Reporting issues
-
-Use GitHub Issues for reproducible defects and feature proposals. For security concerns, follow [SECURITY.md](SECURITY.md).
+- [ ] Shared tests pass
+- [ ] Android debug APK builds
+- [ ] Web tests and production build pass
+- [ ] iOS simulator build was checked when applicable
+- [ ] No duplicate formulas were added to a client
+- [ ] No secrets or real financial data were added
+- [ ] Accessibility and light/dark themes were checked
+- [ ] The educational disclaimer remains visible
