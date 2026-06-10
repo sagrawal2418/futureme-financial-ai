@@ -929,7 +929,30 @@ private func money(_ value: Double) -> String {
 }
 
 private func moneyCompact(_ value: Double) -> String {
-    value.formatted(.currency(code: "USD").notation(.compactName).precision(.fractionLength(0)))
+    let magnitude = abs(value)
+    let divisor: Double
+    let suffix: String
+
+    switch magnitude {
+    case 1_000_000_000...:
+        divisor = 1_000_000_000
+        suffix = "B"
+    case 1_000_000...:
+        divisor = 1_000_000
+        suffix = "M"
+    case 1_000...:
+        divisor = 1_000
+        suffix = "K"
+    default:
+        return money(value)
+    }
+
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .currency
+    formatter.currencyCode = "USD"
+    formatter.maximumFractionDigits = magnitude / divisor < 10 ? 1 : 0
+    formatter.minimumFractionDigits = 0
+    return (formatter.string(from: NSNumber(value: value / divisor)) ?? money(value)) + suffix
 }
 
 private func signedMoney(_ value: Double) -> String {

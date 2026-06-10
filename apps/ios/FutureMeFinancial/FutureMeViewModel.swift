@@ -54,53 +54,49 @@ final class FutureMeViewModel: ObservableObject {
     func load() {
         state = .loading
 
-        do {
-            let bootstrap = product.bootstrap()
-            let mappedScenarios = bootstrap.scenarios.map {
-                ScenarioCardModel(
-                    id: $0.id,
-                    title: $0.title,
-                    subtitle: $0.subtitle,
-                    code: Self.code(for: $0),
-                    source: $0
-                )
-            }
-
-            guard mappedScenarios.count >= 2 else {
-                state = .empty("Add at least two scenarios to unlock comparison mode.")
-                return
-            }
-
-            let initial = mappedScenarios.first { $0.id == "move-to-texas" } ?? mappedScenarios[0]
-            state = .content(
-                FutureMeDashboardContent(
-                    displayName: bootstrap.identity.displayName,
-                    householdName: bootstrap.identity.householdName,
-                    dashboard: bootstrap.dashboard,
-                    scenarios: mappedScenarios,
-                    selected: initial,
-                    result: product.simulate(scenarioId: initial.id),
-                    comparison: product.compare(
-                        leftScenarioId: "move-to-texas",
-                        rightScenarioId: "stay-in-new-jersey"
-                    ),
-                    suggestions: bootstrap.suggestedQuestions,
-                    messages: [
-                        AssistantMessage(
-                            id: UUID(),
-                            text: "Ask me about a major decision. I use the same profile, assumptions, and scenario engine as your dashboard.",
-                            isUser: false
-                        ),
-                    ],
-                    disclaimer: bootstrap.disclaimer
-                )
+        let bootstrap = product.bootstrap()
+        let mappedScenarios = bootstrap.scenarios.map {
+            ScenarioCardModel(
+                id: $0.id,
+                title: $0.title,
+                subtitle: $0.subtitle,
+                code: Self.code(for: $0),
+                source: $0
             )
-
-            // Stores only an opaque demo profile identifier. Financial values remain in memory.
-            try? secureStore.put(bootstrap.profile.profileId, for: "active-demo-profile")
-        } catch {
-            state = .error(error.localizedDescription)
         }
+
+        guard mappedScenarios.count >= 2 else {
+            state = .empty("Add at least two scenarios to unlock comparison mode.")
+            return
+        }
+
+        let initial = mappedScenarios.first { $0.id == "move-to-texas" } ?? mappedScenarios[0]
+        state = .content(
+            FutureMeDashboardContent(
+                displayName: bootstrap.identity.displayName,
+                householdName: bootstrap.identity.householdName,
+                dashboard: bootstrap.dashboard,
+                scenarios: mappedScenarios,
+                selected: initial,
+                result: product.simulate(scenarioId: initial.id),
+                comparison: product.compare(
+                    leftScenarioId: "move-to-texas",
+                    rightScenarioId: "stay-in-new-jersey"
+                ),
+                suggestions: bootstrap.suggestedQuestions,
+                messages: [
+                    AssistantMessage(
+                        id: UUID(),
+                        text: "Ask me about a major decision. I use the same profile, assumptions, and scenario engine as your dashboard.",
+                        isUser: false
+                    ),
+                ],
+                disclaimer: bootstrap.disclaimer
+            )
+        )
+
+        // Stores only an opaque demo profile identifier. Financial values remain in memory.
+        try? secureStore.put(bootstrap.profile.profileId, for: "active-demo-profile")
     }
 
     func select(_ scenario: ScenarioCardModel) {
