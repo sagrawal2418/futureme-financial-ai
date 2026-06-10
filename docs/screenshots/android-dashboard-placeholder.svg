@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title description">
+  <title id="title">FutureMe Financial Android screenshot placeholder</title>
+  <desc id="description">Placeholder for a polished Android dashboard emulator capture.</desc>
+  <rect width="1280" height="720" fill="#0d1612"/>
+  <rect x="96" y="72" width="1088" height="576" rx="32" fill="#14211c" stroke="#2a3b34" stroke-width="2"/>
+  <rect x="140" y="118" width="68" height="68" rx="18" fill="#a6f2cf"/>
+  <text x="174" y="161" text-anchor="middle" fill="#153b30" font-family="Arial, sans-serif" font-size="22" font-weight="700">FM</text>
+  <text x="236" y="144" fill="#a7b6af" font-family="Arial, sans-serif" font-size="14" letter-spacing="3">FINANCIAL DIGITAL TWIN</text>
+  <text x="236" y="182" fill="#edf7f1" font-family="Arial, sans-serif" font-size="34" font-weight="700">Your future, modeled clearly.</text>
+  <rect x="140" y="230" width="460" height="310" rx="26" fill="#153b30"/>
+  <circle cx="270" cy="390" r="78" fill="none" stroke="#315047" stroke-width="16"/>
+  <circle cx="270" cy="390" r="78" fill="none" stroke="#a6f2cf" stroke-width="16" stroke-linecap="round" stroke-dasharray="430 490" transform="rotate(-90 270 390)"/>
+  <text x="270" y="404" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="44" font-weight="700">90</text>
+  <text x="392" y="316" fill="#92b6a9" font-family="Arial, sans-serif" font-size="13" letter-spacing="2">FINANCIAL HEALTH</text>
+  <text x="392" y="352" fill="#ffffff" font-family="Arial, sans-serif" font-size="27" font-weight="700">Strong foundation</text>
+  <text x="392" y="408" fill="#b8cbc3" font-family="Arial, sans-serif" font-size="16">$2,675 monthly cushion</text>
+  <text x="392" y="444" fill="#b8cbc3" font-family="Arial, sans-serif" font-size="16">9.9 months cash runway</text>
+  <rect x="632" y="230" width="508" height="310" rx="26" fill="#192822" stroke="#2a3b34"/>
+  <text x="674" y="284" fill="#a7b6af" font-family="Arial, sans-serif" font-size="13" letter-spacing="2">FIVE-YEAR OUTLOOK</text>
+  <text x="674" y="326" fill="#edf7f1" font-family="Arial, sans-serif" font-size="34" font-weight="700">$1.0M</text>
+  <polyline points="684,478 770,450 856,414 942,376 1028,340 1100,304" fill="none" stroke="#61c99e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="684,478 770,452 856,423 942,394 1028,365 1100,338" fill="none" stroke="#7c70bd" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="640" y="604" text-anchor="middle" fill="#a7b6af" font-family="Arial, sans-serif" font-size="18">Replace this placeholder with emulator screenshots before release.</text>
+</svg>

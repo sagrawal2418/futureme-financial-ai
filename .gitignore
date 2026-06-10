@@ -1,0 +1,26 @@
+# Android Studio and Gradle
+.idea/
+.gradle/
+.kotlin/
+**/build/
+local.properties
+*.iml
+
+# Generated artifacts
+captures/
+*.apk
+*.aab
+
+# Signing and secrets
+*.jks
+*.keystore
+keystore.properties
+.env
+.env.*
+
+# Operating systems
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
