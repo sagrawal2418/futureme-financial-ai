@@ -47,7 +47,13 @@ private struct DashboardTabs: View {
                         Header(name: content.displayName, householdName: content.householdName)
                         HealthCard(dashboard: content.dashboard)
                             .padding(.horizontal, 20)
-                        ProjectionCard(result: content.result)
+                        WeeklyCheckupCard(insights: content.insights)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 14)
+                        FinancialGpsCard(gps: content.financialGps) {
+                            selectedTab = 4
+                            onAsk("How can I improve my 5-year outlook?")
+                        }
                             .padding(.horizontal, 20)
                             .padding(.top, 14)
                         MetricsGrid(dashboard: content.dashboard)
@@ -57,7 +63,7 @@ private struct DashboardTabs: View {
                             .padding(.horizontal, 20)
                             .padding(.top, 12)
                         Button {
-                            selectedTab = 3
+                            selectedTab = 4
                         } label: {
                             Label("Ask FutureMe about this plan", systemImage: "sparkles")
                                 .frame(maxWidth: .infinity)
@@ -67,6 +73,17 @@ private struct DashboardTabs: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 14)
                         .accessibilityHint("Opens the financial assistant")
+                        MoneyLeakPreview(leaks: content.moneyLeaks) {
+                            selectedTab = 1
+                        }
+                            .padding(.horizontal, 20)
+                            .padding(.top, 14)
+                        GoalReadinessCard(goals: content.goals)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 14)
+                        ProjectionCard(result: content.result)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 14)
                         SectionTitle(eyebrow: "DECISION LAB", title: "Explore a different future")
                             .padding(.horizontal, 20)
                             .padding(.top, 30)
@@ -103,6 +120,13 @@ private struct DashboardTabs: View {
             .tabItem { Label("Overview", systemImage: "chart.bar.fill") }
             .tag(0)
 
+            PlanningTab(
+                events: content.lifeEvents,
+                leaks: content.moneyLeaks
+            )
+                .tabItem { Label("Plan", systemImage: "map.fill") }
+                .tag(1)
+
             ScenarioListTab(
                 scenarios: content.scenarios,
                 selected: content.selected,
@@ -110,11 +134,11 @@ private struct DashboardTabs: View {
                 openOverview: { selectedTab = 0 }
             )
                 .tabItem { Label("Scenarios", systemImage: "sparkles") }
-                .tag(1)
+                .tag(2)
 
             ComparisonTab(comparison: content.comparison, disclaimer: content.disclaimer)
                 .tabItem { Label("Compare", systemImage: "rectangle.split.2x1") }
-                .tag(2)
+                .tag(3)
 
             AssistantTab(
                 messages: content.messages,
@@ -122,9 +146,174 @@ private struct DashboardTabs: View {
                 onAsk: onAsk
             )
                 .tabItem { Label("Assistant", systemImage: "bubble.left.and.sparkles") }
-                .tag(3)
+                .tag(4)
         }
         .tint(AppTheme.positive)
+    }
+}
+
+private struct WeeklyCheckupCard: View {
+    let insights: [Insight]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Eyebrow("THIS WEEK'S FINANCIAL CHECKUP")
+            Text("Three signals worth your attention")
+                .font(.title3.bold())
+                .foregroundStyle(AppTheme.ink)
+            ForEach(Array(insights.prefix(3)), id: \.id) { insight in
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(insight.title)
+                        .font(.subheadline.bold())
+                        .foregroundStyle(AppTheme.ink)
+                    Text(insight.summary)
+                        .font(.caption)
+                        .foregroundStyle(AppTheme.muted)
+                    if insight.estimatedDollarImpact > 0 {
+                        Text(money(insight.estimatedDollarImpact) + " modeled impact")
+                            .font(.caption2.bold())
+                            .foregroundStyle(AppTheme.positive)
+                    }
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(AppTheme.surfaceVariant)
+                .clipShape(RoundedRectangle(cornerRadius: 13))
+            }
+        }
+        .padding(20)
+        .futureMeCard()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("This week's financial checkup with \(min(3, insights.count)) insights")
+    }
+}
+
+private struct FinancialGpsCard: View {
+    let gps: FinancialGpsResult
+    let onExplain: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 13) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Eyebrow("FINANCIAL GPS")
+                    Text("A better route is available")
+                        .font(.title3.bold())
+                        .foregroundStyle(AppTheme.ink)
+                }
+                Spacer()
+                Text("HIGH CONFIDENCE")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(AppTheme.positive)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 5)
+                    .background(AppTheme.softMint)
+                    .clipShape(Capsule())
+            }
+            HStack(spacing: 9) {
+                GpsMetric(label: "CURRENT PATH", value: moneyCompact(gps.currentFiveYearNetWorth))
+                GpsMetric(label: "IMPROVED PATH", value: moneyCompact(gps.improvedFiveYearNetWorth))
+            }
+            Text("Potential five-year lift: " + money(gps.difference))
+                .font(.headline)
+                .foregroundStyle(AppTheme.positive)
+            ForEach(gps.monthlyActionPlan, id: \.self) { action in
+                Label(action, systemImage: "arrow.turn.down.right")
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.muted)
+            }
+            Button("Explain my improved route", action: onExplain)
+                .buttonStyle(.bordered)
+                .tint(AppTheme.positive)
+                .frame(maxWidth: .infinity)
+                .accessibilityHint("Asks FutureMe to explain the Financial GPS plan")
+        }
+        .padding(20)
+        .futureMeCard(fill: AppTheme.softMint, showsBorder: false)
+    }
+}
+
+private struct GpsMetric: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.system(size: 8, weight: .bold))
+                .foregroundStyle(AppTheme.muted)
+            Text(value)
+                .font(.title3.bold())
+                .foregroundStyle(AppTheme.ink)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(13)
+        .background(AppTheme.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 13))
+    }
+}
+
+private struct MoneyLeakPreview: View {
+    let leaks: [MoneyLeak]
+    let onReview: () -> Void
+
+    private var annualImpact: Double {
+        leaks.reduce(0) { $0 + $1.estimatedAnnualLoss }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Eyebrow("MONEY LEAKS")
+            Text(money(annualImpact) + " in annual opportunity")
+                .font(.title3.bold())
+                .foregroundStyle(AppTheme.ink)
+            ForEach(Array(leaks.prefix(2)), id: \.id) { leak in
+                HStack {
+                    Text(leak.title)
+                        .font(.caption)
+                        .foregroundStyle(AppTheme.ink)
+                    Spacer()
+                    Text(money(leak.estimatedMonthlyLoss) + "/mo")
+                        .font(.caption.bold())
+                        .foregroundStyle(AppTheme.warning)
+                }
+            }
+            Button("Review all money leaks", action: onReview)
+                .buttonStyle(.bordered)
+                .tint(AppTheme.positive)
+        }
+        .padding(20)
+        .futureMeCard()
+    }
+}
+
+private struct GoalReadinessCard: View {
+    let goals: [GoalProbabilityResult]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 11) {
+            Eyebrow("GOAL READINESS")
+            Text("How close your next chapter is")
+                .font(.title3.bold())
+                .foregroundStyle(AppTheme.ink)
+            ForEach(Array(goals.prefix(3)), id: \.id) { goal in
+                HStack {
+                    Text(goal.title)
+                        .font(.caption)
+                        .foregroundStyle(AppTheme.ink)
+                    Spacer()
+                    Text("\(goal.probabilityPercentage)%")
+                        .font(.caption.bold())
+                        .foregroundStyle(AppTheme.positive)
+                }
+                ProgressView(value: Double(goal.probabilityPercentage), total: 100)
+                    .tint(AppTheme.positive)
+                    .accessibilityLabel("\(goal.title) readiness")
+                    .accessibilityValue("\(goal.probabilityPercentage) percent")
+            }
+        }
+        .padding(20)
+        .futureMeCard()
     }
 }
 
@@ -823,6 +1012,142 @@ private struct ScenarioListTab: View {
             .background(AppTheme.canvas)
             .navigationTitle("Scenarios")
         }
+    }
+}
+
+private struct PlanningTab: View {
+    let events: [LifeEventPlan]
+    let leaks: [MoneyLeak]
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    SectionTitle(
+                        eyebrow: "LIFE EVENT PLANNER",
+                        title: "Plan the moments that change everything"
+                    )
+                    ForEach(events, id: \.id) { event in
+                        NavigationLink {
+                            LifeEventDetail(event: event)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text(event.type.name.replacingOccurrences(of: "_", with: " "))
+                                        .font(.system(size: 8, weight: .bold))
+                                        .foregroundStyle(AppTheme.positive)
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .foregroundStyle(AppTheme.muted)
+                                }
+                                Text(event.title)
+                                    .font(.headline)
+                                    .foregroundStyle(AppTheme.ink)
+                                Text(event.subtitle)
+                                    .font(.caption)
+                                    .foregroundStyle(AppTheme.muted)
+                                    .multilineTextAlignment(.leading)
+                                Text(
+                                    "Monthly \(signedMoney(-event.estimatedMonthlyImpact)) · "
+                                        + "Upfront \(money(event.oneTimeCostLow))–\(money(event.oneTimeCostHigh))"
+                                )
+                                .font(.caption2.bold())
+                                .foregroundStyle(AppTheme.warning)
+                            }
+                            .padding(16)
+                            .futureMeCard()
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Plan \(event.title)")
+                    }
+
+                    SectionTitle(
+                        eyebrow: "MONEY LEAK DETECTOR",
+                        title: "Keep more of what you earn"
+                    )
+                    .padding(.top, 18)
+
+                    ForEach(leaks, id: \.id) { leak in
+                        VStack(alignment: .leading, spacing: 7) {
+                            HStack {
+                                Text(leak.title)
+                                    .font(.subheadline.bold())
+                                    .foregroundStyle(AppTheme.ink)
+                                Spacer()
+                                Text(money(leak.estimatedMonthlyLoss) + "/mo")
+                                    .font(.caption.bold())
+                                    .foregroundStyle(AppTheme.warning)
+                            }
+                            Text(leak.summary)
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.muted)
+                            Text(leak.fixRecommendation)
+                                .font(.caption2.bold())
+                                .foregroundStyle(AppTheme.positive)
+                        }
+                        .padding(16)
+                        .futureMeCard()
+                        .accessibilityElement(children: .combine)
+                    }
+                }
+                .padding(20)
+            }
+            .background(AppTheme.canvas)
+            .navigationTitle("Plan")
+        }
+    }
+}
+
+private struct LifeEventDetail: View {
+    let event: LifeEventPlan
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Eyebrow(event.type.name.replacingOccurrences(of: "_", with: " "))
+                Text(event.title)
+                    .font(.largeTitle.bold())
+                    .foregroundStyle(AppTheme.ink)
+                Text(event.subtitle)
+                    .foregroundStyle(AppTheme.muted)
+
+                HStack(spacing: 10) {
+                    GpsMetric(
+                        label: "MONTHLY IMPACT",
+                        value: signedMoney(-event.estimatedMonthlyImpact)
+                    )
+                    GpsMetric(
+                        label: "RISK IMPACT",
+                        value: "+\(event.riskImpact)"
+                    )
+                }
+
+                VStack(alignment: .leading, spacing: 9) {
+                    Eyebrow("PREPARATION PLAN")
+                    ForEach(event.recommendedPreparationSteps, id: \.self) { step in
+                        Label(step, systemImage: "checkmark.circle")
+                            .font(.callout)
+                            .foregroundStyle(AppTheme.ink)
+                    }
+                }
+                .padding(18)
+                .futureMeCard()
+
+                Button("Plan this event") {}
+                    .buttonStyle(.borderedProminent)
+                    .tint(AppTheme.forest)
+                    .frame(maxWidth: .infinity)
+                    .accessibilityHint("Uses the linked deterministic scenarios")
+
+                Text("Suggested scenarios: " + event.suggestedScenarioIds.joined(separator: ", "))
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.muted)
+            }
+            .padding(20)
+        }
+        .background(AppTheme.canvas)
+        .navigationTitle("Event plan")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

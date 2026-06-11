@@ -82,6 +82,7 @@ function App() {
   const [rightId, setRightId] = useState("stay-in-new-jersey");
   const [mobileMenu, setMobileMenu] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const [selectedLifeEventId, setSelectedLifeEventId] = useState("event-baby");
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -174,6 +175,10 @@ function App() {
         </button>
         <nav>
           <a className="active" href="#dashboard"><BarChart3 size={19} />Overview</a>
+          <a href="#gps"><TrendingUp size={19} />Financial GPS</a>
+          <a href="#goals"><PiggyBank size={19} />Goals</a>
+          <a href="#life-events"><Baby size={19} />Life events</a>
+          <a href="#money-leaks"><CircleDollarSign size={19} />Money leaks</a>
           <a href="#scenarios"><Sparkles size={19} />Scenarios</a>
           <a href="#compare"><WalletCards size={19} />Compare</a>
           <button className="nav-button" onClick={() => setAssistantOpen(true)}><MessageCircle size={19} />AI assistant</button>
@@ -278,6 +283,164 @@ function App() {
               <p>No urgent alerts. Your plan is tracking within the configured thresholds.</p>
             )}
           </div>
+        </section>
+
+        <section className="v2-section" aria-labelledby="checkup-title">
+          <div className="section-title">
+            <div>
+              <p className="eyebrow">This week's financial checkup</p>
+              <h2 id="checkup-title">Your top three proactive insights</h2>
+            </div>
+            <span className="education-pill">Updated from 90 days of mock activity</span>
+          </div>
+          <div className="insights-grid">
+            {data.insights.slice(0, 3).map((insight) => (
+              <article className={`proactive-card ${insight.severity.toLowerCase()}`} key={insight.id}>
+                <div className="insight-label">
+                  <span>{insight.category.replaceAll("_", " ")}</span>
+                  {insight.estimatedDollarImpact > 0 && <strong>{money(insight.estimatedDollarImpact)}</strong>}
+                </div>
+                <h3>{insight.title}</h3>
+                <p>{insight.summary}</p>
+                <b>{insight.recommendedAction}</b>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="v2-section" id="gps" aria-labelledby="gps-title">
+          <article className="gps-panel">
+            <div className="gps-copy">
+              <p className="eyebrow light">Financial GPS</p>
+              <h2 id="gps-title">A better route is available</h2>
+              <p>{data.financialGps.explanation}</p>
+              <div className="gps-values">
+                <div><span>Current trajectory</span><strong>{money(data.financialGps.currentFiveYearNetWorth, true)}</strong></div>
+                <MoveRight aria-hidden="true" />
+                <div><span>Improved trajectory</span><strong>{money(data.financialGps.improvedFiveYearNetWorth, true)}</strong></div>
+              </div>
+              <div className="gps-lift">+{money(data.financialGps.difference)} five-year lift</div>
+            </div>
+            <div className="gps-actions">
+              <span className="confidence-pill">{data.financialGps.confidenceLevel} confidence</span>
+              {data.financialGps.monthlyActionPlan.map((action) => (
+                <div key={action}><ShieldCheck size={16} /><span>{action}</span></div>
+              ))}
+              <button
+                className="primary-button"
+                onClick={() => submitQuestion("How can I improve my 5-year outlook?")}
+              >
+                <Sparkles size={16} />Explain my improved route
+              </button>
+            </div>
+          </article>
+        </section>
+
+        <section className="v2-section" id="money-leaks" aria-labelledby="leaks-title">
+          <div className="section-title">
+            <div><p className="eyebrow">Money leak detector</p><h2 id="leaks-title">Keep more of what you earn</h2></div>
+            <strong className="annual-impact">
+              {money(data.moneyLeaks.reduce((total, leak) => total + leak.estimatedAnnualLoss, 0))} annual opportunity
+            </strong>
+          </div>
+          <div className="leak-grid">
+            {data.moneyLeaks.map((leak) => (
+              <article className="leak-card" key={leak.id}>
+                <div><span>{leak.difficulty}</span><strong>{money(leak.estimatedMonthlyLoss)}/mo</strong></div>
+                <h3>{leak.title}</h3>
+                <p>{leak.summary}</p>
+                <small>Five-year impact {money(leak.estimatedFiveYearLoss)}</small>
+                <b>{leak.fixRecommendation}</b>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="v2-section" id="goals" aria-labelledby="goals-title">
+          <div className="section-title">
+            <div><p className="eyebrow">Goal readiness</p><h2 id="goals-title">How close your next chapter is</h2></div>
+          </div>
+          <div className="goal-grid">
+            {data.goals.map((goal) => (
+              <article className="goal-card" key={goal.id}>
+                <div className="goal-score"><strong>{goal.probabilityPercentage}%</strong><span>ready</span></div>
+                <h3>{goal.title}</h3>
+                <div
+                  className="goal-progress"
+                  role="progressbar"
+                  aria-label={`${goal.title} readiness`}
+                  aria-valuenow={goal.probabilityPercentage}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <i style={{ width: `${goal.probabilityPercentage}%` }} />
+                </div>
+                <p>{goal.explanation}</p>
+                <b>{goal.recommendedActions[0]}</b>
+                <small>Modeled ready {goal.projectedReadyDate}</small>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="v2-section" id="life-events" aria-labelledby="events-title">
+          <div className="section-title">
+            <div><p className="eyebrow">Life event planner</p><h2 id="events-title">Plan the moments that change everything</h2></div>
+          </div>
+          <div className="life-event-layout">
+            <div className="event-list" role="list">
+              {data.lifeEvents.map((event) => (
+                <button
+                  key={event.id}
+                  className={event.id === selectedLifeEventId ? "active" : ""}
+                  onClick={() => setSelectedLifeEventId(event.id)}
+                  aria-pressed={event.id === selectedLifeEventId}
+                >
+                  <Baby size={18} />
+                  <span><strong>{event.title}</strong><small>{event.subtitle}</small></span>
+                  <ArrowRight size={16} />
+                </button>
+              ))}
+            </div>
+            {data.lifeEvents.filter((event) => event.id === selectedLifeEventId).map((event) => (
+              <article className="event-detail" key={event.id}>
+                <p className="eyebrow">{event.type.replaceAll("_", " ")}</p>
+                <h2>{event.title}</h2>
+                <p>{event.subtitle}</p>
+                <div className="event-metrics">
+                  <div><span>Monthly impact</span><strong>{money(event.estimatedMonthlyImpact)}</strong></div>
+                  <div><span>One-time range</span><strong>{money(event.oneTimeCostLow)}–{money(event.oneTimeCostHigh)}</strong></div>
+                  <div><span>Risk impact</span><strong>+{event.riskImpact}</strong></div>
+                </div>
+                <h3>Preparation plan</h3>
+                {event.recommendedPreparationSteps.map((step) => (
+                  <div className="event-step" key={step}><ShieldCheck size={16} /><span>{step}</span></div>
+                ))}
+                <button
+                  className="primary-button"
+                  onClick={() => {
+                    const scenarioId = event.suggestedScenarioIds[0];
+                    if (scenarioId) setSelectedId(scenarioId);
+                    document.querySelector("#scenarios")?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                >
+                  Plan this event <ArrowRight size={16} />
+                </button>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="quick-actions" aria-label="Quick actions">
+          <button onClick={() => document.querySelector("#scenarios")?.scrollIntoView({ behavior: "smooth" })}>
+            <Sparkles size={18} /><span><strong>Simulate decision</strong><small>Model a major choice</small></span>
+          </button>
+          <button onClick={() => setAssistantOpen(true)}>
+            <MessageCircle size={18} /><span><strong>Ask FutureMe</strong><small>Get a grounded explanation</small></span>
+          </button>
+          <button onClick={() => submitQuestion("How can I improve my 5-year outlook?")}>
+            <TrendingUp size={18} /><span><strong>Improve my outlook</strong><small>Follow the Financial GPS</small></span>
+          </button>
         </section>
 
         <section className="section-block" id="scenarios">

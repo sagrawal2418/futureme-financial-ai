@@ -37,9 +37,14 @@ kotlin {
                 "models/src/commonMain/kotlin",
                 "calculators/src/commonMain/kotlin",
                 "scenario-engine/src/commonMain/kotlin",
+                "financial-gps/src/commonMain/kotlin",
+                "goal-engine/src/commonMain/kotlin",
+                "money-leak-detector/src/commonMain/kotlin",
+                "life-event-planner/src/commonMain/kotlin",
+                "insights-engine/src/commonMain/kotlin",
                 "mock-data/src/commonMain/kotlin",
                 "ai-assistant/src/commonMain/kotlin",
-                "design-tokens/src/commonMain/kotlin",
+                "design-system/src/commonMain/kotlin",
                 "domain/src/commonMain/kotlin",
             )
             dependencies {

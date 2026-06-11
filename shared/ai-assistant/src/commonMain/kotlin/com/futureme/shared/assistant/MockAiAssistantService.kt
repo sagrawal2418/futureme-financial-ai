@@ -5,6 +5,7 @@ import com.futureme.shared.domain.FinancialAssistantProvider
 import com.futureme.shared.models.AssistantPrompt
 import com.futureme.shared.models.AssistantResponse
 import com.futureme.shared.models.FinancialProfile
+import com.futureme.shared.models.FinancialCopilotContext
 import com.futureme.shared.models.ScenarioResult
 import com.futureme.shared.mock.MockFinancialData
 import com.futureme.shared.scenario.ScenarioEngine
@@ -18,11 +19,68 @@ class MockAiAssistantService(
         prompt: AssistantPrompt,
         profile: FinancialProfile,
         latestScenarioResult: ScenarioResult?,
+        context: FinancialCopilotContext,
     ): AssistantResponse {
         val question = prompt.question.trim().lowercase()
         if (question.isBlank()) {
+            return AssistantResponse(answer = "Ask me about your biggest risk, money leaks, goals, life events, or five-year outlook.")
+        }
+
+        if ("money leak" in question || ("biggest" in question && "leak" in question)) {
+            val leak = context.moneyLeaks.first()
             return AssistantResponse(
-                answer = "Ask me about a home purchase, debt payoff, emergency runway, relocation, family change, or investment contribution.",
+                answer = "Your largest detected money leak is ${leak.title.lowercase()}, " +
+                    "with about ${leak.estimatedAnnualLoss.asDollars()} in annual impact. " +
+                    leak.fixRecommendation,
+                suggestedActions = listOf(leak.fixRecommendation, "Review all detected money leaks"),
+            )
+        }
+
+        if (
+            "one action" !in question &&
+            "improve" in question &&
+            ("5-year" in question || "outlook" in question)
+        ) {
+            val gps = context.financialGps
+            return AssistantResponse(
+                answer = "The Financial GPS plan improves modeled five-year net worth by " +
+                    "${gps.difference.asDollars()}. " +
+                    gps.monthlyActionPlan.joinToString(prefix = "The plan is: ", separator = "; ") + ".",
+                relatedScenarioId = "pay-off-cards",
+                suggestedActions = gps.monthlyActionPlan,
+            )
+        }
+
+        if ("ready" in question && ("home" in question || "house" in question)) {
+            val goal = context.goals.first { it.id == "goal-home" }
+            return AssistantResponse(
+                answer = "Home readiness is ${goal.probabilityPercentage}%. " +
+                    "${goal.blockers.joinToString()}. " +
+                    "The modeled improvement needed is ${goal.requiredMonthlyImprovement.asDollars()} per month.",
+                relatedScenarioId = "wait-to-buy",
+                suggestedActions = goal.recommendedActions,
+            )
+        }
+
+        if ("before" in question && ("child" in question || "baby" in question)) {
+            val event = context.lifeEvents.first { it.id == "event-baby" }
+            return AssistantResponse(
+                answer = "Before another child, plan for ${event.estimatedMonthlyImpact.asDollars()} " +
+                    "in recurring costs and ${event.oneTimeCostLow.asDollars()} to " +
+                    "${event.oneTimeCostHigh.asDollars()} upfront. " +
+                    event.recommendedPreparationSteps.joinToString(separator = "; ") + ".",
+                relatedScenarioId = "have-a-child",
+                suggestedActions = event.recommendedPreparationSteps,
+            )
+        }
+
+        if ("simulate next" in question || ("decision" in question && "next" in question)) {
+            val lowestGoal = context.goals.minByOrNull { it.probabilityPercentage }
+            return AssistantResponse(
+                answer = "Simulate having another child next. ${lowestGoal?.title ?: "That goal"} " +
+                    "has the lowest modeled readiness and benefits most from testing timing and preparation.",
+                relatedScenarioId = "have-a-child",
+                suggestedActions = listOf("Open the new baby plan", "Compare having a child now versus waiting"),
             )
         }
 
@@ -44,10 +102,13 @@ class MockAiAssistantService(
         if ("biggest" in question && "risk" in question) {
             val baseline = scenarioEngine.simulate(profile, MockFinancialData.baseline)
             val factor = baseline.riskScore.factors.maxByOrNull { it.points }
+            val insight = context.insights.firstOrNull {
+                it.category.name.contains("DEBT") || it.category.name.contains("RISK")
+            }
             return AssistantResponse(
                 answer = "Your largest modeled risk is ${factor?.title?.lowercase() ?: "planning uncertainty"}. " +
                     "${factor?.explanation ?: baseline.riskScore.summary} " +
-                    "Paying down high-interest debt is the clearest near-term improvement.",
+                    "${insight?.recommendedAction ?: "Paying down high-interest debt is the clearest near-term improvement."}",
                 relatedScenarioId = "pay-off-cards",
                 suggestedActions = listOf(
                     "Model the debt payoff scenario",
@@ -56,7 +117,7 @@ class MockAiAssistantService(
             )
         }
 
-        if ("one action" in question || ("improve" in question && "outlook" in question)) {
+        if ("one action" in question) {
             val payoff = scenarioEngine.simulate(
                 profile,
                 requireNotNull(MockFinancialData.scenario("pay-off-cards")),

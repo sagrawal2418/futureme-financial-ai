@@ -23,6 +23,11 @@ struct FutureMeDashboardContent {
     let selected: ScenarioCardModel
     let result: ScenarioResult
     let comparison: ScenarioComparison
+    let insights: [Insight]
+    let financialGps: FinancialGpsResult
+    let goals: [GoalProbabilityResult]
+    let lifeEvents: [LifeEventPlan]
+    let moneyLeaks: [MoneyLeak]
     let suggestions: [SuggestedQuestion]
     let messages: [AssistantMessage]
     let disclaimer: String
@@ -83,6 +88,11 @@ final class FutureMeViewModel: ObservableObject {
                     leftScenarioId: "move-to-texas",
                     rightScenarioId: "stay-in-new-jersey"
                 ),
+                insights: bootstrap.insights,
+                financialGps: bootstrap.financialGps,
+                goals: bootstrap.goals,
+                lifeEvents: bootstrap.lifeEvents,
+                moneyLeaks: bootstrap.moneyLeaks,
                 suggestions: bootstrap.suggestedQuestions,
                 messages: [
                     AssistantMessage(
@@ -113,6 +123,11 @@ final class FutureMeViewModel: ObservableObject {
                 selected: scenario,
                 result: product.simulate(scenarioId: scenario.id),
                 comparison: content.comparison,
+                insights: content.insights,
+                financialGps: content.financialGps,
+                goals: content.goals,
+                lifeEvents: content.lifeEvents,
+                moneyLeaks: content.moneyLeaks,
                 suggestions: content.suggestions,
                 messages: content.messages,
                 disclaimer: content.disclaimer
@@ -146,6 +161,11 @@ final class FutureMeViewModel: ObservableObject {
                 selected: content.selected,
                 result: content.result,
                 comparison: content.comparison,
+                insights: content.insights,
+                financialGps: content.financialGps,
+                goals: content.goals,
+                lifeEvents: content.lifeEvents,
+                moneyLeaks: content.moneyLeaks,
                 suggestions: content.suggestions,
                 messages: messages,
                 disclaimer: content.disclaimer

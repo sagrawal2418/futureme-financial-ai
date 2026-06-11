@@ -15,6 +15,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -31,12 +32,16 @@ import com.futureme.financialai.ui.components.SectionTitle
 import com.futureme.financialai.util.compactMoney
 import com.futureme.financialai.util.money
 import com.futureme.financialai.util.oneDecimal
+import com.futureme.shared.models.InsightSeverity
 
 @Composable
 fun DashboardScreen(
     content: FutureMeContent,
     onScenarioClick: (Scenario) -> Unit,
     onOpenAssistant: () -> Unit,
+    onOpenLifeEvents: () -> Unit,
+    onOpenMoneyLeaks: () -> Unit,
+    onImproveOutlook: () -> Unit,
 ) {
     val dashboard = content.dashboard
     val profile = content.profile
@@ -49,10 +54,14 @@ fun DashboardScreen(
             runway = "${oneDecimal(dashboard.emergencyFundMonths)} mo",
         )
 
-        ProjectionCard(
-            result = content.recentResults.first(),
-            headline = "Five-year outlook",
-            value = compactMoney(dashboard.projectedNetWorth5Years),
+        WeeklyCheckupCard(
+            content = content,
+            modifier = Modifier.padding(top = 14.dp),
+        )
+
+        FinancialGpsCard(
+            content = content,
+            onImproveOutlook = onImproveOutlook,
             modifier = Modifier.padding(top = 14.dp),
         )
 
@@ -100,16 +109,41 @@ fun DashboardScreen(
             modifier = Modifier.padding(top = 14.dp),
         )
 
-        Button(
-            onClick = onOpenAssistant,
+        MoneyLeakPreview(
+            content = content,
+            onOpenMoneyLeaks = onOpenMoneyLeaks,
+            modifier = Modifier.padding(top = 14.dp),
+        )
+
+        GoalReadinessPreview(
+            content = content,
+            modifier = Modifier.padding(top = 14.dp),
+        )
+
+        SectionTitle(
+            eyebrow = "Quick actions",
+            title = "Move your plan forward",
+            modifier = Modifier.padding(top = 28.dp),
+        )
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 14.dp)
-                .semantics {
-                    contentDescription = "Ask FutureMe about your financial plan"
-                },
+                .padding(top = 12.dp)
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Text("Ask FutureMe about this plan")
+            Button(onClick = { content.scenarios.firstOrNull()?.let(onScenarioClick) }) {
+                Text("Simulate decision")
+            }
+            OutlinedButton(onClick = onOpenAssistant) {
+                Text("Ask FutureMe")
+            }
+            OutlinedButton(onClick = onImproveOutlook) {
+                Text("Improve outlook")
+            }
+            OutlinedButton(onClick = onOpenLifeEvents) {
+                Text("Plan life event")
+            }
         }
 
         SectionTitle(
@@ -133,6 +167,151 @@ fun DashboardScreen(
             }
         }
         Spacer(Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun WeeklyCheckupCard(
+    content: FutureMeContent,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+    ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Eyebrow("This week's financial checkup")
+            Text("Three signals worth your attention", style = MaterialTheme.typography.titleMedium)
+            content.insights.take(3).forEach { insight ->
+                val prefix = when (insight.severity) {
+                    InsightSeverity.CRITICAL -> "Urgent"
+                    InsightSeverity.WARNING -> "Watch"
+                    InsightSeverity.OPPORTUNITY -> "Opportunity"
+                    InsightSeverity.INFO -> "On track"
+                }
+                Text(
+                    "$prefix · ${insight.title}",
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(top = 12.dp),
+                )
+                Text(
+                    insight.summary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 3.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FinancialGpsCard(
+    content: FutureMeContent,
+    onImproveOutlook: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val gps = content.financialGps
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+    ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Eyebrow("Financial GPS")
+            Text("A better route is available", style = MaterialTheme.typography.titleLarge)
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                MetricCard(
+                    badge = "NOW",
+                    label = "Current trajectory",
+                    value = compactMoney(gps.currentFiveYearNetWorth),
+                    hint = "Five-year net worth",
+                    modifier = Modifier.weight(1f),
+                )
+                MetricCard(
+                    badge = "GPS",
+                    label = "Improved trajectory",
+                    value = compactMoney(gps.improvedFiveYearNetWorth),
+                    hint = "+${money(gps.difference)}",
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            gps.monthlyActionPlan.forEach { action ->
+                Text(
+                    "•  $action",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+            OutlinedButton(
+                onClick = onImproveOutlook,
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+            ) {
+                Text("Explain my improved route")
+            }
+        }
+    }
+}
+
+@Composable
+private fun MoneyLeakPreview(
+    content: FutureMeContent,
+    onOpenMoneyLeaks: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val annualLoss = content.moneyLeaks.sumOf { it.estimatedAnnualLoss }
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+    ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Eyebrow("Money leaks")
+            Text("${money(annualLoss)} in annual opportunity", style = MaterialTheme.typography.titleMedium)
+            content.moneyLeaks.take(2).forEach { leak ->
+                Text(
+                    "${leak.title} · ${money(leak.estimatedMonthlyLoss)}/mo",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 9.dp),
+                )
+            }
+            OutlinedButton(
+                onClick = onOpenMoneyLeaks,
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+            ) {
+                Text("Review all money leaks")
+            }
+        }
+    }
+}
+
+@Composable
+private fun GoalReadinessPreview(
+    content: FutureMeContent,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+    ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Eyebrow("Goal readiness")
+            Text("How close your next chapter is", style = MaterialTheme.typography.titleMedium)
+            content.goals.take(3).forEach { goal ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 11.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(goal.title, style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        "${goal.probabilityPercentage}%",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+            }
+        }
     }
 }
 

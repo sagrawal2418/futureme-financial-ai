@@ -118,12 +118,94 @@ export interface AssistantResponse {
   suggestedActions: string[];
 }
 
+export type InsightSeverity = "INFO" | "OPPORTUNITY" | "WARNING" | "CRITICAL";
+
+export interface Insight {
+  id: string;
+  title: string;
+  summary: string;
+  severity: InsightSeverity;
+  category: string;
+  estimatedDollarImpact: number;
+  recommendedAction: string;
+  relatedScenarioType: ScenarioType | null;
+  createdDate: string;
+}
+
+export interface MoneyLeak {
+  id: string;
+  type: string;
+  title: string;
+  summary: string;
+  estimatedMonthlyLoss: number;
+  estimatedAnnualLoss: number;
+  estimatedFiveYearLoss: number;
+  fixRecommendation: string;
+  difficulty: "EASY" | "MODERATE" | "INVOLVED";
+}
+
+export interface FinancialGpsResult {
+  currentFiveYearNetWorth: number;
+  improvedFiveYearNetWorth: number;
+  difference: number;
+  monthlyActionPlan: string[];
+  confidenceLevel: "HIGH" | "MEDIUM" | "LOW";
+  explanation: string;
+  currentTrajectory: ProjectionPoint[];
+  improvedTrajectory: ProjectionPoint[];
+}
+
+export interface GoalProbabilityResult {
+  id: string;
+  type: string;
+  title: string;
+  probabilityPercentage: number;
+  blockers: string[];
+  recommendedActions: string[];
+  requiredMonthlyImprovement: number;
+  projectedReadyDate: string;
+  explanation: string;
+}
+
+export interface LifeEventPlan {
+  id: string;
+  type: string;
+  title: string;
+  subtitle: string;
+  estimatedMonthlyImpact: number;
+  oneTimeCostLow: number;
+  oneTimeCostHigh: number;
+  riskImpact: number;
+  recommendedPreparationSteps: string[];
+  relatedInsights: string[];
+  suggestedScenarioIds: string[];
+}
+
+export interface Transaction {
+  id: string;
+  postedDate: string;
+  merchant: string;
+  category: string;
+  amount: number;
+  isRecurring: boolean;
+}
+
 export interface ProductBootstrap {
   identity: UserIdentity;
   profile: FinancialProfile;
   dashboard: DashboardSnapshot;
   scenarios: Scenario[];
   recentScenarioResults: ScenarioResult[];
+  transactions: Transaction[];
+  debtAccounts: unknown[];
+  investmentAccounts: unknown[];
+  cashAccounts: unknown[];
+  mortgageAccounts: unknown[];
+  insights: Insight[];
+  financialGps: FinancialGpsResult;
+  goals: GoalProbabilityResult[];
+  lifeEvents: LifeEventPlan[];
+  moneyLeaks: MoneyLeak[];
   suggestedQuestions: SuggestedQuestion[];
   designTokens: {
     spacing: Record<string, number>;

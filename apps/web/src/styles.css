@@ -415,3 +415,87 @@ footer i { width: 3px; height: 3px; border-radius: 50%; background: #aab4af; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+.v2-section { margin-top: 31px; }
+.insights-grid, .leak-grid, .goal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.proactive-card, .leak-card, .goal-card, .event-detail {
+  padding: 18px; border: 1px solid var(--line); border-radius: 17px; background: var(--surface);
+}
+.proactive-card { border-top: 3px solid #559a7c; }
+.proactive-card.warning, .proactive-card.critical { border-top-color: #c5834d; }
+.insight-label, .leak-card > div:first-child {
+  display: flex; justify-content: space-between; gap: 10px; color: var(--muted);
+  font-size: 8px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase;
+}
+.insight-label strong { color: #2c8061; }
+.proactive-card h3, .leak-card h3, .goal-card h3 { margin-top: 10px; font-size: 14px; }
+.proactive-card p, .leak-card p, .goal-card p { margin: 6px 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.proactive-card b, .leak-card b, .goal-card b { display: block; margin-top: 9px; color: #2c8061; font-size: 9px; line-height: 1.45; }
+.gps-panel {
+  display: grid; grid-template-columns: 1.2fr .8fr; overflow: hidden; border-radius: 20px;
+  color: white; background: linear-gradient(135deg, #153c31, #0c281f);
+}
+.gps-copy { padding: 27px; }
+.gps-copy h2 { color: white; font-size: 24px; }
+.gps-copy > p:not(.eyebrow) { max-width: 660px; color: #b8cec5; font-size: 11px; line-height: 1.55; }
+.gps-values { display: flex; align-items: center; gap: 18px; margin-top: 21px; }
+.gps-values div span, .gps-values div strong { display: block; }
+.gps-values div span { color: #95afa4; font-size: 8px; text-transform: uppercase; letter-spacing: .8px; }
+.gps-values div strong { margin-top: 4px; font: 800 25px "Manrope"; }
+.gps-values svg { color: #65d6a7; }
+.gps-lift { display: inline-flex; margin-top: 17px; padding: 7px 10px; border-radius: 99px; color: #c8f5e2; background: #245344; font-size: 10px; font-weight: 700; }
+.gps-actions { display: flex; flex-direction: column; justify-content: center; gap: 11px; padding: 27px; background: rgba(255,255,255,.07); }
+.gps-actions > div { display: flex; align-items: center; gap: 8px; color: #d0dfd9; font-size: 11px; }
+.gps-actions > div svg { color: #65d6a7; }
+.confidence-pill { align-self: flex-start; padding: 5px 8px; border-radius: 99px; color: #bdf0d9; background: #285445; font-size: 8px; font-weight: 800; text-transform: uppercase; }
+.annual-impact { color: #a85b47; font-size: 12px; }
+.leak-grid { grid-template-columns: repeat(3, 1fr); }
+.leak-card small, .goal-card small { display: block; margin-top: 9px; color: var(--muted); font-size: 8px; }
+.leak-card > div:first-child strong { color: #ad5d47; }
+.goal-grid { grid-template-columns: repeat(3, 1fr); }
+.goal-score { display: flex; align-items: baseline; gap: 5px; color: #2a8060; }
+.goal-score strong { font: 800 23px "Manrope"; }
+.goal-score span { font-size: 9px; }
+.goal-progress { height: 6px; margin-top: 11px; overflow: hidden; border-radius: 99px; background: var(--line); }
+.goal-progress i { display: block; height: 100%; border-radius: inherit; background: #41a47b; }
+.life-event-layout { display: grid; grid-template-columns: .75fr 1.25fr; gap: 14px; }
+.event-list { display: grid; align-content: start; gap: 8px; }
+.event-list button {
+  display: flex; align-items: center; gap: 11px; width: 100%; padding: 14px; text-align: left;
+  border: 1px solid var(--line); border-radius: 14px; color: var(--ink); background: var(--surface);
+}
+.event-list button.active { border-color: #4d9a78; background: #eef9f3; box-shadow: 0 0 0 2px rgba(77,154,120,.1); }
+.event-list button > span { flex: 1; }
+.event-list strong, .event-list small { display: block; }
+.event-list strong { font-size: 11px; }
+.event-list small { margin-top: 3px; color: var(--muted); font-size: 8px; line-height: 1.4; }
+.event-list button > svg:first-child { color: #2d8262; }
+.event-detail > p { color: var(--muted); font-size: 11px; }
+.event-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 18px 0; }
+.event-metrics div { padding: 12px; border-radius: 12px; background: var(--surface-soft); }
+.event-metrics span, .event-metrics strong { display: block; }
+.event-metrics span { color: var(--muted); font-size: 8px; text-transform: uppercase; }
+.event-metrics strong { margin-top: 4px; font-size: 12px; }
+.event-step { display: flex; align-items: center; gap: 8px; margin-top: 9px; color: var(--muted); font-size: 10px; }
+.event-step svg { color: #2d8262; }
+.event-detail .primary-button { margin-top: 18px; }
+.quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 22px; }
+.quick-actions button {
+  display: flex; align-items: center; gap: 11px; padding: 15px; text-align: left;
+  border: 1px solid var(--line); border-radius: 14px; color: var(--ink); background: var(--surface);
+}
+.quick-actions svg { color: #2d8262; }
+.quick-actions strong, .quick-actions small { display: block; }
+.quick-actions strong { font-size: 11px; }
+.quick-actions small { margin-top: 3px; color: var(--muted); font-size: 8px; }
+
+@media (max-width: 980px) {
+  .insights-grid, .leak-grid, .goal-grid { grid-template-columns: repeat(2, 1fr); }
+  .gps-panel, .life-event-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .insights-grid, .leak-grid, .goal-grid, .quick-actions { grid-template-columns: 1fr; }
+  .event-metrics { grid-template-columns: 1fr; }
+  .gps-values { align-items: flex-start; }
+}

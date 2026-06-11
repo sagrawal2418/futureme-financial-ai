@@ -31,7 +31,9 @@ import com.futureme.financialai.ui.screens.AssistantScreen
 import com.futureme.financialai.ui.screens.ComparisonScreen
 import com.futureme.financialai.ui.screens.DashboardScreen
 import com.futureme.financialai.ui.screens.LoadingScreen
+import com.futureme.financialai.ui.screens.LifeEventPlannerScreen
 import com.futureme.financialai.ui.screens.MessageScreen
+import com.futureme.financialai.ui.screens.MoneyLeakScreen
 import com.futureme.financialai.ui.screens.ScenarioDetailScreen
 import com.futureme.financialai.ui.screens.ScenarioListScreen
 
@@ -93,6 +95,7 @@ private fun ContentScaffold(
             ) {
                 listOf(
                     FutureMeScreen.DASHBOARD to "Overview",
+                    FutureMeScreen.LIFE_EVENTS to "Plan",
                     FutureMeScreen.SCENARIOS to "Scenarios",
                     FutureMeScreen.COMPARISON to "Compare",
                 ).forEach { (screen, label) ->
@@ -133,6 +136,11 @@ private fun ContentScaffold(
                         content = content,
                         onScenarioClick = onScenarioClick,
                         onOpenAssistant = { onNavigate(FutureMeScreen.ASSISTANT) },
+                        onOpenLifeEvents = { onNavigate(FutureMeScreen.LIFE_EVENTS) },
+                        onOpenMoneyLeaks = { onNavigate(FutureMeScreen.MONEY_LEAKS) },
+                        onImproveOutlook = {
+                            onAskAssistant("How can I improve my 5-year outlook?")
+                        },
                     )
                     FutureMeScreen.SCENARIOS -> ScenarioListScreen(
                         scenarios = content.scenarios,
@@ -144,6 +152,14 @@ private fun ContentScaffold(
                         onCompare = { onNavigate(FutureMeScreen.COMPARISON) },
                     )
                     FutureMeScreen.COMPARISON -> ComparisonScreen(content.comparison)
+                    FutureMeScreen.LIFE_EVENTS -> LifeEventPlannerScreen(
+                        events = content.lifeEvents,
+                        onPlanScenario = { scenarioId ->
+                            content.scenarios.firstOrNull { it.id == scenarioId }
+                                ?.let(onScenarioClick)
+                        },
+                    )
+                    FutureMeScreen.MONEY_LEAKS -> MoneyLeakScreen(content.moneyLeaks)
                     FutureMeScreen.ASSISTANT -> AssistantScreen(
                         messages = content.messages,
                         suggestions = content.suggestedQuestions,

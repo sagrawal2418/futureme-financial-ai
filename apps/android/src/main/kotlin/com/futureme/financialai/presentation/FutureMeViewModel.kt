@@ -9,6 +9,11 @@ import com.futureme.shared.domain.FutureMeProduct
 import com.futureme.shared.models.AssistantPrompt
 import com.futureme.shared.models.DashboardSnapshot
 import com.futureme.shared.models.FinancialProfile
+import com.futureme.shared.models.FinancialGpsResult
+import com.futureme.shared.models.GoalProbabilityResult
+import com.futureme.shared.models.Insight
+import com.futureme.shared.models.LifeEventPlan
+import com.futureme.shared.models.MoneyLeak
 import com.futureme.shared.models.Scenario
 import com.futureme.shared.models.ScenarioComparison
 import com.futureme.shared.models.ScenarioResult
@@ -20,6 +25,8 @@ enum class FutureMeScreen {
     SCENARIOS,
     SCENARIO_DETAIL,
     COMPARISON,
+    LIFE_EVENTS,
+    MONEY_LEAKS,
     ASSISTANT,
 }
 
@@ -35,6 +42,11 @@ data class FutureMeContent(
     val dashboard: DashboardSnapshot,
     val scenarios: List<Scenario>,
     val recentResults: List<ScenarioResult>,
+    val insights: List<Insight>,
+    val financialGps: FinancialGpsResult,
+    val goals: List<GoalProbabilityResult>,
+    val lifeEvents: List<LifeEventPlan>,
+    val moneyLeaks: List<MoneyLeak>,
     val suggestedQuestions: List<SuggestedQuestion>,
     val disclaimer: String,
     val selectedScenario: Scenario? = null,
@@ -82,6 +94,11 @@ class FutureMeViewModel(
                         dashboard = bootstrap.dashboard,
                         scenarios = bootstrap.scenarios,
                         recentResults = bootstrap.recentScenarioResults,
+                        insights = bootstrap.insights,
+                        financialGps = bootstrap.financialGps,
+                        goals = bootstrap.goals,
+                        lifeEvents = bootstrap.lifeEvents,
+                        moneyLeaks = bootstrap.moneyLeaks,
                         suggestedQuestions = bootstrap.suggestedQuestions,
                         disclaimer = bootstrap.disclaimer,
                         comparison = product.compare("move-to-texas", "stay-in-new-jersey"),

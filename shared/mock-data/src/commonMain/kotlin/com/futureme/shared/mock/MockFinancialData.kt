@@ -1,9 +1,14 @@
 package com.futureme.shared.mock
 
+import com.futureme.shared.models.CashAccount
+import com.futureme.shared.models.DebtAccount
 import com.futureme.shared.models.FinancialProfile
+import com.futureme.shared.models.InvestmentAccount
+import com.futureme.shared.models.MortgageAccount
 import com.futureme.shared.models.Scenario
 import com.futureme.shared.models.ScenarioType
 import com.futureme.shared.models.SuggestedQuestion
+import com.futureme.shared.models.Transaction
 import com.futureme.shared.models.UserIdentity
 
 object MockFinancialData {
@@ -30,7 +35,126 @@ object MockFinancialData {
         monthlyRetirementContribution = 1_850.0,
         monthlyDebtPayments = 850.0,
         dependents = 1,
+        primaryMonthlyNetIncome = 9_250.0,
+        spouseMonthlyNetIncome = 5_000.0,
+        monthlyChildcare = 1_800.0,
+        monthlyInsurance = 680.0,
+        monthlySubscriptions = 228.0,
+        monthlyUtilities = 510.0,
     )
+
+    val cashAccounts = listOf(
+        CashAccount(
+            id = "cash-checking",
+            name = "Household checking",
+            balance = 32_000.0,
+            annualPercentageYield = 0.0001,
+            isEmergencyFund = false,
+        ),
+        CashAccount(
+            id = "cash-emergency",
+            name = "Emergency reserve",
+            balance = 64_500.0,
+            annualPercentageYield = 0.043,
+            isEmergencyFund = true,
+        ),
+    )
+
+    val debtAccounts = listOf(
+        DebtAccount(
+            id = "debt-visa",
+            name = "Rewards Visa",
+            balance = 12_600.0,
+            annualPercentageRate = 0.2199,
+            minimumMonthlyPayment = 525.0,
+            category = "Credit card",
+        ),
+        DebtAccount(
+            id = "debt-mastercard",
+            name = "Travel Mastercard",
+            balance = 5_800.0,
+            annualPercentageRate = 0.1899,
+            minimumMonthlyPayment = 325.0,
+            category = "Credit card",
+        ),
+        DebtAccount(
+            id = "debt-auto",
+            name = "Family SUV loan",
+            balance = 21_400.0,
+            annualPercentageRate = 0.0475,
+            minimumMonthlyPayment = 540.0,
+            category = "Auto loan",
+        ),
+    )
+
+    val investmentAccounts = listOf(
+        InvestmentAccount(
+            id = "investment-401k",
+            name = "Jordan 401(k)",
+            balance = 174_000.0,
+            monthlyContribution = 1_150.0,
+            employeeContributionPercent = 0.04,
+            employerMatchPercent = 0.06,
+        ),
+        InvestmentAccount(
+            id = "investment-403b",
+            name = "Taylor 403(b)",
+            balance = 68_000.0,
+            monthlyContribution = 700.0,
+            employeeContributionPercent = 0.06,
+            employerMatchPercent = 0.05,
+        ),
+        InvestmentAccount(
+            id = "investment-brokerage",
+            name = "Family brokerage",
+            balance = 44_000.0,
+            monthlyContribution = 0.0,
+        ),
+    )
+
+    val mortgageAccounts = listOf(
+        MortgageAccount(
+            id = "mortgage-primary",
+            name = "Primary residence mortgage",
+            balance = 451_000.0,
+            annualPercentageRate = 0.0675,
+            monthlyPayment = 3_825.0,
+            propertyValue = 735_000.0,
+            remainingTermMonths = 326,
+        ),
+    )
+
+    val transactions: List<Transaction> = transactionDates().mapIndexed { index, date ->
+        val template = when {
+            index % 30 == 0 -> Triple("Garden State Mortgage", "Housing", 3_825.0)
+            index % 15 == 4 -> Triple("Bright Horizons", "Childcare", 900.0)
+            index % 15 == 11 -> Triple("Bright Horizons", "Childcare", 900.0)
+            index % 30 == 7 -> Triple("NJ Family Insurance", "Insurance", 680.0)
+            index % 14 == 6 -> Triple("PSE&G Utilities", "Utilities", 255.0)
+            index % 14 == 13 -> Triple("Verizon + Internet", "Utilities", 255.0)
+            index % 30 == 2 -> Triple("Streaming bundle", "Subscriptions", 126.0)
+            index % 30 == 18 -> Triple("Software memberships", "Subscriptions", 102.0)
+            index % 7 == 1 -> Triple("Whole Foods Market", "Groceries", 186.0)
+            index % 7 == 5 -> Triple("Costco", "Groceries", 238.0)
+            index % 9 == 3 -> Triple("NJ Transit", "Transportation", 84.0)
+            index % 8 == 4 -> Triple("Local restaurant", "Dining", 96.0)
+            else -> Triple("Household purchase", "General", 42.0 + (index % 5) * 11.0)
+        }
+        Transaction(
+            id = "txn-${(index + 1).toString().padStart(3, '0')}",
+            postedDate = date,
+            merchant = template.first,
+            category = template.second,
+            amount = template.third,
+            isRecurring = template.second in setOf(
+                "Housing",
+                "Childcare",
+                "Insurance",
+                "Utilities",
+                "Subscriptions",
+            ),
+        )
+    }
 
     val baseline = Scenario(
         id = "baseline",
@@ -156,15 +280,21 @@ object MockFinancialData {
     )
 
     val suggestedQuestions = listOf(
+        SuggestedQuestion("leak", "Biggest money leak", "What is my biggest money leak?", "Insights"),
+        SuggestedQuestion("risk", "Biggest financial risk", "What is my biggest financial risk?", "Risk"),
+        SuggestedQuestion("outlook", "Improve my outlook", "How can I improve my 5-year outlook?", "GPS"),
         SuggestedQuestion("buy", "Can I afford this house?", "Can I afford to buy a $700k home?", "Home"),
-        SuggestedQuestion("refi", "Should I refinance?", "What happens if I refinance my mortgage?", "Mortgage"),
-        SuggestedQuestion("runway", "How long will savings last?", "How long will my emergency fund last?", "Safety"),
-        SuggestedQuestion("debt", "Debt or invest?", "Should I pay off debt or invest more?", "Priorities"),
-        SuggestedQuestion("child", "Can we grow our family?", "What happens financially if I have another child?", "Family"),
-        SuggestedQuestion("move", "Can I move to Texas?", "Can I move to Texas and still stay on track?", "Relocation"),
-        SuggestedQuestion("risk", "What is my biggest risk?", "What is the biggest financial risk in my profile?", "Risk"),
-        SuggestedQuestion("action", "Improve my outlook", "What is one action that improves my 5-year outlook?", "Next step"),
+        SuggestedQuestion("child", "Prepare for a child", "What should I do before having another child?", "Family"),
+        SuggestedQuestion("ready-home", "Home readiness", "How can I become ready to buy a home?", "Goals"),
+        SuggestedQuestion("next", "Next simulation", "What decision should I simulate next?", "Next step"),
     )
 
     fun scenario(id: String): Scenario? = scenarios.firstOrNull { it.id == id }
+
+    private fun transactionDates(): List<String> = buildList {
+        (13..31).forEach { add("2026-03-${it.toString().padStart(2, '0')}") }
+        (1..30).forEach { add("2026-04-${it.toString().padStart(2, '0')}") }
+        (1..31).forEach { add("2026-05-${it.toString().padStart(2, '0')}") }
+        (1..10).forEach { add("2026-06-${it.toString().padStart(2, '0')}") }
+    }
 }

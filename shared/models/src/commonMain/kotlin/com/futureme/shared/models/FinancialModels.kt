@@ -27,6 +27,62 @@ data class FinancialProfile(
     val monthlyRetirementContribution: Double,
     val monthlyDebtPayments: Double,
     val dependents: Int,
+    val primaryMonthlyNetIncome: Double = monthlyNetIncome,
+    val spouseMonthlyNetIncome: Double = 0.0,
+    val monthlyChildcare: Double = 0.0,
+    val monthlyInsurance: Double = 0.0,
+    val monthlySubscriptions: Double = 0.0,
+    val monthlyUtilities: Double = 0.0,
+)
+
+@Serializable
+data class Transaction(
+    val id: String,
+    val postedDate: String,
+    val merchant: String,
+    val category: String,
+    val amount: Double,
+    val isRecurring: Boolean = false,
+)
+
+@Serializable
+data class DebtAccount(
+    val id: String,
+    val name: String,
+    val balance: Double,
+    val annualPercentageRate: Double,
+    val minimumMonthlyPayment: Double,
+    val category: String,
+)
+
+@Serializable
+data class InvestmentAccount(
+    val id: String,
+    val name: String,
+    val balance: Double,
+    val monthlyContribution: Double,
+    val employeeContributionPercent: Double = 0.0,
+    val employerMatchPercent: Double = 0.0,
+)
+
+@Serializable
+data class CashAccount(
+    val id: String,
+    val name: String,
+    val balance: Double,
+    val annualPercentageYield: Double,
+    val isEmergencyFund: Boolean,
+)
+
+@Serializable
+data class MortgageAccount(
+    val id: String,
+    val name: String,
+    val balance: Double,
+    val annualPercentageRate: Double,
+    val monthlyPayment: Double,
+    val propertyValue: Double,
+    val remainingTermMonths: Int,
 )
 
 @Serializable
