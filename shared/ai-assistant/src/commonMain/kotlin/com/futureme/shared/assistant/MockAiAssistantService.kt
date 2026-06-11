@@ -23,7 +23,95 @@ class MockAiAssistantService(
     ): AssistantResponse {
         val question = prompt.question.trim().lowercase()
         if (question.isBlank()) {
-            return AssistantResponse(answer = "Ask me about your biggest risk, money leaks, goals, life events, or five-year outlook.")
+            return AssistantResponse(
+                answer = "Ask me which life decision you are ready for, what is blocking it, or what to focus on this month.",
+            )
+        }
+
+        if ("weakest" in question && "readiness" in question) {
+            val weakest = context.readiness.minByOrNull { it.readinessScore }
+            return AssistantResponse(
+                answer = "${weakest?.title ?: "Business startup readiness"} is currently the weakest " +
+                    "category at ${weakest?.readinessScore ?: 0}%. " +
+                    (weakest?.blockers?.firstOrNull()
+                        ?: "Build more liquidity before taking on the decision."),
+                suggestedActions = weakest?.recommendedActions.orEmpty().take(3),
+            )
+        }
+
+        if (
+            ("plan" in question || "improve" in question) &&
+            ("home" in question || "house" in question)
+        ) {
+            val home = context.readiness.first { it.category.name == "HOME_PURCHASE" }
+            val plan = context.readinessPlans.first { it.category.name == "HOME_PURCHASE" }
+            return AssistantResponse(
+                answer = "Home Purchase Readiness is ${home.readinessScore}%. " +
+                    "The plan targets ${plan.targetScore}% in ${plan.estimatedTimelineMonths} months: " +
+                    plan.recommendations.take(4).joinToString(separator = "; "),
+                relatedScenarioId = "wait-to-buy",
+                suggestedActions = plan.recommendations,
+            )
+        }
+
+        if (
+            ("preventing" in question || "block" in question) &&
+            ("home" in question || "house" in question)
+        ) {
+            val home = context.readiness.first { it.category.name == "HOME_PURCHASE" }
+            return AssistantResponse(
+                answer = "Home Purchase Readiness is ${home.readinessScore}% " +
+                    "(${home.readinessLevel.name.lowercase().replace('_', ' ')}). " +
+                    "The main blockers are ${home.blockers.joinToString(separator = "; ")}",
+                relatedScenarioId = "wait-to-buy",
+                suggestedActions = home.recommendedActions,
+            )
+        }
+
+        if (
+            ("ready" in question || "prepare" in question) &&
+            ("child" in question || "baby" in question)
+        ) {
+            val child = context.readiness.first { it.category.name == "CHILD" }
+            val plan = context.readinessPlans.first { it.category.name == "CHILD" }
+            return AssistantResponse(
+                answer = "Child Readiness is ${child.readinessScore}%. " +
+                    "To reach ${plan.targetScore}%, focus on " +
+                    plan.recommendations.take(3).joinToString(separator = "; ") +
+                    ". The modeled timeline is ${plan.estimatedTimelineMonths} months.",
+                relatedScenarioId = "have-a-child",
+                suggestedActions = plan.recommendations,
+            )
+        }
+
+        if ("decision" in question && ("improves" in question || "best" in question)) {
+            val best = context.decisionSimulations.maxByOrNull {
+                it.readinessImpact * 5_000.0 + it.fiveYearNetWorthImpact
+            }
+            return AssistantResponse(
+                answer = "${best?.title ?: "Pay off credit cards"} creates the strongest " +
+                    "modeled improvement. It changes readiness by " +
+                    "${best?.readinessImpact?.let { if (it >= 0) "+$it" else "$it" } ?: "+0"} points " +
+                    "and five-year net worth by ${best?.fiveYearNetWorthImpact?.asSignedDollars() ?: "$0"}.",
+                relatedScenarioId = best?.scenarioId,
+                suggestedActions = best?.recommendedActions.orEmpty().take(3),
+            )
+        }
+
+        if ("focus" in question && ("month" in question || "now" in question)) {
+            val weakest = context.readiness.minByOrNull { it.readinessScore }
+            val debtAction = "Direct an additional $300 to high-interest debt."
+            return AssistantResponse(
+                answer = "This month, make debt reduction the first move. $debtAction " +
+                    "That improves cash flow, lowers risk, and strengthens " +
+                    "${weakest?.title?.lowercase() ?: "your weakest readiness category"}.",
+                relatedScenarioId = "pay-off-cards",
+                suggestedActions = listOf(
+                    debtAction,
+                    "Keep six months of essential expenses liquid.",
+                    weakest?.recommendedActions?.firstOrNull() ?: "Review the readiness dashboard.",
+                ),
+            )
         }
 
         if ("money leak" in question || ("biggest" in question && "leak" in question)) {

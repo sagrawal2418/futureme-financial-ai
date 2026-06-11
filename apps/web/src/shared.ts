@@ -5,9 +5,28 @@ export type ScenarioType =
   | "REFINANCE_MORTGAGE"
   | "PAY_OFF_DEBT"
   | "JOB_LOSS"
+  | "SPOUSE_STOPS_WORKING"
   | "RELOCATE"
   | "HAVE_CHILD"
+  | "START_BUSINESS"
   | "INCREASE_INVESTMENTS";
+
+export type ReadinessCategory =
+  | "HOME_PURCHASE"
+  | "CHILD"
+  | "RELOCATION"
+  | "RETIREMENT"
+  | "BUSINESS_STARTUP"
+  | "PARENT_SUPPORT"
+  | "EDUCATION_FUNDING";
+
+export type ReadinessLevel =
+  | "NOT_READY"
+  | "NEEDS_PREPARATION"
+  | "ALMOST_READY"
+  | "READY";
+
+export type ReadinessTrend = "IMPROVING" | "STABLE" | "DECLINING";
 
 export interface UserIdentity {
   ownerId: string;
@@ -181,6 +200,84 @@ export interface LifeEventPlan {
   suggestedScenarioIds: string[];
 }
 
+export interface LifeReadinessResult {
+  id: string;
+  category: ReadinessCategory;
+  title: string;
+  readinessScore: number;
+  readinessLevel: ReadinessLevel;
+  strengths: string[];
+  weaknesses: string[];
+  blockers: string[];
+  confidenceLevel: "HIGH" | "MEDIUM" | "LOW";
+  recommendedActions: string[];
+  projectedReadyDate: string;
+  estimatedMonthsToReady: number;
+  trend: ReadinessTrend;
+  trendDelta: number;
+}
+
+export interface ReadinessImprovementPlan {
+  id: string;
+  category: ReadinessCategory;
+  title: string;
+  currentScore: number;
+  targetScore: number;
+  scoreGap: number;
+  recommendations: string[];
+  monthlyCommitment: number;
+  estimatedTimelineMonths: number;
+  projectedTargetDate: string;
+}
+
+export interface LifeDecisionSimulation {
+  scenarioId: string;
+  title: string;
+  category: ReadinessCategory;
+  readinessScoreBefore: number;
+  readinessScoreAfter: number;
+  readinessImpact: number;
+  monthlyCashFlowImpact: number;
+  fiveYearNetWorthImpact: number;
+  riskScoreBefore: number;
+  riskScoreAfter: number;
+  riskChange: number;
+  timelineChangeMonths: number;
+  summary: string;
+  recommendedActions: string[];
+}
+
+export interface TimelineReadinessScore {
+  category: ReadinessCategory;
+  score: number;
+}
+
+export interface LifeTimelinePoint {
+  horizon: "TODAY" | "SIX_MONTHS" | "ONE_YEAR" | "THREE_YEARS" | "FIVE_YEARS";
+  label: string;
+  monthsFromNow: number;
+  netWorth: number;
+  debtBalance: number;
+  investmentBalance: number;
+  readinessScores: TimelineReadinessScore[];
+  completedGoals: string[];
+}
+
+export interface ExecutiveDemoStep {
+  order: number;
+  title: string;
+  category: ReadinessCategory | null;
+  description: string;
+  coachPrompt: string;
+}
+
+export interface ExecutiveDemoExperience {
+  personaTitle: string;
+  personaSummary: string;
+  personaFacts: string[];
+  steps: ExecutiveDemoStep[];
+}
+
 export interface Transaction {
   id: string;
   postedDate: string;
@@ -206,6 +303,11 @@ export interface ProductBootstrap {
   goals: GoalProbabilityResult[];
   lifeEvents: LifeEventPlan[];
   moneyLeaks: MoneyLeak[];
+  readiness: LifeReadinessResult[];
+  readinessPlans: ReadinessImprovementPlan[];
+  decisionSimulations: LifeDecisionSimulation[];
+  lifeTimeline: LifeTimelinePoint[];
+  executiveDemo: ExecutiveDemoExperience;
   suggestedQuestions: SuggestedQuestion[];
   designTokens: {
     spacing: Record<string, number>;

@@ -37,6 +37,7 @@ import {
   compareScenarios,
   simulateScenario,
   type ProductBootstrap,
+  type ReadinessCategory,
   type Scenario,
   type ScenarioResult,
   type ScenarioType,
@@ -59,6 +60,14 @@ const money = (value: number, compact = false) =>
 const signedMoney = (value: number) =>
   `${value >= 0 ? "+" : "-"}${money(Math.abs(value))}`;
 
+const readinessLevel = (value: string) =>
+  value.replaceAll("_", " ").toLowerCase().replace(/^\w/, (letter) => letter.toUpperCase());
+
+const displayDate = (value: string) =>
+  new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" }).format(
+    new Date(`${value}T00:00:00`),
+  );
+
 const scenarioIcon = (type: ScenarioType) => {
   const props = { size: 20, strokeWidth: 1.8 };
   switch (type) {
@@ -69,6 +78,8 @@ const scenarioIcon = (type: ScenarioType) => {
     case "HAVE_CHILD": return <Baby {...props} />;
     case "INCREASE_INVESTMENTS": return <TrendingUp {...props} />;
     case "JOB_LOSS": return <BriefcaseBusiness {...props} />;
+    case "SPOUSE_STOPS_WORKING": return <BriefcaseBusiness {...props} />;
+    case "START_BUSINESS": return <BriefcaseBusiness {...props} />;
   }
 };
 
@@ -84,13 +95,15 @@ function App() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [selectedLifeEventId, setSelectedLifeEventId] = useState("event-baby");
+  const [selectedReadinessCategory, setSelectedReadinessCategory] =
+    useState<ReadinessCategory>("HOME_PURCHASE");
   const [showAllInsights, setShowAllInsights] = useState(false);
   const [showAllScenarios, setShowAllScenarios] = useState(false);
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 0,
-      text: "Ask me about a major decision. I use the same assumptions and scenario engine as your dashboard.",
+      text: "Tell me which life decision matters next. I will identify the blockers, tradeoffs, and highest-leverage action.",
       isUser: false,
     },
   ]);
@@ -152,6 +165,22 @@ function App() {
   const leftResult = comparison.left;
   const rightResult = comparison.right;
   const preferred = comparison.preferredScenarioId === left.id ? leftResult : rightResult;
+  const decisionSimulation =
+    data.decisionSimulations.find((item) => item.scenarioId === selected.id) ??
+    data.decisionSimulations[0];
+  const selectedReadiness =
+    data.readiness.find((item) => item.category === selectedReadinessCategory) ??
+    data.readiness[0];
+  const selectedPlan =
+    data.readinessPlans.find((item) => item.category === selectedReadiness.category) ??
+    data.readinessPlans[0];
+  const dashboardReadinessCategories: ReadinessCategory[] = [
+    "HOME_PURCHASE",
+    "CHILD",
+    "RETIREMENT",
+    "RELOCATION",
+    "PARENT_SUPPORT",
+  ];
 
   const submitQuestion = (prompt: string) => {
     const normalized = prompt.trim();
@@ -177,14 +206,14 @@ function App() {
           <X size={20} />
         </button>
         <nav>
-          <a className="active" href="#dashboard"><BarChart3 size={19} />Overview</a>
+          <a className="active" href="#readiness"><BarChart3 size={19} />Readiness</a>
+          <a href="#scenarios"><Sparkles size={19} />Decision simulator</a>
+          <a href="#timeline"><TrendingUp size={19} />Life timeline</a>
+          <a href="#improvement-plan"><PiggyBank size={19} />Improvement plan</a>
           <a href="#gps"><TrendingUp size={19} />Financial GPS</a>
-          <a href="#goals"><PiggyBank size={19} />Goals</a>
           <a href="#life-events"><Baby size={19} />Life events</a>
-          <a href="#money-leaks"><CircleDollarSign size={19} />Money leaks</a>
-          <a href="#scenarios"><Sparkles size={19} />Scenarios</a>
           <a href="#compare"><WalletCards size={19} />Compare</a>
-          <button className="nav-button" onClick={() => setAssistantOpen(true)}><MessageCircle size={19} />AI assistant</button>
+          <button className="nav-button" onClick={() => setAssistantOpen(true)}><MessageCircle size={19} />AI coach</button>
         </nav>
         <div className="sidebar-spacer" />
         <div className="privacy-card">
@@ -207,8 +236,8 @@ function App() {
             <Menu size={22} />
           </button>
           <div>
-            <p className="eyebrow">Financial digital twin</p>
-            <h1>Your future, modeled clearly.</h1>
+            <p className="eyebrow">Life readiness intelligence</p>
+            <h1>How ready are you for your next life decision?</h1>
           </div>
           <div className="header-actions">
             <button className="icon-button" aria-label="Notifications"><Bell size={19} /></button>
@@ -219,19 +248,150 @@ function App() {
             >
               {darkMode ? <Sun size={19} /> : <Moon size={19} />}
             </button>
-            <button className="primary-button" aria-label="Ask FutureMe" onClick={() => setAssistantOpen(true)}>
-              <Sparkles size={17} />Ask FutureMe
+            <button className="primary-button" aria-label="Open FutureMe AI coach" onClick={() => setAssistantOpen(true)}>
+              <Sparkles size={17} />Ask your coach
             </button>
           </div>
         </header>
 
         <div className="offline-banner" role="status">
           <ShieldCheck size={16} />
-          <span>Shared Kotlin engine active. Mock data stays on this device.</span>
-          <strong>Demo mode</strong>
+          <span>Version 3 shared readiness engine active. Mock data stays on this device.</span>
+          <strong>Executive demo</strong>
         </div>
 
-        <section className="hero-grid" id="dashboard">
+        <section className="readiness-section" id="readiness" aria-labelledby="readiness-title">
+          <div className="readiness-heading">
+            <div>
+              <p className="eyebrow">Life readiness dashboard</p>
+              <h2 id="readiness-title">Are you ready for what comes next?</h2>
+              <p>One shared model measures cash flow, reserves, debt pressure, income resilience, and decision-specific costs.</p>
+            </div>
+            <button
+              className="primary-button"
+              onClick={() => submitQuestion("What is my weakest readiness category?")}
+            >
+              <Sparkles size={16} />Find my priority
+            </button>
+          </div>
+          <div className="readiness-grid">
+            {data.readiness
+              .filter((item) => dashboardReadinessCategories.includes(item.category))
+              .map((item) => (
+                <button
+                  className={`readiness-card ${item.category === selectedReadiness.category ? "active" : ""}`}
+                  key={item.id}
+                  onClick={() => setSelectedReadinessCategory(item.category)}
+                  aria-pressed={item.category === selectedReadiness.category}
+                >
+                  <div className="readiness-card-top">
+                    <span>{item.confidenceLevel} confidence</span>
+                    <b className={item.trend.toLowerCase()}>
+                      {item.trend === "IMPROVING" ? "+" : ""}{item.trendDelta} pts / 6 mo
+                    </b>
+                  </div>
+                  <div className="readiness-score-row">
+                    <strong>{item.readinessScore}</strong>
+                    <div>
+                      <h3>{item.title}</h3>
+                      <span>{readinessLevel(item.readinessLevel)}</span>
+                    </div>
+                  </div>
+                  <div
+                    className="readiness-progress"
+                    role="progressbar"
+                    aria-label={`${item.title} score`}
+                    aria-valuenow={item.readinessScore}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
+                    <i style={{ width: `${item.readinessScore}%` }} />
+                  </div>
+                  <p>{item.blockers[0] ?? "No active blockers in the current model."}</p>
+                  <small>
+                    {item.estimatedMonthsToReady === 0
+                      ? "Ready now"
+                      : `Estimated ready ${displayDate(item.projectedReadyDate)}`}
+                  </small>
+                </button>
+              ))}
+          </div>
+        </section>
+
+        <section className="improvement-section" id="improvement-plan" aria-labelledby="plan-title">
+          <div className="plan-summary">
+            <p className="eyebrow">Readiness improvement plan</p>
+            <h2 id="plan-title">{selectedReadiness.title}</h2>
+            <p>{selectedReadiness.weaknesses.join(" ")}</p>
+            <div className="plan-score-path">
+              <div><span>Current</span><strong>{selectedPlan.currentScore}%</strong></div>
+              <MoveRight aria-hidden="true" />
+              <div><span>Target</span><strong>{selectedPlan.targetScore}%</strong></div>
+            </div>
+            <div className="plan-timeline">
+              <strong>{selectedPlan.estimatedTimelineMonths} months</strong>
+              <span>Modeled target {displayDate(selectedPlan.projectedTargetDate)}</span>
+            </div>
+          </div>
+          <div className="plan-actions">
+            <div className="plan-tabs" aria-label="Choose readiness plan">
+              {data.readiness.map((item) => (
+                <button
+                  key={item.id}
+                  className={item.category === selectedReadiness.category ? "active" : ""}
+                  onClick={() => setSelectedReadinessCategory(item.category)}
+                >
+                  {item.title.replace(" Readiness", "")}
+                </button>
+              ))}
+            </div>
+            <p className="eyebrow">Recommended sequence</p>
+            {selectedPlan.recommendations.map((action, index) => (
+              <div className="plan-action" key={action}>
+                <span>{index + 1}</span>
+                <div><strong>{action}</strong><small>Builds readiness toward the {selectedPlan.targetScore}% target.</small></div>
+              </div>
+            ))}
+            <div className="monthly-commitment">
+              <span>Modeled monthly commitment</span>
+              <strong>{money(selectedPlan.monthlyCommitment)}</strong>
+            </div>
+          </div>
+        </section>
+
+        <section className="timeline-section" id="timeline" aria-labelledby="timeline-title">
+          <div className="section-title">
+            <div>
+              <p className="eyebrow">Life timeline</p>
+              <h2 id="timeline-title">See readiness change before the decision arrives</h2>
+            </div>
+          </div>
+          <div className="timeline-track">
+            {data.lifeTimeline.map((point) => {
+              const averageReadiness = Math.round(
+                point.readinessScores.reduce((sum, item) => sum + item.score, 0) /
+                  point.readinessScores.length,
+              );
+              return (
+                <article className="timeline-point" key={point.horizon}>
+                  <div className="timeline-marker"><i /></div>
+                  <p className="eyebrow">{point.label}</p>
+                  <h3>{money(point.netWorth, true)} net worth</h3>
+                  <dl>
+                    <div><dt>Avg readiness</dt><dd>{averageReadiness}%</dd></div>
+                    <div><dt>Debt</dt><dd>{money(point.debtBalance, true)}</dd></div>
+                    <div><dt>Investments</dt><dd>{money(point.investmentBalance, true)}</dd></div>
+                  </dl>
+                  {point.completedGoals.length > 0 && (
+                    <small>{point.completedGoals.join(" · ")}</small>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="hero-grid" id="financial-overview">
           <article className="health-card">
             <div className="card-heading">
               <div><p className="eyebrow light">Financial health</p><h2>{data.dashboard.healthScore.label}</h2></div>
@@ -471,7 +631,10 @@ function App() {
 
         <section className="section-block" id="scenarios">
           <div className="section-title">
-            <div><p className="eyebrow">Decision lab</p><h2>Explore a different future</h2></div>
+            <div>
+              <p className="eyebrow">Life decision simulator</p>
+              <h2>What happens to readiness if you make the move?</h2>
+            </div>
             <button
               className="text-button"
               onClick={() => setShowAllScenarios((current) => !current)}
@@ -493,20 +656,22 @@ function App() {
 
           <article className="insight-panel">
             <div className="insight-main">
-              <div className="ai-badge"><Sparkles size={18} />FutureMe insight</div>
+              <div className="ai-badge"><Sparkles size={18} />Readiness impact</div>
               <h2>{selected.title}</h2>
-              <p>{result.recommendation}</p>
+              <p>{decisionSimulation.summary}</p>
               <div className="tradeoffs">
-                {result.tradeoffs.slice(0, 3).map((tradeoff) => (
-                  <span key={tradeoff}><i />{tradeoff}</span>
+                {decisionSimulation.recommendedActions.slice(0, 4).map((action) => (
+                  <span key={action}><i />{action}</span>
                 ))}
               </div>
             </div>
             <div className="impact-grid">
-              <Impact label="Monthly impact" value={signedMoney(result.monthlyCashFlowImpact)} positive={result.monthlyCashFlowImpact >= 0} />
-              <Impact label="Five-year change" value={signedMoney(result.netWorthDelta5Years)} positive={result.netWorthDelta5Years >= 0} />
-              <Impact label="Risk score" value={`${result.riskScore.value}/100`} positive={result.riskScore.value < 45} />
-              <Impact label="Cash runway" value={`${result.emergencyFundMonths.toFixed(1)} months`} positive={result.emergencyFundMonths >= 6} />
+              <Impact label="Readiness after" value={`${decisionSimulation.readinessScoreAfter}%`} positive={decisionSimulation.readinessScoreAfter >= 60} />
+              <Impact label="Readiness impact" value={`${decisionSimulation.readinessImpact >= 0 ? "+" : ""}${decisionSimulation.readinessImpact} pts`} positive={decisionSimulation.readinessImpact >= 0} />
+              <Impact label="Monthly impact" value={signedMoney(decisionSimulation.monthlyCashFlowImpact)} positive={decisionSimulation.monthlyCashFlowImpact >= 0} />
+              <Impact label="Five-year impact" value={signedMoney(decisionSimulation.fiveYearNetWorthImpact)} positive={decisionSimulation.fiveYearNetWorthImpact >= 0} />
+              <Impact label="Risk change" value={`${decisionSimulation.riskChange >= 0 ? "+" : ""}${decisionSimulation.riskChange} pts`} positive={decisionSimulation.riskChange <= 0} />
+              <Impact label="Timeline change" value={`${decisionSimulation.timelineChangeMonths >= 0 ? "+" : ""}${decisionSimulation.timelineChangeMonths} mo`} positive={decisionSimulation.timelineChangeMonths <= 0} />
             </div>
           </article>
 
@@ -579,6 +744,37 @@ function App() {
           </div>
         </section>
 
+        <section className="executive-demo" id="demo" aria-labelledby="demo-title">
+          <div className="demo-persona">
+            <p className="eyebrow light">Executive demo experience</p>
+            <h2 id="demo-title">{data.executiveDemo.personaTitle}</h2>
+            <p>{data.executiveDemo.personaSummary}</p>
+            <ul>
+              {data.executiveDemo.personaFacts.map((fact) => <li key={fact}>{fact}</li>)}
+            </ul>
+          </div>
+          <div className="demo-flow">
+            <p className="eyebrow">Five-minute product story</p>
+            {data.executiveDemo.steps.map((step) => (
+              <button
+                key={step.order}
+                onClick={() => {
+                  if (step.category) setSelectedReadinessCategory(step.category);
+                  if (step.order === 4) submitQuestion(step.coachPrompt);
+                  else {
+                    document.querySelector(step.order === 3 ? "#scenarios" : "#readiness")
+                      ?.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+              >
+                <span>{step.order}</span>
+                <div><strong>{step.title}</strong><small>{step.description}</small></div>
+                <ArrowRight size={16} />
+              </button>
+            ))}
+          </div>
+        </section>
+
         <footer>
           <ShieldCheck size={15} />
           <span>{data.disclaimer}</span>
@@ -590,10 +786,10 @@ function App() {
       <button
         className="assistant-fab"
         onClick={() => setAssistantOpen(true)}
-        aria-label="Open FutureMe financial assistant"
+        aria-label="Open FutureMe AI coach"
       >
         <Sparkles size={20} />
-        <span>Ask FutureMe</span>
+        <span>Ask your coach</span>
       </button>
 
       {assistantOpen && (
@@ -607,14 +803,16 @@ function App() {
           >
             <header>
               <div>
-                <p className="eyebrow">AI financial guide</p>
-                <h2 id="assistant-title">Ask FutureMe</h2>
+                <p className="eyebrow">FutureMe AI coach</p>
+                <h2 id="assistant-title">Your financial strategist</h2>
               </div>
               <button className="icon-button" onClick={() => setAssistantOpen(false)} aria-label="Close assistant">
                 <X size={19} />
               </button>
             </header>
-            <p className="assistant-context">Mock AI grounded in the active profile and selected scenario: <strong>{selected.title}</strong>.</p>
+            <p className="assistant-context">
+              Grounded in shared readiness, risk, and scenario results. Current decision: <strong>{selected.title}</strong>.
+            </p>
             <div className="suggestion-chips" aria-label="Suggested questions">
               {data.suggestedQuestions.map((suggestion) => (
                 <button key={suggestion.id} onClick={() => submitQuestion(suggestion.prompt)}>
@@ -636,15 +834,15 @@ function App() {
                 submitQuestion(question);
               }}
             >
-              <label className="sr-only" htmlFor="assistant-question">Financial assistant question</label>
+              <label className="sr-only" htmlFor="assistant-question">Financial strategist question</label>
               <textarea
                 id="assistant-question"
                 value={question}
                 onChange={(event) => setQuestion(event.target.value)}
-                placeholder="Ask a financial what-if question"
+                placeholder="Ask what is blocking your next life decision"
                 rows={2}
               />
-              <button type="submit" disabled={!question.trim()} aria-label="Send question to FutureMe">
+              <button type="submit" disabled={!question.trim()} aria-label="Ask FutureMe AI coach">
                 <Send size={18} />
               </button>
             </form>

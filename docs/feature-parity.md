@@ -2,20 +2,28 @@
 
 FutureMe treats Android, iOS, and web as three native presentations of one product, not three independent products. Every financial value and recommendation input comes from `FutureMeProduct`; platform code owns only interaction and rendering.
 
-## Version 2 Contract
+## Version 3 Contract
 
 | Capability | Android | iOS | Web |
 | --- | --- | --- | --- |
+| Life readiness dashboard | Dedicated dashboard and overview preview | Dedicated Readiness tab and overview hero | Dedicated responsive dashboard |
+| Seven readiness categories | Shared engine output | Shared engine output | Shared engine output |
+| Readiness detail | Score, level, trend, blockers, confidence, ready date | Score, level, trend, blockers, confidence, ready date | Score, level, trend, blockers, confidence, ready date |
+| Readiness improvement plan | Current/target, actions, commitment, timeline | Current/target, actions, commitment, timeline | Current/target, actions, commitment, timeline |
+| Life decision simulator | Scenario list, financial/risk/readiness/timeline impact | Scenario list, financial/risk/readiness/timeline impact | Scenario list, financial/risk/readiness/timeline impact |
+| Life timeline | Today through five years | Today through five years with chart | Today through five years |
+| FutureMe AI Coach | Floating strategist entry and prompts | Dedicated Coach tab and prompts | Floating coach drawer and prompts |
+| Executive demo experience | Guided persona and five-step flow | Guided persona and five-step flow | Guided persona and five-step flow |
 | Financial health dashboard | Compose overview | SwiftUI overview | React overview |
 | Proactive insights | Full Plan hub plus dashboard top three | Full Plan hub plus dashboard top three | Expandable full list plus dashboard top three |
 | Financial GPS | Current/improved chart, actions, confidence, explanation | Current/improved chart, actions, confidence, explanation | Current/improved chart, actions, confidence, explanation |
 | Goal readiness | All goals, blockers, actions, monthly gap, ready date | All goals with detail screens | All goals with expandable details |
 | Life-event planning | Event details and linked scenario action | Event details and linked scenario action | Selected event details and linked scenario action |
 | Money-leak detector | Dedicated complete list | Complete Plan section | Complete dashboard section |
-| Scenario lab | Complete list and scenario detail | Complete list and overview detail | Expandable complete list and inline detail |
+| Scenario lab | Nine scenarios and scenario detail | Nine scenarios and overview detail | Nine scenarios and inline detail |
 | Risk explanation | Factor-level scenario detail | Factor-level overview detail | Factor-level inline detail |
 | Scenario comparison | Dynamic Option A and B selectors | Dynamic Option A and B pickers | Dynamic Option A and B selectors |
-| FutureMe assistant | Floating entry, suggestions, free-form prompt | Dedicated tab, suggestions, free-form prompt | Floating drawer, suggestions, free-form prompt |
+| FutureMe assistant foundation | Shared grounded response service | Shared grounded response service | Shared grounded response service |
 | Loading, error, and empty states | Yes | Yes | Yes |
 | Dark mode and accessibility | System theme and Compose semantics | System theme and SwiftUI labels | Theme control, semantic HTML, ARIA |
 

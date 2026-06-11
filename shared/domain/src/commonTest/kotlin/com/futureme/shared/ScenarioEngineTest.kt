@@ -39,6 +39,6 @@ class ScenarioEngineTest {
     fun everyRequiredScenarioFamilyIsRepresented() {
         val types = MockFinancialData.scenarios.map { it.type }.toSet()
 
-        assertEquals(7, types.size)
+        assertEquals(9, types.size)
     }
 }

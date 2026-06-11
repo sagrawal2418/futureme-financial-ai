@@ -234,6 +234,16 @@ object MockFinancialData {
             rationale = "A complete income interruption tests reserve adequacy.",
         ),
         Scenario(
+            id = "spouse-stops-working",
+            type = ScenarioType.SPOUSE_STOPS_WORKING,
+            title = "Spouse stops working",
+            subtitle = "Stress-test the family plan on one income",
+            monthlyIncomeDelta = -5_000.0,
+            riskAdjustment = 20,
+            tags = listOf("One income", "Family"),
+            rationale = "Losing the second income reduces flexibility and increases reliance on reserves.",
+        ),
+        Scenario(
             id = "move-to-texas",
             type = ScenarioType.RELOCATE,
             title = "Move to Austin, TX",
@@ -267,6 +277,18 @@ object MockFinancialData {
             rationale = "Childcare and healthcare add durable monthly commitments.",
         ),
         Scenario(
+            id = "start-business",
+            type = ScenarioType.START_BUSINESS,
+            title = "Start a business",
+            subtitle = "Invest $40K and replace part of one salary during launch",
+            monthlyIncomeDelta = -4_000.0,
+            monthlyExpenseDelta = 800.0,
+            upfrontCost = 40_000.0,
+            riskAdjustment = 25,
+            tags = listOf("Entrepreneurship", "Income risk"),
+            rationale = "Startup capital and uncertain income require a longer household runway.",
+        ),
+        Scenario(
             id = "invest-more",
             type = ScenarioType.INCREASE_INVESTMENTS,
             title = "Invest $1,200 more",
@@ -280,13 +302,38 @@ object MockFinancialData {
     )
 
     val suggestedQuestions = listOf(
+        SuggestedQuestion(
+            "home-blockers",
+            "Home blockers",
+            "What is preventing me from buying a home?",
+            "Readiness",
+        ),
+        SuggestedQuestion(
+            "child-ready",
+            "Child readiness",
+            "How can I become ready for another child?",
+            "Readiness",
+        ),
+        SuggestedQuestion(
+            "best-decision",
+            "Best decision",
+            "What decision improves my future the most?",
+            "Strategy",
+        ),
+        SuggestedQuestion(
+            "weakest",
+            "Weakest readiness",
+            "What is my weakest readiness category?",
+            "Strategy",
+        ),
+        SuggestedQuestion(
+            "this-month",
+            "This month's focus",
+            "What should I focus on this month?",
+            "Action plan",
+        ),
         SuggestedQuestion("leak", "Biggest money leak", "What is my biggest money leak?", "Insights"),
-        SuggestedQuestion("risk", "Biggest financial risk", "What is my biggest financial risk?", "Risk"),
         SuggestedQuestion("outlook", "Improve my outlook", "How can I improve my 5-year outlook?", "GPS"),
-        SuggestedQuestion("buy", "Can I afford this house?", "Can I afford to buy a $700k home?", "Home"),
-        SuggestedQuestion("child", "Prepare for a child", "What should I do before having another child?", "Family"),
-        SuggestedQuestion("ready-home", "Home readiness", "How can I become ready to buy a home?", "Goals"),
-        SuggestedQuestion("next", "Next simulation", "What decision should I simulate next?", "Next step"),
     )
 
     fun scenario(id: String): Scenario? = scenarios.firstOrNull { it.id == id }

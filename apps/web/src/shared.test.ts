@@ -17,10 +17,24 @@ describe("shared Kotlin/JS product bridge", () => {
       "REFINANCE_MORTGAGE",
       "PAY_OFF_DEBT",
       "JOB_LOSS",
+      "SPOUSE_STOPS_WORKING",
       "RELOCATE",
       "HAVE_CHILD",
+      "START_BUSINESS",
       "INCREASE_INVESTMENTS",
     ]));
+  });
+
+  it("loads the complete life readiness platform contract", () => {
+    const product = bootstrapProduct();
+
+    expect(product.readiness).toHaveLength(7);
+    expect(product.readinessPlans).toHaveLength(7);
+    expect(product.decisionSimulations).toHaveLength(product.scenarios.length);
+    expect(product.lifeTimeline.map((point) => point.monthsFromNow)).toEqual([
+      0, 6, 12, 36, 60,
+    ]);
+    expect(product.executiveDemo.steps).toHaveLength(5);
   });
 
   it("returns projections and explainable risk from the shared engine", () => {

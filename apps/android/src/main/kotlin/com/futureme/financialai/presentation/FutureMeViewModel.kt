@@ -12,8 +12,13 @@ import com.futureme.shared.models.FinancialProfile
 import com.futureme.shared.models.FinancialGpsResult
 import com.futureme.shared.models.GoalProbabilityResult
 import com.futureme.shared.models.Insight
+import com.futureme.shared.models.ExecutiveDemoExperience
+import com.futureme.shared.models.LifeDecisionSimulation
 import com.futureme.shared.models.LifeEventPlan
+import com.futureme.shared.models.LifeReadinessResult
+import com.futureme.shared.models.LifeTimelinePoint
 import com.futureme.shared.models.MoneyLeak
+import com.futureme.shared.models.ReadinessImprovementPlan
 import com.futureme.shared.models.Scenario
 import com.futureme.shared.models.ScenarioComparison
 import com.futureme.shared.models.ScenarioResult
@@ -22,6 +27,8 @@ import com.futureme.shared.models.UserIdentity
 
 enum class FutureMeScreen {
     DASHBOARD,
+    READINESS,
+    TIMELINE,
     SCENARIOS,
     SCENARIO_DETAIL,
     COMPARISON,
@@ -47,6 +54,11 @@ data class FutureMeContent(
     val goals: List<GoalProbabilityResult>,
     val lifeEvents: List<LifeEventPlan>,
     val moneyLeaks: List<MoneyLeak>,
+    val readiness: List<LifeReadinessResult>,
+    val readinessPlans: List<ReadinessImprovementPlan>,
+    val decisionSimulations: List<LifeDecisionSimulation>,
+    val lifeTimeline: List<LifeTimelinePoint>,
+    val executiveDemo: ExecutiveDemoExperience,
     val suggestedQuestions: List<SuggestedQuestion>,
     val disclaimer: String,
     val selectedScenario: Scenario? = null,
@@ -55,8 +67,8 @@ data class FutureMeContent(
     val messages: List<ChatMessage> = listOf(
         ChatMessage(
             id = 0L,
-            text = "Ask me about a major decision. I will use the same profile, assumptions, " +
-                "and scenario engine as your dashboard.",
+            text = "Tell me which life decision matters next. I will identify the blockers, " +
+                "tradeoffs, and highest-leverage action.",
             isUser = false,
         ),
     ),
@@ -99,6 +111,11 @@ class FutureMeViewModel(
                         goals = bootstrap.goals,
                         lifeEvents = bootstrap.lifeEvents,
                         moneyLeaks = bootstrap.moneyLeaks,
+                        readiness = bootstrap.readiness,
+                        readinessPlans = bootstrap.readinessPlans,
+                        decisionSimulations = bootstrap.decisionSimulations,
+                        lifeTimeline = bootstrap.lifeTimeline,
+                        executiveDemo = bootstrap.executiveDemo,
                         suggestedQuestions = bootstrap.suggestedQuestions,
                         disclaimer = bootstrap.disclaimer,
                         comparison = product.compare("move-to-texas", "stay-in-new-jersey"),

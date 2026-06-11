@@ -41,6 +41,7 @@ kotlin {
                 "goal-engine/src/commonMain/kotlin",
                 "money-leak-detector/src/commonMain/kotlin",
                 "life-event-planner/src/commonMain/kotlin",
+                "life-readiness-engine/src/commonMain/kotlin",
                 "insights-engine/src/commonMain/kotlin",
                 "mock-data/src/commonMain/kotlin",
                 "ai-assistant/src/commonMain/kotlin",

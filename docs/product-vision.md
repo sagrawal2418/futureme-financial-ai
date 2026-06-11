@@ -1,12 +1,13 @@
 # Product Vision
 
-FutureMe Financial is a proactive financial digital twin.
+FutureMe Financial is an AI-powered Life Readiness Platform.
 
-Traditional budgeting products categorize the past. FutureMe continuously answers what is likely to happen next, what may derail the plan, and which action has the highest modeled value.
+Traditional budgeting products categorize the past. FutureMe answers how ready a household is for a home, another child, relocation, retirement, a business, parent support, or education funding. It explains what may derail the decision and which action has the highest modeled value.
 
 ## Product Promise
 
 - Detect financial risks before they become crises.
+- Measure readiness for major life decisions on a transparent 0-100 scale.
 - Translate account activity into understandable opportunities.
 - Track readiness for life goals instead of only balances.
 - Prepare for major life events with transparent assumptions.
@@ -17,7 +18,7 @@ Traditional budgeting products categorize the past. FutureMe continuously answer
 
 1. Calculators calculate; AI explains.
 2. One financial model serves every channel.
-3. Recommendations expose assumptions and tradeoffs.
+3. Readiness scores expose assumptions, confidence, blockers, and tradeoffs.
 4. Bank access is optional and backend-only.
 5. Data collection is minimized.
 6. Accessibility, dark mode, and failure states are product requirements.

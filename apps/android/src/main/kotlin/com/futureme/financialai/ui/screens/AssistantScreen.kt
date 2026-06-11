@@ -42,11 +42,11 @@ fun AssistantScreen(
 
     Column {
         SectionTitle(
-            eyebrow = "AI financial guide",
-            title = "Ask FutureMe",
+            eyebrow = "FutureMe AI coach",
+            title = "Your financial strategist",
         )
         Text(
-            "Mock AI, grounded in your demo profile and the shared deterministic scenario engine.",
+            "Grounded in shared readiness, risk, and scenario results. AI explains; the engines calculate.",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(top = 8.dp),
@@ -83,13 +83,13 @@ fun AssistantScreen(
         OutlinedTextField(
             value = question,
             onValueChange = { question = it },
-            label = { Text("Ask a financial what-if question") },
+            label = { Text("Ask what is blocking your next life decision") },
             minLines = 2,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp)
                 .semantics {
-                    contentDescription = "Financial assistant question"
+                    contentDescription = "Financial strategist question"
                 },
         )
         Button(
@@ -102,10 +102,10 @@ fun AssistantScreen(
                 .align(Alignment.End)
                 .padding(top = 10.dp)
                 .semantics {
-                    contentDescription = "Send question to FutureMe"
+                    contentDescription = "Ask FutureMe AI coach"
                 },
         ) {
-            Text("Model my question")
+            Text("Ask my coach")
         }
 
         Text(

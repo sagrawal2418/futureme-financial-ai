@@ -39,6 +39,7 @@ fun DashboardScreen(
     content: FutureMeContent,
     onScenarioClick: (Scenario) -> Unit,
     onOpenAssistant: () -> Unit,
+    onOpenReadiness: () -> Unit,
     onOpenScenarios: () -> Unit,
     onOpenLifeEvents: () -> Unit,
     onOpenMoneyLeaks: () -> Unit,
@@ -47,6 +48,11 @@ fun DashboardScreen(
     val dashboard = content.dashboard
     val profile = content.profile
     Column {
+        LifeReadinessPreview(
+            content = content,
+            onOpenReadiness = onOpenReadiness,
+        )
+
         HealthScoreCard(
             score = dashboard.healthScore.value,
             label = dashboard.healthScore.label,
@@ -177,6 +183,44 @@ fun DashboardScreen(
             }
         }
         Spacer(Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun LifeReadinessPreview(
+    content: FutureMeContent,
+    onOpenReadiness: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+    ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Eyebrow("Life readiness dashboard")
+            Text(
+                "Are you ready for what comes next?",
+                style = MaterialTheme.typography.titleLarge,
+            )
+            content.readiness.take(3).forEach { readiness ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 11.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(readiness.title, style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        "${readiness.readinessScore}%",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+            }
+            Button(
+                onClick = onOpenReadiness,
+                modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
+            ) {
+                Text("Open life readiness")
+            }
+        }
     }
 }
 
