@@ -41,8 +41,8 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { margin: 0; min-width: 320px; min-height: 100vh; }
+html { overflow-x: hidden; scroll-behavior: smooth; }
+body { margin: 0; min-width: 320px; min-height: 100vh; overflow-x: hidden; }
 button, select { font: inherit; }
 button { cursor: pointer; }
 button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visible {
@@ -160,9 +160,9 @@ h2 { font-size: 20px; }
 
 .improvement-section {
   display: grid; grid-template-columns: .75fr 1.25fr; gap: 0; margin-top: 18px;
-  overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--surface);
+  min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--surface);
 }
-.plan-summary { padding: 27px; color: white; background: linear-gradient(145deg, #215745, #12372d); }
+.plan-summary { min-width: 0; padding: 27px; color: white; background: linear-gradient(145deg, #215745, #12372d); }
 .plan-summary h2 { color: white; font-size: 23px; }
 .plan-summary > p:not(.eyebrow) { margin: 9px 0 0; color: #b7cec4; font-size: 11px; line-height: 1.55; }
 .plan-score-path { display: flex; align-items: center; gap: 17px; margin-top: 25px; }
@@ -174,7 +174,7 @@ h2 { font-size: 20px; }
 .plan-timeline strong, .plan-timeline span { display: block; }
 .plan-timeline strong { font: 700 16px "Manrope"; }
 .plan-timeline span { margin-top: 3px; color: #a9c0b6; font-size: 9px; }
-.plan-actions { padding: 25px; }
+.plan-actions { min-width: 0; padding: 25px; }
 .plan-tabs { display: flex; gap: 6px; margin-bottom: 22px; padding-bottom: 8px; overflow-x: auto; }
 .plan-tabs button {
   flex: 0 0 auto; padding: 7px 9px; border: 1px solid var(--line); border-radius: 99px;
@@ -617,4 +617,138 @@ footer i { width: 3px; height: 3px; border-radius: 50%; background: #aab4af; }
   .insights-grid, .leak-grid, .goal-grid, .quick-actions { grid-template-columns: 1fr; }
   .event-metrics { grid-template-columns: 1fr; }
   .gps-values { align-items: flex-start; }
+}
+
+/* Readability pass: keep the primary journey concise and maintain a 12px text floor. */
+body { font-size: 16px; line-height: 1.5; }
+h1 { font-size: 32px; line-height: 1.18; }
+h2 { font-size: 24px; line-height: 1.25; }
+.eyebrow { font-size: 12px; letter-spacing: 1.35px; }
+.primary-button, .secondary-button, .text-button { font-size: 14px; }
+.offline-banner { font-size: 13px; }
+.offline-banner strong { font-size: 11px; }
+
+.readiness-section { padding: 32px; }
+.readiness-heading h2 { font-size: 30px; }
+.readiness-heading > div > p:last-child {
+  max-width: 640px; font-size: 15px; line-height: 1.5;
+}
+.readiness-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.readiness-card { padding: 20px; }
+.readiness-card-top { font-size: 11px; }
+.readiness-score-row > strong { font-size: 38px; }
+.readiness-score-row h3 { font-size: 16px; }
+.readiness-score-row span { font-size: 13px; }
+.readiness-card small { display: block; margin-top: 12px; font-size: 13px; }
+
+.plan-summary { padding: 32px; }
+.plan-summary h2 { font-size: 27px; }
+.plan-focus {
+  margin-top: 18px; padding: 15px; border-radius: 13px;
+  background: rgba(255,255,255,.08);
+}
+.plan-focus span, .plan-focus strong { display: block; }
+.plan-focus span {
+  color: #9fc0b3; font-size: 11px; font-weight: 700;
+  letter-spacing: .8px; text-transform: uppercase;
+}
+.plan-focus strong { margin-top: 5px; color: white; font-size: 15px; line-height: 1.45; }
+.plan-summary h2, .plan-focus strong, .plan-action > strong {
+  min-width: 0; overflow-wrap: anywhere;
+}
+.plan-score-path span { font-size: 11px; }
+.plan-timeline span { font-size: 13px; }
+.plan-actions { padding: 30px; }
+.plan-tabs button { padding: 8px 12px; font-size: 12px; }
+.plan-action { gap: 14px; padding: 13px 0; }
+.plan-action > span { width: 32px; height: 32px; font-size: 12px; }
+.plan-action > strong { color: var(--ink); font-size: 15px; line-height: 1.4; }
+.monthly-commitment span { font-size: 13px; }
+.monthly-commitment strong { font-size: 16px; }
+
+.timeline-point { padding: 28px 17px 18px; }
+.timeline-point h3 { font-size: 16px; }
+.timeline-point dl div { padding: 6px 0; }
+.timeline-point dt, .timeline-point dd, .timeline-point small { font-size: 12px; }
+
+.details-toggle {
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  margin-top: 30px; padding: 22px 24px; border: 1px solid var(--line);
+  border-radius: 18px; background: var(--surface);
+}
+.secondary-button {
+  display: inline-flex; align-items: center; gap: 9px; min-height: 44px;
+  padding: 0 16px; border: 1px solid #75b99b; border-radius: 11px;
+  color: #226f53; background: #edf8f2; font-weight: 700; white-space: nowrap;
+}
+.secondary-button svg { transition: transform .2s ease; }
+.secondary-button svg.rotated { transform: rotate(180deg); }
+.financial-details { animation: reveal-details .2s ease-out; }
+@keyframes reveal-details {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.health-copy > p, .assistant-context, .chat-message { font-size: 14px; }
+.mini-stat-row span, .chart-label, .chart-legend,
+.metric-card p, .metric-card span, .alert-list > div, .alert-list p {
+  font-size: 12px;
+}
+.scenario-card strong { font-size: 15px; }
+.scenario-card small, .scenario-link { font-size: 12px; }
+.ai-badge { font-size: 12px; }
+.insight-main h2 { font-size: 21px; }
+.insight-main > p { font-size: 14px; }
+.tradeoffs span, .impact-grid span { font-size: 12px; }
+.impact-grid strong { font-size: 16px; }
+.risk-summary p:last-child, .risk-factor strong, .risk-factor span,
+.comparison-summary p, .comparison-column dt, .comparison-column dd {
+  font-size: 13px;
+}
+.comparison-label, .comparison-hero span, .comparison-chart figcaption { font-size: 12px; }
+.comparison-label strong { font-size: 11px; }
+.demo-persona > p:not(.eyebrow) { font-size: 14px; }
+.persona-summary {
+  display: block; margin-top: 18px; color: #d2e0da; font-size: 13px;
+  font-weight: 500; line-height: 1.6;
+}
+.demo-flow strong { font-size: 14px; }
+.demo-flow small { font-size: 12px; }
+.suggestion-chips button { font-size: 12px; }
+.assistant-drawer > small, footer { font-size: 11px; }
+
+.insight-label, .leak-card > div:first-child { font-size: 11px; }
+.proactive-card h3, .leak-card h3, .goal-card h3 { font-size: 16px; }
+.proactive-card p, .leak-card p, .goal-card p,
+.proactive-card b, .leak-card b, .goal-card b { font-size: 13px; }
+.gps-copy > p:not(.eyebrow), .gps-actions > div { font-size: 14px; }
+.gps-values div span, .confidence-pill { font-size: 11px; }
+.leak-card small, .goal-card small, .goal-score span, .goal-details { font-size: 12px; }
+.event-list strong, .event-detail > p, .event-metrics strong,
+.event-step, .quick-actions strong { font-size: 14px; }
+.event-list small, .event-metrics span, .quick-actions small { font-size: 12px; }
+
+@media (max-width: 1100px) {
+  .readiness-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 780px) {
+  h1 { font-size: 25px; }
+  h2 { font-size: 22px; }
+  .readiness-section { padding: 24px; }
+  .readiness-heading h2 { font-size: 27px; }
+  .readiness-grid { grid-template-columns: 1fr; }
+  .details-toggle { align-items: flex-start; flex-direction: column; }
+  .secondary-button { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 500px) {
+  main { padding: 20px 16px; }
+  .eyebrow { font-size: 11px; }
+  .primary-button { font-size: 13px; }
+  .readiness-card-top { font-size: 10px; }
+  .readiness-score-row h3 { font-size: 16px; }
+  .metrics-grid { grid-template-columns: 1fr; }
+  .metric-card span { display: block; }
+  .assistant-fab { display: none; }
 }

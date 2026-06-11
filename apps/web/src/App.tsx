@@ -99,6 +99,7 @@ function App() {
     useState<ReadinessCategory>("HOME_PURCHASE");
   const [showAllInsights, setShowAllInsights] = useState(false);
   const [showAllScenarios, setShowAllScenarios] = useState(false);
+  const [showFinancialDetails, setShowFinancialDetails] = useState(false);
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -210,9 +211,17 @@ function App() {
           <a href="#scenarios"><Sparkles size={19} />Decision simulator</a>
           <a href="#timeline"><TrendingUp size={19} />Life timeline</a>
           <a href="#improvement-plan"><PiggyBank size={19} />Improvement plan</a>
-          <a href="#gps"><TrendingUp size={19} />Financial GPS</a>
-          <a href="#life-events"><Baby size={19} />Life events</a>
           <a href="#compare"><WalletCards size={19} />Compare</a>
+          <button
+            className="nav-button"
+            onClick={() => {
+              setShowFinancialDetails((current) => !current);
+              setMobileMenu(false);
+            }}
+            aria-expanded={showFinancialDetails}
+          >
+            <CircleDollarSign size={19} />Financial details
+          </button>
           <button className="nav-button" onClick={() => setAssistantOpen(true)}><MessageCircle size={19} />AI coach</button>
         </nav>
         <div className="sidebar-spacer" />
@@ -256,8 +265,8 @@ function App() {
 
         <div className="offline-banner" role="status">
           <ShieldCheck size={16} />
-          <span>Version 3 shared readiness engine active. Mock data stays on this device.</span>
-          <strong>Executive demo</strong>
+          <span>Shared readiness engine active. Demo data stays local.</span>
+          <strong>Version 3</strong>
         </div>
 
         <section className="readiness-section" id="readiness" aria-labelledby="readiness-title">
@@ -265,7 +274,7 @@ function App() {
             <div>
               <p className="eyebrow">Life readiness dashboard</p>
               <h2 id="readiness-title">Are you ready for what comes next?</h2>
-              <p>One shared model measures cash flow, reserves, debt pressure, income resilience, and decision-specific costs.</p>
+              <p>See your score, biggest blocker, and next best move.</p>
             </div>
             <button
               className="primary-button"
@@ -307,7 +316,6 @@ function App() {
                   >
                     <i style={{ width: `${item.readinessScore}%` }} />
                   </div>
-                  <p>{item.blockers[0] ?? "No active blockers in the current model."}</p>
                   <small>
                     {item.estimatedMonthsToReady === 0
                       ? "Ready now"
@@ -322,7 +330,14 @@ function App() {
           <div className="plan-summary">
             <p className="eyebrow">Readiness improvement plan</p>
             <h2 id="plan-title">{selectedReadiness.title}</h2>
-            <p>{selectedReadiness.weaknesses.join(" ")}</p>
+            <div className="plan-focus">
+              <span>Main gap</span>
+              <strong>
+                {selectedReadiness.weaknesses[0] ??
+                  selectedReadiness.blockers[0] ??
+                  "No active gap."}
+              </strong>
+            </div>
             <div className="plan-score-path">
               <div><span>Current</span><strong>{selectedPlan.currentScore}%</strong></div>
               <MoveRight aria-hidden="true" />
@@ -346,10 +361,10 @@ function App() {
               ))}
             </div>
             <p className="eyebrow">Recommended sequence</p>
-            {selectedPlan.recommendations.map((action, index) => (
+            {selectedPlan.recommendations.slice(0, 3).map((action, index) => (
               <div className="plan-action" key={action}>
                 <span>{index + 1}</span>
-                <div><strong>{action}</strong><small>Builds readiness toward the {selectedPlan.targetScore}% target.</small></div>
+                <strong>{action}</strong>
               </div>
             ))}
             <div className="monthly-commitment">
@@ -383,7 +398,7 @@ function App() {
                     <div><dt>Investments</dt><dd>{money(point.investmentBalance, true)}</dd></div>
                   </dl>
                   {point.completedGoals.length > 0 && (
-                    <small>{point.completedGoals.join(" · ")}</small>
+                    <small>{point.completedGoals.length} goals complete</small>
                   )}
                 </article>
               );
@@ -391,6 +406,23 @@ function App() {
           </div>
         </section>
 
+        <section className="details-toggle" aria-labelledby="details-title">
+          <div>
+            <p className="eyebrow">Supporting financial details</p>
+            <h2 id="details-title">Want the numbers behind the score?</h2>
+          </div>
+          <button
+            className="secondary-button"
+            onClick={() => setShowFinancialDetails((current) => !current)}
+            aria-expanded={showFinancialDetails}
+          >
+            {showFinancialDetails ? "Hide details" : "View financial details"}
+            <ChevronDown className={showFinancialDetails ? "rotated" : ""} size={18} />
+          </button>
+        </section>
+
+        {showFinancialDetails && (
+          <div className="financial-details" id="financial-details">
         <section className="hero-grid" id="financial-overview">
           <article className="health-card">
             <div className="card-heading">
@@ -628,6 +660,8 @@ function App() {
             <TrendingUp size={18} /><span><strong>Improve my outlook</strong><small>Follow the Financial GPS</small></span>
           </button>
         </section>
+          </div>
+        )}
 
         <section className="section-block" id="scenarios">
           <div className="section-title">
@@ -660,7 +694,7 @@ function App() {
               <h2>{selected.title}</h2>
               <p>{decisionSimulation.summary}</p>
               <div className="tradeoffs">
-                {decisionSimulation.recommendedActions.slice(0, 4).map((action) => (
+                {decisionSimulation.recommendedActions.slice(0, 2).map((action) => (
                   <span key={action}><i />{action}</span>
                 ))}
               </div>
@@ -692,7 +726,6 @@ function App() {
                 <div key={factor.id} className="risk-factor">
                   <div>
                     <strong>{factor.title}</strong>
-                    <span>{factor.explanation}</span>
                   </div>
                   <b className={factor.points < 0 ? "protective" : ""}>
                     {factor.points > 0 ? "+" : ""}{factor.points}
@@ -749,9 +782,9 @@ function App() {
             <p className="eyebrow light">Executive demo experience</p>
             <h2 id="demo-title">{data.executiveDemo.personaTitle}</h2>
             <p>{data.executiveDemo.personaSummary}</p>
-            <ul>
-              {data.executiveDemo.personaFacts.map((fact) => <li key={fact}>{fact}</li>)}
-            </ul>
+            <strong className="persona-summary">
+              {data.executiveDemo.personaFacts.slice(0, 2).join(" · ")}
+            </strong>
           </div>
           <div className="demo-flow">
             <p className="eyebrow">Five-minute product story</p>
@@ -768,7 +801,7 @@ function App() {
                 }}
               >
                 <span>{step.order}</span>
-                <div><strong>{step.title}</strong><small>{step.description}</small></div>
+                <div><strong>{step.title}</strong></div>
                 <ArrowRight size={16} />
               </button>
             ))}
