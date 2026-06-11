@@ -17,6 +17,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.futureme.shared.models.Scenario
+import com.futureme.shared.models.LifeDecisionSimulation
 import com.futureme.shared.models.ScenarioResult
 import com.futureme.financialai.ui.components.ImpactTile
 import com.futureme.financialai.ui.components.InsightCard
@@ -36,8 +37,8 @@ fun ScenarioListScreen(
 ) {
     Column {
         SectionTitle(
-            eyebrow = "What-if scenarios",
-            title = "Model a major decision",
+            eyebrow = "Life decision simulator",
+            title = "What happens if you make the move?",
         )
         Text(
             "Every simulation uses the same transparent assumptions and mock household data.",
@@ -61,6 +62,7 @@ fun ScenarioListScreen(
 @Composable
 fun ScenarioDetailScreen(
     result: ScenarioResult,
+    simulation: LifeDecisionSimulation,
     onBack: () -> Unit,
     onCompare: () -> Unit,
 ) {
@@ -74,7 +76,7 @@ fun ScenarioDetailScreen(
             Text("<  Scenarios")
         }
         SectionTitle(
-            eyebrow = "Scenario analysis",
+            eyebrow = "Life decision simulator",
             title = result.scenario.title,
             modifier = Modifier.padding(top = 20.dp),
         )
@@ -102,6 +104,11 @@ fun ScenarioDetailScreen(
                 modifier = Modifier.weight(1f),
             )
         }
+
+        ReadinessImpactCard(
+            simulation = simulation,
+            modifier = Modifier.padding(top = 14.dp),
+        )
 
         ProjectionCard(
             result = result,
@@ -144,5 +151,64 @@ fun ScenarioDetailScreen(
             Text("Compare scenarios")
         }
         Spacer(Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun ReadinessImpactCard(
+    simulation: LifeDecisionSimulation,
+    modifier: Modifier = Modifier,
+) {
+    androidx.compose.material3.Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = androidx.compose.material3.CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+        ),
+    ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            SectionTitle(
+                eyebrow = "Readiness impact",
+                title = "${simulation.readinessScoreBefore}% to ${simulation.readinessScoreAfter}%",
+            )
+            Text(
+                simulation.summary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                ImpactTile(
+                    label = "Readiness",
+                    value = "${if (simulation.readinessImpact >= 0) "+" else ""}" +
+                        "${simulation.readinessImpact} pts",
+                    positive = simulation.readinessImpact >= 0,
+                    modifier = Modifier.weight(1f),
+                )
+                ImpactTile(
+                    label = "Risk",
+                    value = "${if (simulation.riskChange >= 0) "+" else ""}" +
+                        "${simulation.riskChange} pts",
+                    positive = simulation.riskChange <= 0,
+                    modifier = Modifier.weight(1f),
+                )
+                ImpactTile(
+                    label = "Timeline",
+                    value = "${if (simulation.timelineChangeMonths >= 0) "+" else ""}" +
+                        "${simulation.timelineChangeMonths} mo",
+                    positive = simulation.timelineChangeMonths <= 0,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            simulation.recommendedActions.take(3).forEach { action ->
+                Text(
+                    "•  $action",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+        }
     }
 }

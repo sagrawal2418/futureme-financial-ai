@@ -31,6 +31,8 @@ import com.futureme.financialai.ui.screens.AssistantScreen
 import com.futureme.financialai.ui.screens.CopilotHubScreen
 import com.futureme.financialai.ui.screens.ComparisonScreen
 import com.futureme.financialai.ui.screens.DashboardScreen
+import com.futureme.financialai.ui.screens.LifeReadinessDashboardScreen
+import com.futureme.financialai.ui.screens.LifeTimelineScreen
 import com.futureme.financialai.ui.screens.LoadingScreen
 import com.futureme.financialai.ui.screens.MessageScreen
 import com.futureme.financialai.ui.screens.MoneyLeakScreen
@@ -82,7 +84,7 @@ private fun ContentScaffold(
                     onClick = { onNavigate(FutureMeScreen.ASSISTANT) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.semantics {
-                        contentDescription = "Open FutureMe financial assistant"
+                        contentDescription = "Open FutureMe AI coach"
                     },
                 ) {
                     Text(
@@ -100,9 +102,10 @@ private fun ContentScaffold(
             ) {
                 listOf(
                     FutureMeScreen.DASHBOARD to "Overview",
+                    FutureMeScreen.READINESS to "Ready",
+                    FutureMeScreen.SCENARIOS to "Simulate",
+                    FutureMeScreen.TIMELINE to "Timeline",
                     FutureMeScreen.LIFE_EVENTS to "Plan",
-                    FutureMeScreen.SCENARIOS to "Scenarios",
-                    FutureMeScreen.COMPARISON to "Compare",
                 ).forEach { (screen, label) ->
                     NavigationBarItem(
                         selected = content.screen == screen,
@@ -141,6 +144,7 @@ private fun ContentScaffold(
                         content = content,
                         onScenarioClick = onScenarioClick,
                         onOpenAssistant = { onNavigate(FutureMeScreen.ASSISTANT) },
+                        onOpenReadiness = { onNavigate(FutureMeScreen.READINESS) },
                         onOpenScenarios = { onNavigate(FutureMeScreen.SCENARIOS) },
                         onOpenLifeEvents = { onNavigate(FutureMeScreen.LIFE_EVENTS) },
                         onOpenMoneyLeaks = { onNavigate(FutureMeScreen.MONEY_LEAKS) },
@@ -148,12 +152,20 @@ private fun ContentScaffold(
                             onAskAssistant("How can I improve my 5-year outlook?")
                         },
                     )
+                    FutureMeScreen.READINESS -> LifeReadinessDashboardScreen(
+                        content = content,
+                        onAskCoach = onAskAssistant,
+                    )
+                    FutureMeScreen.TIMELINE -> LifeTimelineScreen(content.lifeTimeline)
                     FutureMeScreen.SCENARIOS -> ScenarioListScreen(
                         scenarios = content.scenarios,
                         onScenarioClick = onScenarioClick,
                     )
                     FutureMeScreen.SCENARIO_DETAIL -> ScenarioDetailScreen(
                         result = requireNotNull(content.selectedResult),
+                        simulation = content.decisionSimulations.first {
+                            it.scenarioId == content.selectedScenario?.id
+                        },
                         onBack = { onNavigate(FutureMeScreen.SCENARIOS) },
                         onCompare = { onNavigate(FutureMeScreen.COMPARISON) },
                     )
@@ -204,9 +216,9 @@ private fun AppHeader(
                 .padding(12.dp),
         )
         Column(modifier = Modifier.padding(start = 12.dp)) {
-            Eyebrow("Financial digital twin")
+            Eyebrow("Life readiness intelligence")
             Text(
-                "Your future, modeled clearly.",
+                "How ready are you for what comes next?",
                 style = MaterialTheme.typography.titleLarge,
             )
             Text(

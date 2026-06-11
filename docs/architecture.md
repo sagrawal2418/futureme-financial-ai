@@ -8,8 +8,9 @@ FutureMe Financial uses native Android and iOS presentation, React on web, and o
 
 | Module | Responsibility |
 | --- | --- |
-| `shared/models` | Serializable profile, account, transaction, insight, goal, event, scenario, GPS, and assistant contracts |
+| `shared/models` | Serializable profile, account, transaction, insight, goal, event, scenario, readiness, timeline, GPS, and coach contracts |
 | `shared/calculators` | Pure formulas |
+| `shared/life-readiness-engine` | Readiness scoring, improvement plans, decision impact, and life timeline |
 | `shared/scenario-engine` | Five-year projection and comparison policy |
 | `shared/financial-gps` | Current versus improved trajectory |
 | `shared/goal-engine` | Deterministic goal-readiness probability |
@@ -40,6 +41,7 @@ flowchart TB
     W --> J["Kotlin/JS bridge"] --> P
 
     P --> S["Scenario engine"]
+    P --> R["Life Readiness Engine"]
     P --> G["Financial GPS"]
     P --> GO["Goal engine"]
     P --> M["Money leak detector"]
@@ -48,6 +50,8 @@ flowchart TB
     P --> AI["Mock assistant"]
 
     S --> C["Pure calculators"]
+    R --> C
+    R --> S
     G --> C
     AI --> OUT["Structured engine output"]
 
@@ -66,13 +70,13 @@ Calculators and engines produce all dollar values, scores, probabilities, dates,
 - iOS calls the generated `Shared` framework from `FutureMeViewModel`.
 - Web parses the serialized `ProductBootstrap` from Kotlin/JS.
 
-Every client renders `insights`, `financialGps`, `goals`, `lifeEvents`, and `moneyLeaks` from the same bootstrap.
+Every client renders `readiness`, `readinessPlans`, `decisionSimulations`, `lifeTimeline`, `executiveDemo`, and the Version 2 financial foundation from the same bootstrap.
 
 The synchronized presentation contract is documented in [feature-parity.md](feature-parity.md). Platform-native navigation is encouraged, but all clients must expose equivalent inputs, outputs, and user actions.
 
 ## Projection Policy
 
-The scenario engine projects monthly for 60 months, compounds investments, applies a documented property-appreciation assumption, services revolving debt, and emits annual points. The Financial GPS adds the deterministic effect of three explicit actions: reduce spending by $250, invest $200 more, and pay $300 more toward high-interest debt.
+The scenario engine projects monthly for 60 months, compounds investments, applies a documented property-appreciation assumption, services revolving debt, and emits annual points. The Life Readiness Engine combines profile ratios with those scenario results to produce decision-specific scores, impacts, plans, and timeline points. The Financial GPS adds the deterministic effect of three explicit actions: reduce spending by $250, invest $200 more, and pay $300 more toward high-interest debt.
 
 ## Extension Points
 

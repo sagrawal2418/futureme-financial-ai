@@ -28,6 +28,11 @@ struct FutureMeDashboardContent {
     let goals: [GoalProbabilityResult]
     let lifeEvents: [LifeEventPlan]
     let moneyLeaks: [MoneyLeak]
+    let readiness: [LifeReadinessResult]
+    let readinessPlans: [ReadinessImprovementPlan]
+    let decisionSimulations: [LifeDecisionSimulation]
+    let lifeTimeline: [LifeTimelinePoint]
+    let executiveDemo: ExecutiveDemoExperience
     let suggestions: [SuggestedQuestion]
     let messages: [AssistantMessage]
     let disclaimer: String
@@ -93,11 +98,16 @@ final class FutureMeViewModel: ObservableObject {
                 goals: bootstrap.goals,
                 lifeEvents: bootstrap.lifeEvents,
                 moneyLeaks: bootstrap.moneyLeaks,
+                readiness: bootstrap.readiness,
+                readinessPlans: bootstrap.readinessPlans,
+                decisionSimulations: bootstrap.decisionSimulations,
+                lifeTimeline: bootstrap.lifeTimeline,
+                executiveDemo: bootstrap.executiveDemo,
                 suggestions: bootstrap.suggestedQuestions,
                 messages: [
                     AssistantMessage(
                         id: UUID(),
-                        text: "Ask me about a major decision. I use the same profile, assumptions, and scenario engine as your dashboard.",
+                        text: "Tell me which life decision matters next. I will identify the blockers, tradeoffs, and highest-leverage action.",
                         isUser: false
                     ),
                 ],
@@ -128,6 +138,11 @@ final class FutureMeViewModel: ObservableObject {
                 goals: content.goals,
                 lifeEvents: content.lifeEvents,
                 moneyLeaks: content.moneyLeaks,
+                readiness: content.readiness,
+                readinessPlans: content.readinessPlans,
+                decisionSimulations: content.decisionSimulations,
+                lifeTimeline: content.lifeTimeline,
+                executiveDemo: content.executiveDemo,
                 suggestions: content.suggestions,
                 messages: content.messages,
                 disclaimer: content.disclaimer
@@ -157,6 +172,11 @@ final class FutureMeViewModel: ObservableObject {
                 goals: content.goals,
                 lifeEvents: content.lifeEvents,
                 moneyLeaks: content.moneyLeaks,
+                readiness: content.readiness,
+                readinessPlans: content.readinessPlans,
+                decisionSimulations: content.decisionSimulations,
+                lifeTimeline: content.lifeTimeline,
+                executiveDemo: content.executiveDemo,
                 suggestions: content.suggestions,
                 messages: content.messages,
                 disclaimer: content.disclaimer
@@ -195,6 +215,11 @@ final class FutureMeViewModel: ObservableObject {
                 goals: content.goals,
                 lifeEvents: content.lifeEvents,
                 moneyLeaks: content.moneyLeaks,
+                readiness: content.readiness,
+                readinessPlans: content.readinessPlans,
+                decisionSimulations: content.decisionSimulations,
+                lifeTimeline: content.lifeTimeline,
+                executiveDemo: content.executiveDemo,
                 suggestions: content.suggestions,
                 messages: messages,
                 disclaimer: content.disclaimer
@@ -209,6 +234,8 @@ final class FutureMeViewModel: ObservableObject {
         case "pay-off-cards": "DEBT"
         case "move-to-texas", "stay-in-new-jersey": "MOVE"
         case "have-a-child": "FAM"
+        case "spouse-stops-working": "ONE"
+        case "start-business": "BIZ"
         case "invest-more": "INV"
         default: "SAFE"
         }

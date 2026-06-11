@@ -47,8 +47,13 @@ private struct DashboardTabs: View {
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         Header(name: content.displayName, householdName: content.householdName)
+                        ReadinessHeroCard(readiness: content.readiness) {
+                            selectedTab = 1
+                        }
+                            .padding(.horizontal, 20)
                         HealthCard(dashboard: content.dashboard)
                             .padding(.horizontal, 20)
+                            .padding(.top, 14)
                         WeeklyCheckupCard(insights: content.insights)
                             .padding(.horizontal, 20)
                             .padding(.top, 14)
@@ -67,7 +72,7 @@ private struct DashboardTabs: View {
                         Button {
                             selectedTab = 4
                         } label: {
-                            Label("Ask FutureMe about this plan", systemImage: "sparkles")
+                            Label("Ask my AI coach about this plan", systemImage: "sparkles")
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.borderedProminent)
@@ -136,16 +141,17 @@ private struct DashboardTabs: View {
                     onAsk(question)
                 }
             )
-                .tabItem { Label("Plan", systemImage: "map.fill") }
+                .tabItem { Label("Readiness", systemImage: "target") }
                 .tag(1)
 
             ScenarioListTab(
                 scenarios: content.scenarios,
                 selected: content.selected,
+                simulations: content.decisionSimulations,
                 onSelect: onSelect,
                 openOverview: { selectedTab = 0 }
             )
-                .tabItem { Label("Scenarios", systemImage: "sparkles") }
+                .tabItem { Label("Simulator", systemImage: "sparkles") }
                 .tag(2)
 
             ComparisonTab(
@@ -162,10 +168,61 @@ private struct DashboardTabs: View {
                 suggestions: content.suggestions,
                 onAsk: onAsk
             )
-                .tabItem { Label("Assistant", systemImage: "bubble.left.and.sparkles") }
+                .tabItem { Label("Coach", systemImage: "bubble.left.and.sparkles") }
                 .tag(4)
         }
         .tint(AppTheme.positive)
+    }
+}
+
+private struct ReadinessHeroCard: View {
+    let readiness: [LifeReadinessResult]
+    let onOpen: () -> Void
+
+    private var featured: [LifeReadinessResult] {
+        let categories = [
+            "HOME_PURCHASE",
+            "CHILD",
+            "RETIREMENT",
+            "RELOCATION",
+            "PARENT_SUPPORT",
+        ]
+        return readiness.filter { categories.contains($0.category.name) }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Eyebrow("LIFE READINESS DASHBOARD", light: true)
+            Text("Are you ready for what comes next?")
+                .font(.title2.bold())
+                .foregroundStyle(.white)
+            Text("One shared model measures cash flow, reserves, debt pressure, income resilience, and decision-specific costs.")
+                .font(.caption)
+                .foregroundStyle(Color(red: 185 / 255, green: 206 / 255, blue: 197 / 255))
+            ForEach(featured, id: \.id) { item in
+                VStack(spacing: 5) {
+                    HStack {
+                        Text(item.title)
+                            .font(.caption.bold())
+                            .foregroundStyle(.white)
+                        Spacer()
+                        Text("\(item.readinessScore)%")
+                            .font(.caption.bold())
+                            .foregroundStyle(AppTheme.mint)
+                    }
+                    ProgressView(value: Double(item.readinessScore), total: 100)
+                        .tint(AppTheme.mint)
+                }
+            }
+            Button("Open life readiness", action: onOpen)
+                .buttonStyle(.borderedProminent)
+                .tint(AppTheme.mint)
+                .foregroundStyle(AppTheme.forest)
+                .frame(maxWidth: .infinity)
+        }
+        .padding(20)
+        .futureMeCard(fill: AppTheme.forest, showsBorder: false)
+        .accessibilityElement(children: .contain)
     }
 }
 
@@ -347,8 +404,8 @@ private struct Header: View {
                 .background(AppTheme.forest)
                 .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
             VStack(alignment: .leading, spacing: 3) {
-                Eyebrow("FINANCIAL DIGITAL TWIN")
-                Text("Good evening, \(name)")
+                Eyebrow("LIFE READINESS INTELLIGENCE")
+                Text("How ready are you, \(name)?")
                     .font(.title2.bold())
                     .foregroundStyle(AppTheme.ink)
                 Text(householdName)
@@ -365,7 +422,7 @@ private struct Header: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 18)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("FutureMe Financial. Good evening, \(name). \(householdName).")
+        .accessibilityLabel("FutureMe Financial life readiness. \(name). \(householdName).")
     }
 }
 
@@ -981,15 +1038,26 @@ private struct StateView: View {
 private struct ScenarioListTab: View {
     let scenarios: [ScenarioCardModel]
     let selected: ScenarioCardModel
+    let simulations: [LifeDecisionSimulation]
     let onSelect: (ScenarioCardModel) -> Void
     let openOverview: () -> Void
+
+    private var selectedSimulation: LifeDecisionSimulation? {
+        simulations.first { $0.scenarioId == selected.id }
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 12) {
-                    SectionTitle(eyebrow: "WHAT-IF SCENARIOS", title: "Model a major decision")
+                    SectionTitle(
+                        eyebrow: "LIFE DECISION SIMULATOR",
+                        title: "What happens if you make the move?"
+                    )
                         .padding(.bottom, 4)
+                    if let selectedSimulation {
+                        LifeDecisionImpactCard(simulation: selectedSimulation)
+                    }
                     ForEach(scenarios) { scenario in
                         Button {
                             onSelect(scenario)
@@ -1027,8 +1095,55 @@ private struct ScenarioListTab: View {
                 .padding(20)
             }
             .background(AppTheme.canvas)
-            .navigationTitle("Scenarios")
+            .navigationTitle("Simulator")
         }
+    }
+}
+
+private struct LifeDecisionImpactCard: View {
+    let simulation: LifeDecisionSimulation
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Eyebrow("READINESS IMPACT")
+            Text(simulation.title)
+                .font(.title3.bold())
+                .foregroundStyle(AppTheme.ink)
+            Text(simulation.summary)
+                .font(.caption)
+                .foregroundStyle(AppTheme.muted)
+            HStack(spacing: 8) {
+                ImpactTile(
+                    label: "READINESS AFTER",
+                    value: "\(simulation.readinessScoreAfter)%",
+                    positive: simulation.readinessScoreAfter >= 60
+                )
+                ImpactTile(
+                    label: "SCORE IMPACT",
+                    value: "\(simulation.readinessImpact >= 0 ? "+" : "")\(simulation.readinessImpact) pts",
+                    positive: simulation.readinessImpact >= 0
+                )
+            }
+            HStack(spacing: 8) {
+                ImpactTile(
+                    label: "RISK CHANGE",
+                    value: "\(simulation.riskChange >= 0 ? "+" : "")\(simulation.riskChange) pts",
+                    positive: simulation.riskChange <= 0
+                )
+                ImpactTile(
+                    label: "TIMELINE",
+                    value: "\(simulation.timelineChangeMonths >= 0 ? "+" : "")\(simulation.timelineChangeMonths) mo",
+                    positive: simulation.timelineChangeMonths <= 0
+                )
+            }
+            ForEach(Array(simulation.recommendedActions.prefix(3)), id: \.self) { action in
+                Label(action, systemImage: "arrow.turn.down.right")
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.ink)
+            }
+        }
+        .padding(18)
+        .futureMeCard(fill: AppTheme.softMint, showsBorder: false)
     }
 }
 
@@ -1041,6 +1156,15 @@ private struct PlanningTab: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 12) {
+                    LifeReadinessDashboard(
+                        readiness: content.readiness,
+                        plans: content.readinessPlans,
+                        onAsk: onAsk
+                    )
+
+                    LifeTimelineView(points: content.lifeTimeline)
+                        .padding(.top, 18)
+
                     SectionTitle(
                         eyebrow: "PROACTIVE INSIGHTS",
                         title: "Every signal worth reviewing"
@@ -1144,11 +1268,248 @@ private struct PlanningTab: View {
                         .futureMeCard()
                         .accessibilityElement(children: .combine)
                     }
+
+                    ExecutiveDemoView(
+                        experience: content.executiveDemo,
+                        onAsk: onAsk
+                    )
+                    .padding(.top, 18)
                 }
                 .padding(20)
             }
             .background(AppTheme.canvas)
-            .navigationTitle("Plan")
+            .navigationTitle("Readiness")
+        }
+    }
+}
+
+private struct LifeReadinessDashboard: View {
+    let readiness: [LifeReadinessResult]
+    let plans: [ReadinessImprovementPlan]
+    let onAsk: (String) -> Void
+    @State private var selectedCategory = "HOME_PURCHASE"
+
+    private var featured: [LifeReadinessResult] {
+        let categories = [
+            "HOME_PURCHASE",
+            "CHILD",
+            "RETIREMENT",
+            "RELOCATION",
+            "PARENT_SUPPORT",
+        ]
+        return readiness.filter { categories.contains($0.category.name) }
+    }
+
+    private var selected: LifeReadinessResult? {
+        readiness.first { $0.category.name == selectedCategory }
+    }
+
+    private var selectedPlan: ReadinessImprovementPlan? {
+        plans.first { $0.category.name == selectedCategory }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionTitle(
+                eyebrow: "LIFE READINESS DASHBOARD",
+                title: "Are you ready for what comes next?"
+            )
+            Text("Tap a category to see its blockers, actions, and modeled target date.")
+                .font(.caption)
+                .foregroundStyle(AppTheme.muted)
+
+            ForEach(featured, id: \.id) { item in
+                Button {
+                    selectedCategory = item.category.name
+                } label: {
+                    VStack(alignment: .leading, spacing: 9) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(item.title)
+                                    .font(.headline)
+                                    .foregroundStyle(AppTheme.ink)
+                                Text(item.readinessLevel.name.replacingOccurrences(of: "_", with: " ").capitalized)
+                                    .font(.caption2.bold())
+                                    .foregroundStyle(AppTheme.positive)
+                            }
+                            Spacer()
+                            Text("\(item.readinessScore)%")
+                                .font(.title2.bold())
+                                .foregroundStyle(AppTheme.positive)
+                        }
+                        ProgressView(value: Double(item.readinessScore), total: 100)
+                            .tint(AppTheme.positive)
+                        Text(item.blockers.first ?? "No active blocker.")
+                            .font(.caption)
+                            .foregroundStyle(AppTheme.muted)
+                        HStack {
+                            Text(item.trend.name.capitalized + " \(item.trendDelta >= 0 ? "+" : "")\(item.trendDelta) pts / 6 mo")
+                            Spacer()
+                            Text(
+                                item.estimatedMonthsToReady == 0
+                                    ? "Ready now"
+                                    : "Ready \(item.projectedReadyDate)"
+                            )
+                        }
+                        .font(.caption2.bold())
+                        .foregroundStyle(AppTheme.muted)
+                    }
+                    .padding(16)
+                    .futureMeCard(
+                        fill: item.category.name == selectedCategory
+                            ? AppTheme.softMint
+                            : AppTheme.surface
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(item.title), \(item.readinessScore) percent")
+            }
+
+            if let selected, let selectedPlan {
+                VStack(alignment: .leading, spacing: 11) {
+                    Eyebrow("READINESS IMPROVEMENT PLAN")
+                    Text("\(selected.readinessScore)% to \(selectedPlan.targetScore)%")
+                        .font(.title2.bold())
+                        .foregroundStyle(AppTheme.ink)
+                    Text(
+                        "\(selectedPlan.estimatedTimelineMonths) months to the modeled target "
+                            + "(\(selectedPlan.projectedTargetDate))"
+                    )
+                    .font(.caption.bold())
+                    .foregroundStyle(AppTheme.positive)
+                    ForEach(Array(selectedPlan.recommendations.enumerated()), id: \.offset) { index, action in
+                        Label("\(index + 1). \(action)", systemImage: "checkmark.circle")
+                            .font(.caption)
+                            .foregroundStyle(AppTheme.ink)
+                    }
+                    Text("Modeled monthly commitment " + money(selectedPlan.monthlyCommitment))
+                        .font(.caption.bold())
+                        .foregroundStyle(AppTheme.positive)
+                    Button("Ask my AI coach") {
+                        onAsk("What should I focus on this month?")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(AppTheme.forest)
+                    .frame(maxWidth: .infinity)
+                }
+                .padding(18)
+                .futureMeCard(fill: AppTheme.softMint, showsBorder: false)
+            }
+        }
+    }
+}
+
+private struct LifeTimelineView: View {
+    let points: [LifeTimelinePoint]
+
+    private func averageReadiness(_ point: LifeTimelinePoint) -> Double {
+        guard !point.readinessScores.isEmpty else {
+            return 0
+        }
+        let total = point.readinessScores.reduce(0.0) { $0 + Double($1.score) }
+        return total / Double(point.readinessScores.count)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 13) {
+            SectionTitle(
+                eyebrow: "LIFE TIMELINE",
+                title: "See readiness change before the decision arrives"
+            )
+            Chart {
+                ForEach(points, id: \.label) { point in
+                    LineMark(
+                        x: .value("Months", point.monthsFromNow),
+                        y: .value("Average readiness", averageReadiness(point))
+                    )
+                    .foregroundStyle(AppTheme.positive)
+                    .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round))
+                    PointMark(
+                        x: .value("Months", point.monthsFromNow),
+                        y: .value("Average readiness", averageReadiness(point))
+                    )
+                    .foregroundStyle(AppTheme.positive)
+                }
+            }
+            .chartYScale(domain: 0...100)
+            .frame(height: 170)
+            .accessibilityLabel("Readiness timeline from today through five years")
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 9) {
+                    ForEach(points, id: \.label) { point in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Eyebrow(point.label)
+                            Text(moneyCompact(point.netWorth))
+                                .font(.headline)
+                                .foregroundStyle(AppTheme.ink)
+                            Text("\(Int(averageReadiness(point)))% avg readiness")
+                                .font(.caption2.bold())
+                                .foregroundStyle(AppTheme.positive)
+                            Text("Debt " + moneyCompact(point.debtBalance))
+                                .font(.caption2)
+                                .foregroundStyle(AppTheme.muted)
+                            Text("Invested " + moneyCompact(point.investmentBalance))
+                                .font(.caption2)
+                                .foregroundStyle(AppTheme.muted)
+                        }
+                        .frame(width: 145, alignment: .leading)
+                        .padding(14)
+                        .futureMeCard()
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct ExecutiveDemoView: View {
+    let experience: ExecutiveDemoExperience
+    let onAsk: (String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 11) {
+            SectionTitle(
+                eyebrow: "EXECUTIVE DEMO EXPERIENCE",
+                title: experience.personaTitle
+            )
+            Text(experience.personaSummary)
+                .font(.caption)
+                .foregroundStyle(AppTheme.muted)
+            ForEach(experience.personaFacts, id: \.self) { fact in
+                Label(fact, systemImage: "person.2")
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.ink)
+            }
+            ForEach(experience.steps, id: \.order) { step in
+                Button {
+                    onAsk(step.coachPrompt)
+                } label: {
+                    HStack(spacing: 12) {
+                        Text("\(step.order)")
+                            .font(.caption.bold())
+                            .foregroundStyle(AppTheme.positive)
+                            .frame(width: 32, height: 32)
+                            .background(AppTheme.softMint)
+                            .clipShape(RoundedRectangle(cornerRadius: 9))
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(step.title)
+                                .font(.subheadline.bold())
+                                .foregroundStyle(AppTheme.ink)
+                            Text(step.description)
+                                .font(.caption2)
+                                .foregroundStyle(AppTheme.muted)
+                                .multilineTextAlignment(.leading)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(AppTheme.muted)
+                    }
+                    .padding(13)
+                    .futureMeCard()
+                }
+                .buttonStyle(.plain)
+            }
         }
     }
 }
@@ -1538,7 +1899,7 @@ private struct AssistantTab: View {
                 }
 
                 HStack(alignment: .bottom, spacing: 10) {
-                    TextField("Ask a financial what-if question", text: $question, axis: .vertical)
+                    TextField("Ask what is blocking your next life decision", text: $question, axis: .vertical)
                         .textFieldStyle(.roundedBorder)
                         .lineLimit(1...4)
                         .accessibilityLabel("Financial assistant question")
@@ -1559,7 +1920,7 @@ private struct AssistantTab: View {
                 .background(AppTheme.surface)
             }
             .background(AppTheme.canvas)
-            .navigationTitle("Ask FutureMe")
+            .navigationTitle("AI Coach")
         }
     }
 }

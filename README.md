@@ -1,6 +1,6 @@
 # FutureMe Financial
 
-> An AI-powered financial digital twin that continuously finds risks, opportunities, and better routes through major life decisions.
+> FutureMe Financial is an AI-powered Life Readiness Platform that helps families understand how prepared they are for major life decisions.
 
 [![Product CI](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/product-ci.yml/badge.svg)](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/product-ci.yml)
 [![GitHub Pages](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/deploy-pages.yml)
@@ -19,20 +19,30 @@ Traditional banking apps explain what already happened: balances, transactions, 
 - Which financial risk is quietly getting worse?
 - How much better could our five-year outlook become?
 
-FutureMe models the household as a living financial system. Deterministic engines calculate the future; AI translates those results into clear next steps.
+FutureMe models the household as a living financial system. Deterministic engines calculate readiness and future impact; AI translates those results into clear next steps.
 
-## Version 2
+## Version 3: Life Readiness Intelligence
+
+- **Life Readiness Engine:** shared 0-100 readiness scores for home purchase, children, relocation, retirement, business startup, parent support, and education funding
+- **Readiness Dashboard:** decision-level scores, trends, blockers, confidence, and estimated ready dates
+- **Life Decision Simulator:** readiness, cash-flow, net-worth, risk, and timeline impact for major choices
+- **Readiness Improvement Plans:** current-to-target plans with sequenced actions, monthly commitment, and projected target date
+- **FutureMe AI Coach:** a financial strategist grounded in shared readiness, scenario, and risk output
+- **Life Timeline:** today, six-month, one-year, three-year, and five-year views of readiness, net worth, debt, investments, and completed goals
+- **Executive Demo:** a guided dual-income family experience covering home, child, relocation, coaching, and an improvement plan
+
+Android, iOS, and web receive the same `ProductBootstrap` from the Kotlin Multiplatform core. No platform owns a separate readiness or financial formula implementation.
+
+## Version 2 Foundation
 
 - **Proactive Insights:** a weekly financial checkup ranked by severity and dollar impact
 - **Financial GPS:** current trajectory versus a concrete improved trajectory
 - **Goal Readiness:** probability, blockers, actions, monthly gap, and modeled ready date
 - **Life Event Planner:** new baby, home purchase, relocation, job loss, parent support, and medical expense
 - **Money Leak Detector:** subscriptions, idle cash, high-interest debt, insurance, refinance, and employer match
-- **Scenario Lab:** seven scenario families with deterministic five-year comparisons
+- **Scenario Lab:** nine scenario families with deterministic five-year comparisons
 - **FutureMe Assistant:** contextual explanations grounded in shared engine output
 - **Realistic Demo Data:** account inventory and 90 days of transaction history
-
-Android, iOS, and web receive the same `ProductBootstrap` from the Kotlin Multiplatform core. No platform owns a separate formula implementation.
 
 ## Screenshots
 
@@ -60,6 +70,7 @@ flowchart LR
 
     CORE --> CALC["Deterministic calculators"]
     CORE --> GPS["Financial GPS"]
+    CORE --> READY["Life Readiness Engine"]
     CORE --> GOALS["Goal engine"]
     CORE --> LEAKS["Money leak detector"]
     CORE --> EVENTS["Life event planner"]
@@ -68,7 +79,7 @@ flowchart LR
 
 The backend never replaces the financial core. Claude receives structured, already-calculated outputs and cannot alter balances, probabilities, or projections.
 
-See [Architecture](docs/architecture.md), [Client Feature Parity](docs/feature-parity.md), [LLM Architecture](docs/llm-architecture.md), and [Security Architecture](docs/security-architecture.md).
+See [Life Readiness Framework](docs/life-readiness-framework.md), [Architecture](docs/architecture.md), [Client Feature Parity](docs/feature-parity.md), [LLM Architecture](docs/llm-architecture.md), and [Security Architecture](docs/security-architecture.md).
 
 ## Repository
 
@@ -81,6 +92,7 @@ shared/
 ├── domain/                  # Product facade and provider contracts
 ├── models/                  # Serializable cross-platform contracts
 ├── calculators/             # Pure financial formulas
+├── life-readiness-engine/   # Readiness, decision impact, plans, and timeline
 ├── scenario-engine/         # Five-year simulation and comparison
 ├── financial-gps/           # Current versus improved trajectory
 ├── goal-engine/             # Goal readiness probability
@@ -116,15 +128,15 @@ Seeded totals:
 
 ## Demo Flow
 
-1. Open **This Week's Financial Checkup** and review the top three proactive insights.
-2. Compare the **Financial GPS** current and improved five-year trajectories.
-3. Open **Money Leaks** and inspect the annual and five-year impact.
-4. Review **Goal Readiness** for a larger home and another child.
-5. Open **Life Event Planner**, select **Welcome a new baby**, and plan the linked scenario.
-6. Compare **Move to Austin** versus **Stay in New Jersey**.
-7. Ask, “What is my biggest money leak?” and “How can I improve my 5-year outlook?”
+1. Open the **Life Readiness Dashboard** and compare home, child, retirement, relocation, and parent-support readiness.
+2. Select **Home Purchase Readiness** and review its blockers, trend, confidence, and estimated ready date.
+3. Open the **Readiness Improvement Plan** and show the path from the current score to 85%.
+4. Use the **Life Decision Simulator** to compare buying a home, moving, losing income, having another child, or starting a business.
+5. Ask the **FutureMe AI Coach**, “What is preventing me from buying a home?” and “What should I focus on this month?”
+6. Review the **Life Timeline** from today through five years.
+7. Finish with the guided **Executive Demo Experience**.
 
-The assistant repeats shared structured output; it does not perform financial arithmetic.
+The coach explains shared structured output; it does not perform financial arithmetic.
 
 ## Claude Architecture
 
@@ -202,7 +214,7 @@ cd ../.. && python3 -m unittest discover -s backend/tests -v
 
 ## Test Coverage
 
-Shared tests cover formulas, scenarios, all seven scenario families, proactive insights, Financial GPS, goal probability, life-event planning, money-leak detection, assistant grounding, and 90-day demo-data reconciliation.
+Shared tests cover formulas, nine scenario families, readiness scoring and thresholds, improvement plans, decision impacts, timeline projections, proactive insights, Financial GPS, goal probability, life-event planning, money-leak detection, coach grounding, and 90-day demo-data reconciliation.
 
 Backend tests cover:
 
@@ -211,11 +223,11 @@ Backend tests cover:
 - Mock Plaid data and token handling
 - Financial data normalization
 
-Web tests verify the generated Kotlin/JS bridge. A client parity contract test guards the synchronized Version 2 capability set. GitHub Actions builds Android, web, the native iOS simulator app, and the backend provider suite.
+Web tests verify the generated Kotlin/JS bridge. A client parity contract test guards the synchronized Version 3 capability set. GitHub Actions builds Android, web, the native iOS simulator app, and the backend provider suite.
 
 ## Roadmap
 
-Version 3 priorities:
+Version 4 priorities:
 
 1. Editable synchronized profiles and custom goal inputs
 2. Versioned assumption sets and Monte Carlo confidence bands

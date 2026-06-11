@@ -139,4 +139,7 @@ data class FinancialCopilotContext(
     val goals: List<GoalProbabilityResult>,
     val lifeEvents: List<LifeEventPlan>,
     val moneyLeaks: List<MoneyLeak>,
+    val readiness: List<LifeReadinessResult>,
+    val readinessPlans: List<ReadinessImprovementPlan>,
+    val decisionSimulations: List<LifeDecisionSimulation>,
 )
