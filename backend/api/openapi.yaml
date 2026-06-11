@@ -86,11 +86,132 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AssistantResponse"
+  /v1/insights:
+    get:
+      operationId: getProactiveInsights
+      summary: Return deterministic proactive insights for the current workspace
+      responses:
+        "200":
+          description: Ranked insight collection
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Insight"
+  /v1/financial-gps:
+    get:
+      operationId: getFinancialGps
+      summary: Compare current and improved five-year trajectories
+      responses:
+        "200":
+          description: Deterministic Financial GPS result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinancialGpsResult"
+  /v1/goals:
+    get:
+      operationId: getGoalReadiness
+      summary: Return readiness probability for supported goals
+      responses:
+        "200":
+          description: Goal probability results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GoalProbabilityResult"
+  /v1/life-events:
+    get:
+      operationId: getLifeEventPlans
+      summary: Return supported life-event plans
+      responses:
+        "200":
+          description: Life event plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LifeEventPlan"
+  /v1/money-leaks:
+    get:
+      operationId: getMoneyLeaks
+      summary: Return deterministic money-leak detections
+      responses:
+        "200":
+          description: Money leak collection
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MoneyLeak"
+  /plaid/link-token:
+    post:
+      operationId: createPlaidLinkToken
+      summary: Create a short-lived Plaid Link token on the backend
+      responses:
+        "200":
+          description: Link token response
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [link_token, expiration]
+                properties:
+                  link_token: { type: string }
+                  expiration: { type: string, format: date-time }
+  /plaid/exchange-public-token:
+    post:
+      operationId: exchangePlaidPublicToken
+      summary: Exchange a public token and store the resulting token in a backend vault
+      responses:
+        "200":
+          description: Opaque item reference; no access token is returned to the client
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [item_id, access_token_reference]
+                properties:
+                  item_id: { type: string }
+                  access_token_reference: { type: string }
+  /plaid/accounts:
+    get:
+      operationId: getPlaidAccounts
+      summary: Return normalized account records
+      responses:
+        "200":
+          description: Normalized cash, debt, mortgage, and investment accounts
+  /plaid/transactions:
+    get:
+      operationId: getPlaidTransactions
+      summary: Return normalized transaction records
+      responses:
+        "200":
+          description: Normalized transactions
+  /plaid/liabilities:
+    get:
+      operationId: getPlaidLiabilities
+      summary: Return normalized debt and mortgage records
+      responses:
+        "200":
+          description: Normalized liabilities
+  /plaid/investments:
+    get:
+      operationId: getPlaidInvestments
+      summary: Return normalized investment records
+      responses:
+        "200":
+          description: Normalized investments
 components:
   schemas:
     ProductBootstrap:
       type: object
-      required: [identity, profile, dashboard, scenarios, recentScenarioResults, suggestedQuestions, disclaimer]
+      required: [identity, profile, dashboard, scenarios, recentScenarioResults, transactions, insights, financialGps, goals, lifeEvents, moneyLeaks, suggestedQuestions, disclaimer]
       properties:
         identity:
           $ref: "#/components/schemas/UserIdentity"
@@ -106,6 +227,29 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ScenarioResult"
+        transactions:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        insights:
+          type: array
+          items:
+            $ref: "#/components/schemas/Insight"
+        financialGps:
+          $ref: "#/components/schemas/FinancialGpsResult"
+        goals:
+          type: array
+          items:
+            $ref: "#/components/schemas/GoalProbabilityResult"
+        lifeEvents:
+          type: array
+          items:
+            $ref: "#/components/schemas/LifeEventPlan"
+        moneyLeaks:
+          type: array
+          items:
+            $ref: "#/components/schemas/MoneyLeak"
         suggestedQuestions:
           type: array
           items:
@@ -221,3 +365,70 @@ components:
         suggestedActions:
           type: array
           items: { type: string }
+    Insight:
+      type: object
+      additionalProperties: true
+      required: [id, title, summary, severity, category, estimatedDollarImpact, recommendedAction, createdDate]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        summary: { type: string }
+        severity: { type: string, enum: [INFO, OPPORTUNITY, WARNING, CRITICAL] }
+        category: { type: string }
+        estimatedDollarImpact: { type: number }
+        recommendedAction: { type: string }
+        createdDate: { type: string, format: date }
+    FinancialGpsResult:
+      type: object
+      additionalProperties: true
+      required: [currentFiveYearNetWorth, improvedFiveYearNetWorth, difference, monthlyActionPlan, confidenceLevel]
+      properties:
+        currentFiveYearNetWorth: { type: number }
+        improvedFiveYearNetWorth: { type: number }
+        difference: { type: number }
+        monthlyActionPlan:
+          type: array
+          items: { type: string }
+        confidenceLevel: { type: string, enum: [HIGH, MEDIUM, LOW] }
+    GoalProbabilityResult:
+      type: object
+      additionalProperties: true
+      required: [id, type, title, probabilityPercentage, blockers, recommendedActions, requiredMonthlyImprovement, projectedReadyDate]
+      properties:
+        id: { type: string }
+        type: { type: string }
+        title: { type: string }
+        probabilityPercentage: { type: integer, minimum: 0, maximum: 100 }
+        blockers:
+          type: array
+          items: { type: string }
+        recommendedActions:
+          type: array
+          items: { type: string }
+        requiredMonthlyImprovement: { type: number }
+        projectedReadyDate: { type: string, format: date }
+    LifeEventPlan:
+      type: object
+      additionalProperties: true
+      required: [id, type, title, estimatedMonthlyImpact, oneTimeCostLow, oneTimeCostHigh, riskImpact]
+      properties:
+        id: { type: string }
+        type: { type: string }
+        title: { type: string }
+        estimatedMonthlyImpact: { type: number }
+        oneTimeCostLow: { type: number }
+        oneTimeCostHigh: { type: number }
+        riskImpact: { type: integer }
+    MoneyLeak:
+      type: object
+      additionalProperties: true
+      required: [id, type, title, estimatedMonthlyLoss, estimatedAnnualLoss, estimatedFiveYearLoss, fixRecommendation, difficulty]
+      properties:
+        id: { type: string }
+        type: { type: string }
+        title: { type: string }
+        estimatedMonthlyLoss: { type: number }
+        estimatedAnnualLoss: { type: number }
+        estimatedFiveYearLoss: { type: number }
+        fixRecommendation: { type: string }
+        difficulty: { type: string, enum: [EASY, MODERATE, INVOLVED] }

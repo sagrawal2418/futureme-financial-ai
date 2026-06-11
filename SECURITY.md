@@ -27,6 +27,10 @@ FutureMe Financial currently uses mock data only.
 - Treat future financial-data connectors as privileged infrastructure.
 - Keep AI providers downstream of deterministic calculator outputs.
 - Keep bank and AI credentials in backend-managed secret storage, never in mobile or web clients.
+- Call Claude only through the backend `LlmProvider`.
+- Store Plaid tokens only in a backend token vault and return opaque references to clients.
 - Preserve the separation between `UserIdentity` and `FinancialProfile`.
 
 This prototype has not undergone a formal security, privacy, regulatory, or compliance review and must not be used with real customer data.
+
+See [docs/security-architecture.md](docs/security-architecture.md) for the encryption and audit-logging roadmap.

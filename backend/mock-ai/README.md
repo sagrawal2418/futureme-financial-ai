@@ -2,4 +2,4 @@
 
 The running MVP uses `shared/ai-assistant/MockAiAssistantService`.
 
-A future backend implementation may expose the same assistant contract and delegate explanations to Azure OpenAI. It must ground prompts in immutable `ScenarioResult` values, include assumption/risk context, and never ask the model to calculate balances or projections.
+The backend provider architecture now includes `MockLlmProvider` and an `AnthropicLlmProvider` request builder. Claude must receive immutable shared-engine output, include assumption and risk context, and never calculate balances, scores, probabilities, or projections.

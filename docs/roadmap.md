@@ -1,54 +1,28 @@
-# Future Roadmap
+# Roadmap
 
-## 1. Editable planning workspace
+## Version 3: Connected Twin
 
-- Validated profile editor on every client
-- Custom scenario inputs and assumption review
-- Saved comparisons and shareable summaries
-- Localization and expanded accessibility testing
+- Editable profile and custom goal inputs across all clients
+- Authenticated sync and encrypted persistence
+- Plaid Sandbox through backend token vaulting
+- Claude transport with prompt registry and evaluation datasets
+- Assumption versioning and Monte Carlo ranges
+- Real-time insight delivery and alert preferences
 
-## 2. Deeper modeling
+## Version 4: Intelligent Banking
 
-- Monte Carlo confidence ranges
-- Inflation, salary growth, and market regimes
-- Mortgage amortization and refinance break-even
-- Tax-aware relocation and family-cost policies
-- Versioned assumptions with regression fixtures
+- Core banking and CRM adapters
+- Banker-assisted planning sessions
+- Explainable next-best-action orchestration
+- Product eligibility and prequalification handoffs
+- White-label themes and multi-tenant policy
 
-## 3. Privacy-ready persistence
+## Version 5: Governed Enterprise Platform
 
-- Encrypted local databases
-- Android Keystore and iOS Keychain-backed secrets
-- Consent, retention, export, and deletion workflows
-- Threat model, privacy review, and audit events
+- Model-risk governance and approval workflows
+- Immutable audit events and data lineage
+- Consent, retention, export, and deletion controls
+- Regional policy packs
+- Experimentation, observability, and outcome analytics
 
-## 4. Plaid integration
-
-- Opt-in account aggregation behind a backend provider
-- Read-only balances and categorized cash flow
-- Explicit consent and reconnect/revoke flows
-- Sandbox-first contract and security testing
-
-## 5. Azure OpenAI integration
-
-- Provider adapter behind a governed explanation contract
-- Grounding only from signed calculator output
-- Prompt/model versioning, content filters, and evaluations
-- Human-readable citations to assumptions and risk factors
-
-## 6. Real-time alerts
-
-- Cash-flow deterioration and reserve warnings
-- Debt payoff opportunities
-- Rate and refinance monitoring
-- Goal drift and large-commitment notifications
-
-## 7. Enterprise banking
-
-- White-label financial wellness
-- Banker-assisted planning and customer handoff
-- Next-best-action and prequalification journeys
-- Multi-tenant policy, audit, observability, and model-risk governance
-- Core banking and CRM provider adapters
-
-No real financial-data integration should ship before authentication, encryption, consent, retention, audit, and compliance foundations are reviewed.
+No production financial-data integration should ship before authentication, encryption, consent, retention, incident response, and compliance review are complete.

@@ -1,47 +1,28 @@
 # Product Vision
 
-FutureMe Financial helps a household answer one difficult question: **What happens to our financial future if we do this?**
+FutureMe Financial is a proactive financial digital twin.
 
-## Problem
+Traditional budgeting products categorize the past. FutureMe continuously answers what is likely to happen next, what may derail the plan, and which action has the highest modeled value.
 
-Major choices combine income, fixed obligations, debt, liquidity, investments, family needs, and uncertainty. Most finance products show balances or isolate one calculator. Spreadsheets are brittle, and black-box recommendations are difficult to trust.
+## Product Promise
 
-## Product promise
-
-FutureMe provides a synchronized decision workspace on Android, iOS, and web:
-
-- Build one understandable financial twin
-- Simulate a meaningful life decision in seconds
-- See cash-flow, runway, debt, net-worth, and risk effects together
-- Compare two paths using the same assumptions
-- Ask plain-English questions grounded in the model
-- Understand why a recommendation was made
+- Detect financial risks before they become crises.
+- Translate account activity into understandable opportunities.
+- Track readiness for life goals instead of only balances.
+- Prepare for major life events with transparent assumptions.
+- Compare current and improved trajectories.
+- Explain every recommendation in plain language.
 
 ## Principles
 
-1. **Calculators calculate; AI explains.**
-2. **One scenario model across every channel.**
-3. **Show assumptions and tradeoffs, not false certainty.**
-4. **Deliver value before requesting bank access.**
-5. **Collect the minimum data required.**
-6. **Use calm, non-judgmental language in stressful moments.**
-7. **Treat accessibility and dark mode as product requirements.**
+1. Calculators calculate; AI explains.
+2. One financial model serves every channel.
+3. Recommendations expose assumptions and tradeoffs.
+4. Bank access is optional and backend-only.
+5. Data collection is minimized.
+6. Accessibility, dark mode, and failure states are product requirements.
+7. Financial language remains calm and non-judgmental.
 
-## Users
+## Enterprise Opportunity
 
-- Households planning a home, move, family change, debt payoff, or investment increase
-- Financial wellness customers at banks and credit unions
-- Bankers facilitating guided planning conversations
-- Product leaders evaluating next-best-action experiences
-
-## MVP success
-
-A user can open any client and receive materially identical output for the same demo profile and scenario. They can explain the recommendation using visible cash-flow, reserve, projection, and risk factors.
-
-## Non-goals
-
-- Investment, tax, legal, or lending advice
-- Credit underwriting
-- Automated trading or money movement
-- Production storage of customer financial data
-- Real bank or AI integrations in the prototype
+Banks can use the same architecture for financial wellness, banker-assisted planning, next-best-action experiences, retention signals, refinance journeys, and proactive life-event support without turning the LLM into a calculation engine.

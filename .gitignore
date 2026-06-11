@@ -27,6 +27,8 @@ keystore.properties
 
 # Operating systems
 .DS_Store
+__pycache__/
+*.py[cod]
 Thumbs.db
 
 # Logs

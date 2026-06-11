@@ -2,98 +2,80 @@
 
 ## Decision
 
-FutureMe Financial uses native presentation on Android and iOS, React on web, and a Kotlin Multiplatform product core.
-
-The core is deterministic and provider-independent. It owns models, formulas, projection policy, scenario comparison, seeded data, design semantics, and the mock assistant. Clients own rendering, navigation, platform accessibility, and secure-storage implementations.
+FutureMe Financial uses native Android and iOS presentation, React on web, and one Kotlin Multiplatform financial product core. Platform code owns rendering, navigation, accessibility, and secure-storage implementations. Shared code owns every financial model, deterministic calculation, recommendation input, and seeded demo record.
 
 ## Boundaries
 
-| Boundary | Responsibility | Must not own |
-| --- | --- | --- |
-| `shared/models` | Serializable product contracts | Calculations or UI |
-| `shared/calculators` | Pure formulas | Framework APIs |
-| `shared/scenario-engine` | Projection, tradeoff, and comparison policy | Client state |
-| `shared/mock-data` | Canonical demo profile and scenarios | Production credentials |
-| `shared/ai-assistant` | Grounded mock explanations | Financial arithmetic |
-| `shared/design-tokens` | Cross-platform visual semantics | Platform widgets |
-| `shared/domain` | `FutureMeProduct` facade and common tests | Presentation |
-| `shared/web-bridge` | JSON exports for React | Business rules |
-| `apps/*` | Native/responsive presentation | Formula forks |
-| `backend/*` | Future transport and provider contracts | A second calculator |
+| Module | Responsibility |
+| --- | --- |
+| `shared/models` | Serializable profile, account, transaction, insight, goal, event, scenario, GPS, and assistant contracts |
+| `shared/calculators` | Pure formulas |
+| `shared/scenario-engine` | Five-year projection and comparison policy |
+| `shared/financial-gps` | Current versus improved trajectory |
+| `shared/goal-engine` | Deterministic goal-readiness probability |
+| `shared/money-leak-detector` | Rule-based opportunity detection |
+| `shared/life-event-planner` | Cost ranges and preparation plans |
+| `shared/insights-engine` | Proactive ranking and next actions |
+| `shared/ai-assistant` | Mock explanations of structured outputs |
+| `shared/mock-data` | Canonical household, accounts, scenarios, and 90-day transactions |
+| `shared/design-system` | Cross-platform visual semantics |
+| `shared/domain` | `FutureMeProduct` facade |
+| `shared/web-bridge` | JSON boundary for React |
+| `backend/providers` | Claude and Plaid interfaces |
+| `backend/normalizers` | External data to domain-compatible records |
+| `apps/*` | Presentation only |
 
-## Dependency flow
+## Dependency Flow
 
 ```mermaid
-flowchart LR
-    UI["Platform UI"] --> VM["Presentation state"]
-    VM --> FACADE["FutureMeProduct"]
-    FACADE --> ENGINE["ScenarioEngine"]
-    FACADE --> AI["MockAiAssistantService"]
-    FACADE --> DATA["MockFinancialData"]
-    ENGINE --> MATH["FinancialMath"]
-    ENGINE --> MODELS["Shared models"]
-    AI --> ENGINE
-    WEB["React"] --> JSON["Kotlin/JS JSON bridge"] --> FACADE
+flowchart TB
+    subgraph Clients
+        A["Android Compose"]
+        I["iOS SwiftUI"]
+        W["React Web"]
+    end
+
+    A --> P["FutureMeProduct"]
+    I --> P
+    W --> J["Kotlin/JS bridge"] --> P
+
+    P --> S["Scenario engine"]
+    P --> G["Financial GPS"]
+    P --> GO["Goal engine"]
+    P --> M["Money leak detector"]
+    P --> L["Life event planner"]
+    P --> IN["Insights engine"]
+    P --> AI["Mock assistant"]
+
+    S --> C["Pure calculators"]
+    G --> C
+    AI --> OUT["Structured engine output"]
+
+    B["Backend services"] --> LP["LlmProvider"]
+    B --> PP["PlaidProvider"]
+    PP --> N["FinancialDataNormalizer"]
 ```
 
-Dependencies point toward shared business policy. Platform modules can be replaced without changing calculation behavior.
+## Determinism Rule
 
-## Client integration
+Calculators and engines produce all dollar values, scores, probabilities, dates, rankings, and projections. The assistant can summarize these values but cannot calculate replacements.
 
-### Android
+## Client Integration
 
-`FutureMeApplication` provides one `FutureMeProduct`. `FutureMeViewModel` translates shared models into navigation and chat state. Compose screens render immutable shared results.
+- Android uses `FutureMeViewModel` and immutable Compose state.
+- iOS calls the generated `Shared` framework from `FutureMeViewModel`.
+- Web parses the serialized `ProductBootstrap` from Kotlin/JS.
 
-### iOS
+Every client renders `insights`, `financialGps`, `goals`, `lifeEvents`, and `moneyLeaks` from the same bootstrap.
 
-`FutureMeViewModel` owns SwiftUI state and calls the generated `Shared` framework. `KeychainSecureStore` demonstrates a platform secure-storage boundary while demo financial values remain in memory.
+## Projection Policy
 
-### Web
+The scenario engine projects monthly for 60 months, compounds investments, applies a documented property-appreciation assumption, services revolving debt, and emits annual points. The Financial GPS adds the deterministic effect of three explicit actions: reduce spending by $250, invest $200 more, and pay $300 more toward high-interest debt.
 
-Kotlin/JS exports four JSON operations: bootstrap, simulate, compare, and ask. `src/shared.ts` is a typed serialization adapter. It mirrors contracts only and contains no formulas.
+## Extension Points
 
-## Calculation policy
-
-The five-year engine:
-
-1. Builds opening cash, investments, property, mortgage, and revolving debt.
-2. Applies scenario upfront and balance-sheet changes.
-3. Projects cash flow monthly for 60 months.
-4. Compounds investments monthly.
-5. Applies a documented 3% property-appreciation assumption.
-6. Uses a simplified mortgage-principal allocation.
-7. Services revolving debt with APR and scheduled payment.
-8. Emits annual points from year zero through year five.
-
-This prototype intentionally simplifies taxes, transaction costs, rate changes, market volatility, and state-specific rules.
-
-## Explainability
-
-Risk is the bounded sum of visible factors:
-
-- Planning uncertainty
-- Scenario complexity
-- Monthly cash-flow pressure
-- Emergency reserve coverage
-- High-interest revolving debt
-- Large upfront liquidity draw
-
-The assistant receives `ScenarioResult`; it does not recalculate financial figures. A future AI provider must preserve this grounding rule.
-
-## Security posture
-
-- `UserIdentity` and `FinancialProfile` are separate contracts.
-- No real customer data is persisted.
-- No bank or AI credential exists in client code.
-- Secure storage is abstracted per platform.
-- Future providers sit behind backend/service boundaries.
-- Calculation changes require tests and assumption documentation.
-
-## Extension points
-
-- `FinancialDataProvider`: Plaid, open banking, manual entry, or enterprise core adapters
-- `FinancialExplanationProvider`: Azure OpenAI with prompt/model versioning and evaluations
-- `ScenarioPersistence`: encrypted local storage or backend sync
-- `AlertProvider`: balance, cash-flow, rate, and goal events
-
-The OpenAPI contract in `backend/api/openapi.yaml` describes the intended transport without introducing a competing implementation.
+- Replace `MockFinancialDataProvider` with normalized backend data.
+- Replace `MockLlmProvider` with Anthropic transport.
+- Replace `MockPlaidProvider` with Plaid Sandbox.
+- Add encrypted persistence without changing financial engines.
+- Add alert delivery downstream of insights.

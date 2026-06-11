@@ -1,33 +1,35 @@
 # FutureMe Financial
 
-> A cross-platform financial digital twin that helps households simulate major decisions before they commit.
+> An AI-powered financial digital twin that continuously finds risks, opportunities, and better routes through major life decisions.
 
 [![Product CI](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/product-ci.yml/badge.svg)](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/product-ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 **Educational simulation only, not financial advice.**
 
-## Product
+## Why This Exists
 
-Traditional finance apps explain the past. FutureMe models the future.
+Traditional banking apps explain what already happened: balances, transactions, and monthly budgets. They rarely answer the questions customers actually worry about:
 
-The seeded demo household can test buying a home, refinancing, paying off debt, losing a job, relocating, having a child, or investing more. Every client presents the same monthly cash-flow impact, emergency runway, debt timeline, five-year net-worth projection, health score, risk factors, tradeoffs, and recommendation.
+- Are we ready to buy a home?
+- What should we change before having another child?
+- Which financial risk is quietly getting worse?
+- How much better could our five-year outlook become?
 
-The MVP uses mock data only. It has no Plaid dependency, bank credentials, customer PII, or live AI call.
+FutureMe models the household as a living financial system. Deterministic engines calculate the future; AI translates those results into clear next steps.
 
-## Highlights
+## Version 2
 
-- Native Android with Jetpack Compose and MVVM
-- Native iOS with SwiftUI and Apple Charts
-- Responsive React and TypeScript web dashboard
-- Kotlin Multiplatform core shared by every client
-- Seven scenario families with side-by-side comparison
-- Explainable health and risk scores
-- Scenario-aware mock AI assistant with free-form questions
-- Loading, empty, error, dark-mode, and accessible UI states
-- Pure unit-tested financial calculations
-- Encryption-ready secure storage boundary
-- OpenAPI contract for future backend adapters
+- **Proactive Insights:** a weekly financial checkup ranked by severity and dollar impact
+- **Financial GPS:** current trajectory versus a concrete improved trajectory
+- **Goal Readiness:** probability, blockers, actions, monthly gap, and modeled ready date
+- **Life Event Planner:** new baby, home purchase, relocation, job loss, parent support, and medical expense
+- **Money Leak Detector:** subscriptions, idle cash, high-interest debt, insurance, refinance, and employer match
+- **Scenario Lab:** seven scenario families with deterministic five-year comparisons
+- **FutureMe Assistant:** contextual explanations grounded in shared engine output
+- **Realistic Demo Data:** account inventory and 90 days of transaction history
+
+Android, iOS, and web receive the same `ProductBootstrap` from the Kotlin Multiplatform core. No platform owns a separate formula implementation.
 
 ## Screenshots
 
@@ -35,168 +37,197 @@ The MVP uses mock data only. It has no Plaid dependency, bank credentials, custo
 | --- | --- | --- |
 | ![Android dashboard placeholder](docs/screenshots/android-dashboard-placeholder.svg) | ![iOS dashboard placeholder](docs/screenshots/ios-dashboard-placeholder.svg) | ![Web dashboard placeholder](docs/screenshots/web-dashboard-placeholder.svg) |
 
-Replace the placeholders with release captures as the product evolves.
+Release captures can replace these placeholders without changing documentation layout.
 
 ## Architecture
 
 ```mermaid
-flowchart TB
-    subgraph Clients
-        ANDROID["Android<br/>Compose + MVVM"]
-        IOS["iOS<br/>SwiftUI + MVVM"]
-        WEB["Web<br/>React + TypeScript"]
-    end
+flowchart LR
+    ANDROID["Android App<br/>Compose + MVVM"]
+    IOS["iOS App<br/>SwiftUI + MVVM"]
+    WEB["Web App<br/>React + TypeScript"]
 
-    ANDROID --> PRODUCT["FutureMeProduct facade"]
-    IOS --> PRODUCT
-    WEB --> BRIDGE["Kotlin/JS JSON bridge"] --> PRODUCT
+    ANDROID --> CORE["Shared Financial Engines<br/>Kotlin Multiplatform"]
+    IOS --> CORE
+    WEB --> BRIDGE["Kotlin/JS bridge"] --> CORE
 
-    PRODUCT --> ENGINE["Scenario engine"]
-    PRODUCT --> ASSISTANT["Mock AI assistant"]
-    ENGINE --> CALC["Pure calculators"]
-    ENGINE --> MODELS["Shared models"]
-    ASSISTANT --> ENGINE
-    PRODUCT --> MOCK["Seeded mock data"]
-    PRODUCT --> TOKENS["Shared design tokens"]
+    CORE --> API["Backend services"]
+    API --> CLAUDE["Claude provider<br/>explanations only"]
+    API --> PLAID["Plaid provider<br/>financial data only"]
 
-    API["Backend OpenAPI contract"] -. future adapter .-> PRODUCT
-    PLAID["Plaid provider"] -. future .-> API
-    AZURE["Azure OpenAI provider"] -. future .-> API
+    CORE --> CALC["Deterministic calculators"]
+    CORE --> GPS["Financial GPS"]
+    CORE --> GOALS["Goal engine"]
+    CORE --> LEAKS["Money leak detector"]
+    CORE --> EVENTS["Life event planner"]
+    CORE --> INSIGHTS["Insights engine"]
 ```
 
-Financial figures are produced only by `shared/calculators` and `shared/scenario-engine`. AI explains calculator output; it never invents balances or projections.
+The backend never replaces the financial core. Claude receives structured, already-calculated outputs and cannot alter balances, probabilities, or projections.
 
-See [Architecture](docs/architecture.md), [Product Vision](docs/product-vision.md), and [Roadmap](docs/roadmap.md).
+See [Architecture](docs/architecture.md), [LLM Architecture](docs/llm-architecture.md), and [Security Architecture](docs/security-architecture.md).
 
 ## Repository
 
 ```text
 apps/
-├── android/                  # Jetpack Compose presentation
-├── ios/                      # SwiftUI presentation
-└── web/                      # React dashboard
+├── android/                 # Native Jetpack Compose
+├── ios/                     # Native SwiftUI + Charts
+└── web/                     # React + TypeScript
 shared/
-├── models/                   # Cross-platform contracts
-├── calculators/              # Pure financial formulas
-├── scenario-engine/          # Projection and comparison policy
-├── mock-data/                # One canonical demo household
-├── ai-assistant/             # Deterministic mock assistant
-├── design-tokens/            # Shared visual semantics
-├── domain/                   # Product facade and common tests
-└── web-bridge/               # Kotlin/JS JSON boundary
+├── domain/                  # Product facade and provider contracts
+├── models/                  # Serializable cross-platform contracts
+├── calculators/             # Pure financial formulas
+├── scenario-engine/         # Five-year simulation and comparison
+├── financial-gps/           # Current versus improved trajectory
+├── goal-engine/             # Goal readiness probability
+├── money-leak-detector/     # Deterministic opportunity rules
+├── life-event-planner/      # Life-event cost and preparation plans
+├── insights-engine/         # Proactive insight ranking
+├── ai-assistant/            # Grounded mock explanation layer
+├── mock-data/               # Canonical household and 90-day history
+├── design-system/           # Shared visual semantics
+└── web-bridge/              # Kotlin/JS JSON exports
 backend/
-├── api/                      # OpenAPI contract
-├── services/                 # Future provider boundaries
-└── mock-ai/                  # Mock AI service notes
+├── api/                     # OpenAPI transport contract
+├── services/                # Application orchestration
+├── providers/               # LLM and Plaid boundaries
+├── normalizers/             # Provider-to-domain mapping
+└── tests/                   # Provider and normalizer tests
 docs/
 ```
 
-The logical shared directories compile as one KMP Gradle module, `:shared`, so Android, iOS, and JavaScript receive the same implementation.
+## Demo Household
 
-## Demo
+The Lee household includes two incomes, one dependent, childcare, insurance, subscriptions, utilities, mortgage, credit cards, auto debt, retirement accounts, brokerage assets, checking, and an emergency reserve.
 
-The `Lee household` starts with:
+Seeded totals:
 
-- $242,000 gross annual income
+- $242,000 annual gross income
 - $14,250 monthly take-home income
 - $96,500 liquid savings
-- $18,400 credit-card debt at 20.99% APR
-- $735,000 property value and $451,000 mortgage
-- $286,000 invested and $1,850 monthly retirement contribution
+- $18,400 credit-card debt
+- $451,000 mortgage on a $735,000 home
+- $286,000 invested
+- 90 dated mock transactions from March 13 through June 10, 2026
 
-Try **Move to Austin, TX vs Stay in New Jersey**. The same comparison object and risk-adjusted recommendation render in all three clients. Then ask the assistant, “Should I pay off debt or invest more?”
+## Demo Flow
+
+1. Open **This Week's Financial Checkup** and review the top three proactive insights.
+2. Compare the **Financial GPS** current and improved five-year trajectories.
+3. Open **Money Leaks** and inspect the annual and five-year impact.
+4. Review **Goal Readiness** for a larger home and another child.
+5. Open **Life Event Planner**, select **Welcome a new baby**, and plan the linked scenario.
+6. Compare **Move to Austin** versus **Stay in New Jersey**.
+7. Ask, “What is my biggest money leak?” and “How can I improve my 5-year outlook?”
+
+The assistant repeats shared structured output; it does not perform financial arithmetic.
+
+## Claude Architecture
+
+`LlmProvider` is backend-only:
+
+- `MockLlmProvider` runs in Version 2.
+- `AnthropicLlmProvider` builds requests but does not send them.
+- Sonnet is the default explanation strategy.
+- Opus is reserved for complex scenario reasoning.
+- Haiku is reserved for short insight summaries.
+- API keys belong only in backend secret storage.
+
+See [docs/llm-architecture.md](docs/llm-architecture.md).
+
+## Plaid Architecture
+
+`PlaidProvider` exposes link-token, token exchange, account, transaction, liability, and investment methods.
+
+- `MockPlaidProvider` returns safe local records.
+- `PlaidSandboxProvider` is an explicit non-operational placeholder.
+- `FinancialDataNormalizer` maps provider records into shared-compatible profile, transaction, cash, debt, mortgage, and investment shapes.
+- Access tokens are never returned to a client.
+
+See the endpoint contract in [backend/api/openapi.yaml](backend/api/openapi.yaml).
 
 ## Setup
 
-### Requirements
+Requirements:
 
 - JDK 17
 - Android Studio with Android SDK 36
 - Node.js 22.12 or newer
-- Xcode 16 or newer for the iOS app
+- Xcode 16 or newer
+- Python 3.12 for backend tests
 
-If macOS cannot find Java, use Android Studio's bundled JDK:
+Use Android Studio's bundled JDK on macOS when needed:
 
 ```bash
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ```
 
-### Shared core and Android
+Shared core and Android:
 
 ```bash
-./gradlew :shared:testDebugUnitTest
-./gradlew :apps:android:assembleDebug
+./gradlew :shared:testDebugUnitTest :apps:android:assembleDebug
 ```
 
-Open the repository root in Android Studio and run `apps:android`.
-
-### iOS
+iOS:
 
 ```bash
 open apps/ios/FutureMeFinancial.xcodeproj
 ```
 
-Select an iPhone simulator and run `FutureMeFinancial`. The Xcode build phase compiles and embeds the KMP framework automatically.
-
-If Command Line Tools are selected instead of Xcode:
+Web:
 
 ```bash
-sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-```
-
-### Web
-
-```bash
-./gradlew :shared:jsBrowserProductionLibraryDistribution
 cd apps/web
 npm install
 npm run dev
 ```
 
-`npm run dev` builds the Kotlin/JS package before starting Vite. Open [http://localhost:5173](http://localhost:5173).
-
-### Verification
+Backend tests:
 
 ```bash
-./gradlew :shared:testDebugUnitTest :apps:android:assembleDebug
-cd apps/web && npm test && npm run build
+python3 -m unittest discover -s backend/tests -v
 ```
 
-## Testing
+Full local verification:
 
-Shared tests cover:
+```bash
+./gradlew :shared:testDebugUnitTest :shared:compileKotlinIosSimulatorArm64 :apps:android:assembleDebug
+cd apps/web && npm test && npm run build
+cd ../.. && python3 -m unittest discover -s backend/tests -v
+```
 
-- Monthly cash flow and emergency runway
-- Monthly compounding
-- Debt payoff and negative amortization
-- Net worth and annual projection points
-- Health and explainable risk scoring
-- Scenario comparison policy
-- All seven scenario families
-- Scenario-aware assistant responses
+## Test Coverage
 
-Web tests verify the generated Kotlin/JS contract. Android and iOS intentionally contain no duplicate formula implementation.
+Shared tests cover formulas, scenarios, all seven scenario families, proactive insights, Financial GPS, goal probability, life-event planning, money-leak detection, assistant grounding, and 90-day demo-data reconciliation.
 
-## Privacy
+Backend tests cover:
 
-- Mock data only
-- No account numbers, tokens, or real credentials
-- Identity is separated from financial profile data
-- Android application DI and iOS Keychain abstractions are provider-ready
-- Future bank and AI adapters remain outside the deterministic calculation core
+- Mock LLM explanations
+- Anthropic model routing and request generation
+- Mock Plaid data and token handling
+- Financial data normalization
 
-See [SECURITY.md](SECURITY.md).
+Web tests verify the generated Kotlin/JS bridge. GitHub Actions builds Android, web, the native iOS simulator app, and the backend provider suite.
 
 ## Roadmap
 
-1. Editable, validated profiles and custom scenarios
-2. Encrypted local persistence and consent controls
-3. Monte Carlo ranges and versioned assumptions
-4. Opt-in Plaid aggregation through a governed backend
-5. Azure OpenAI explanations grounded in signed calculator output
-6. Real-time alerts and refinance/debt opportunities
-7. Enterprise banking workflows, audit, tenancy, and model-risk governance
+Version 3 priorities:
 
-## Contributing
+1. Editable synchronized profiles and custom goal inputs
+2. Versioned assumption sets and Monte Carlo confidence bands
+3. Authenticated backend persistence with consent and audit events
+4. Plaid Sandbox integration behind token vaulting
+5. Claude evaluation harness, prompt registry, and citation UI
+6. Real-time cash-flow, rate, and goal-drift alerts
+7. Banker-assisted and white-label enterprise workflows
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Licensed under the [MIT License](LICENSE).
+See [docs/roadmap.md](docs/roadmap.md).
+
+## Privacy
+
+This prototype uses mock data only. It stores no real bank credentials, Plaid access tokens, Claude API keys, or customer account numbers. See [SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE)
