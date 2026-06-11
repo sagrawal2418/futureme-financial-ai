@@ -7,6 +7,7 @@
     "shared": "cd ../.. && ./gradlew :shared:jsBrowserProductionLibraryDistribution",
     "dev": "npm run shared && vite",
     "build": "npm run shared && tsc -b && vite build",
+    "build:pages": "npm run shared && tsc -b && vite build --mode github-pages",
     "test": "vitest run"
   },
   "dependencies": {
