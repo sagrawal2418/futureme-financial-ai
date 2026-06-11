@@ -3,9 +3,12 @@
 > An AI-powered financial digital twin that continuously finds risks, opportunities, and better routes through major life decisions.
 
 [![Product CI](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/product-ci.yml/badge.svg)](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/product-ci.yml)
+[![GitHub Pages](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/deploy-pages.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 **Educational simulation only, not financial advice.**
+
+[Open the live web app](https://sagrawal2418.github.io/futureme-financial-ai/)
 
 ## Why This Exists
 
