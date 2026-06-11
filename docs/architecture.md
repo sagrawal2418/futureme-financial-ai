@@ -68,6 +68,8 @@ Calculators and engines produce all dollar values, scores, probabilities, dates,
 
 Every client renders `insights`, `financialGps`, `goals`, `lifeEvents`, and `moneyLeaks` from the same bootstrap.
 
+The synchronized presentation contract is documented in [feature-parity.md](feature-parity.md). Platform-native navigation is encouraged, but all clients must expose equivalent inputs, outputs, and user actions.
+
 ## Projection Policy
 
 The scenario engine projects monthly for 60 months, compounds investments, applies a documented property-appreciation assumption, services revolving debt, and emits annual points. The Financial GPS adds the deterministic effect of three explicit actions: reduce spending by $250, invest $200 more, and pay $300 more toward high-interest debt.

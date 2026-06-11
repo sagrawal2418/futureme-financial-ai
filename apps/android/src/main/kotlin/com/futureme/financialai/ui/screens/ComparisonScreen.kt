@@ -11,11 +11,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.futureme.shared.models.Scenario
 import com.futureme.shared.models.ScenarioComparison
 import com.futureme.shared.models.ScenarioResult
 import com.futureme.financialai.ui.components.ComparisonChart
@@ -27,7 +37,11 @@ import com.futureme.financialai.util.oneDecimal
 import com.futureme.financialai.util.signedMoney
 
 @Composable
-fun ComparisonScreen(comparison: ScenarioComparison) {
+fun ComparisonScreen(
+    comparison: ScenarioComparison,
+    scenarios: List<Scenario>,
+    onCompare: (Scenario, Scenario) -> Unit,
+) {
     Column {
         SectionTitle(
             eyebrow = "Side by side",
@@ -37,6 +51,20 @@ fun ComparisonScreen(comparison: ScenarioComparison) {
             "Risk-adjusted comparison using the same household profile and projection policy.",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+        ScenarioSelector(
+            label = "Option A",
+            selected = comparison.left.scenario,
+            scenarios = scenarios.filterNot { it.id == comparison.right.scenario.id },
+            onSelect = { onCompare(it, comparison.right.scenario) },
+            modifier = Modifier.padding(top = 14.dp),
+        )
+        ScenarioSelector(
+            label = "Option B",
+            selected = comparison.right.scenario,
+            scenarios = scenarios.filterNot { it.id == comparison.left.scenario.id },
+            onSelect = { onCompare(comparison.left.scenario, it) },
             modifier = Modifier.padding(top = 8.dp),
         )
         Card(
@@ -105,6 +133,45 @@ fun ComparisonScreen(comparison: ScenarioComparison) {
             modifier = Modifier.padding(top = 22.dp),
         )
         Spacer(Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun ScenarioSelector(
+    label: String,
+    selected: Scenario,
+    scenarios: List<Scenario>,
+    onSelect: (Scenario) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Column(modifier = modifier.fillMaxWidth()) {
+        Eyebrow(label)
+        OutlinedButton(
+            onClick = { expanded = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics {
+                    contentDescription = "$label scenario, currently ${selected.title}"
+                },
+        ) {
+            Text(selected.title, modifier = Modifier.weight(1f))
+            Text("Change")
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            scenarios.forEach { scenario ->
+                DropdownMenuItem(
+                    text = { Text(scenario.title) },
+                    onClick = {
+                        expanded = false
+                        onSelect(scenario)
+                    },
+                )
+            }
+        }
     }
 }
 

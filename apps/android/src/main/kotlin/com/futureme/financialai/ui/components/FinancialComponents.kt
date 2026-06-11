@@ -286,6 +286,21 @@ fun ComparisonChart(
 }
 
 @Composable
+fun GpsTrajectoryChart(
+    gps: com.futureme.shared.models.FinancialGpsResult,
+    modifier: Modifier = Modifier,
+) {
+    FinancialLineChart(
+        primary = gps.improvedTrajectory.map { it.scenarioNetWorth },
+        secondary = gps.currentTrajectory.map { it.scenarioNetWorth },
+        primaryColor = Positive,
+        secondaryColor = Color(0xFFA5B2AC),
+        description = "Five-year Financial GPS current and improved trajectories",
+        modifier = modifier,
+    )
+}
+
+@Composable
 private fun FinancialLineChart(
     primary: List<Double>,
     secondary: List<Double>,

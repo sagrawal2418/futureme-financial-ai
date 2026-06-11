@@ -65,7 +65,7 @@ flowchart LR
 
 The backend never replaces the financial core. Claude receives structured, already-calculated outputs and cannot alter balances, probabilities, or projections.
 
-See [Architecture](docs/architecture.md), [LLM Architecture](docs/llm-architecture.md), and [Security Architecture](docs/security-architecture.md).
+See [Architecture](docs/architecture.md), [Client Feature Parity](docs/feature-parity.md), [LLM Architecture](docs/llm-architecture.md), and [Security Architecture](docs/security-architecture.md).
 
 ## Repository
 
@@ -208,7 +208,7 @@ Backend tests cover:
 - Mock Plaid data and token handling
 - Financial data normalization
 
-Web tests verify the generated Kotlin/JS bridge. GitHub Actions builds Android, web, the native iOS simulator app, and the backend provider suite.
+Web tests verify the generated Kotlin/JS bridge. A client parity contract test guards the synchronized Version 2 capability set. GitHub Actions builds Android, web, the native iOS simulator app, and the backend provider suite.
 
 ## Roadmap
 

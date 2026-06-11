@@ -135,6 +135,35 @@ final class FutureMeViewModel: ObservableObject {
         )
     }
 
+    func compare(_ left: ScenarioCardModel, _ right: ScenarioCardModel) {
+        guard left.id != right.id, case let .content(content) = state else {
+            return
+        }
+
+        state = .content(
+            FutureMeDashboardContent(
+                displayName: content.displayName,
+                householdName: content.householdName,
+                dashboard: content.dashboard,
+                scenarios: content.scenarios,
+                selected: content.selected,
+                result: content.result,
+                comparison: product.compare(
+                    leftScenarioId: left.id,
+                    rightScenarioId: right.id
+                ),
+                insights: content.insights,
+                financialGps: content.financialGps,
+                goals: content.goals,
+                lifeEvents: content.lifeEvents,
+                moneyLeaks: content.moneyLeaks,
+                suggestions: content.suggestions,
+                messages: content.messages,
+                disclaimer: content.disclaimer
+            )
+        )
+    }
+
     func ask(_ question: String) {
         let normalized = question.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalized.isEmpty, case let .content(content) = state else {

@@ -28,10 +28,10 @@ import com.futureme.financialai.presentation.FutureMeUiState
 import com.futureme.financialai.presentation.FutureMeViewModel
 import com.futureme.financialai.ui.components.Eyebrow
 import com.futureme.financialai.ui.screens.AssistantScreen
+import com.futureme.financialai.ui.screens.CopilotHubScreen
 import com.futureme.financialai.ui.screens.ComparisonScreen
 import com.futureme.financialai.ui.screens.DashboardScreen
 import com.futureme.financialai.ui.screens.LoadingScreen
-import com.futureme.financialai.ui.screens.LifeEventPlannerScreen
 import com.futureme.financialai.ui.screens.MessageScreen
 import com.futureme.financialai.ui.screens.MoneyLeakScreen
 import com.futureme.financialai.ui.screens.ScenarioDetailScreen
@@ -57,6 +57,7 @@ fun FutureMeApp(viewModel: FutureMeViewModel) {
             content = state.data,
             onNavigate = viewModel::navigate,
             onScenarioClick = viewModel::openScenario,
+            onCompare = viewModel::compare,
             onAskAssistant = viewModel::askAssistant,
         )
     }
@@ -67,6 +68,10 @@ private fun ContentScaffold(
     content: FutureMeContent,
     onNavigate: (FutureMeScreen) -> Unit,
     onScenarioClick: (com.futureme.shared.models.Scenario) -> Unit,
+    onCompare: (
+        com.futureme.shared.models.Scenario,
+        com.futureme.shared.models.Scenario,
+    ) -> Unit,
     onAskAssistant: (String) -> Unit,
 ) {
     Scaffold(
@@ -136,6 +141,7 @@ private fun ContentScaffold(
                         content = content,
                         onScenarioClick = onScenarioClick,
                         onOpenAssistant = { onNavigate(FutureMeScreen.ASSISTANT) },
+                        onOpenScenarios = { onNavigate(FutureMeScreen.SCENARIOS) },
                         onOpenLifeEvents = { onNavigate(FutureMeScreen.LIFE_EVENTS) },
                         onOpenMoneyLeaks = { onNavigate(FutureMeScreen.MONEY_LEAKS) },
                         onImproveOutlook = {
@@ -151,13 +157,19 @@ private fun ContentScaffold(
                         onBack = { onNavigate(FutureMeScreen.SCENARIOS) },
                         onCompare = { onNavigate(FutureMeScreen.COMPARISON) },
                     )
-                    FutureMeScreen.COMPARISON -> ComparisonScreen(content.comparison)
-                    FutureMeScreen.LIFE_EVENTS -> LifeEventPlannerScreen(
-                        events = content.lifeEvents,
+                    FutureMeScreen.COMPARISON -> ComparisonScreen(
+                        comparison = content.comparison,
+                        scenarios = content.scenarios,
+                        onCompare = onCompare,
+                    )
+                    FutureMeScreen.LIFE_EVENTS -> CopilotHubScreen(
+                        content = content,
                         onPlanScenario = { scenarioId ->
                             content.scenarios.firstOrNull { it.id == scenarioId }
                                 ?.let(onScenarioClick)
                         },
+                        onAskAssistant = onAskAssistant,
+                        onOpenMoneyLeaks = { onNavigate(FutureMeScreen.MONEY_LEAKS) },
                     )
                     FutureMeScreen.MONEY_LEAKS -> MoneyLeakScreen(content.moneyLeaks)
                     FutureMeScreen.ASSISTANT -> AssistantScreen(

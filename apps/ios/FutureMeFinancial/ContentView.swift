@@ -27,6 +27,7 @@ struct ContentView: View {
             DashboardTabs(
                 content: content,
                 onSelect: viewModel.select,
+                onCompare: viewModel.compare,
                 onAsk: viewModel.ask
             )
         }
@@ -36,6 +37,7 @@ struct ContentView: View {
 private struct DashboardTabs: View {
     let content: FutureMeDashboardContent
     let onSelect: (ScenarioCardModel) -> Void
+    let onCompare: (ScenarioCardModel, ScenarioCardModel) -> Void
     let onAsk: (String) -> Void
     @State private var selectedTab = 0
 
@@ -121,8 +123,18 @@ private struct DashboardTabs: View {
             .tag(0)
 
             PlanningTab(
-                events: content.lifeEvents,
-                leaks: content.moneyLeaks
+                content: content,
+                onPlanScenario: { scenarioId in
+                    guard let scenario = content.scenarios.first(where: { $0.id == scenarioId }) else {
+                        return
+                    }
+                    onSelect(scenario)
+                    selectedTab = 0
+                },
+                onAsk: { question in
+                    selectedTab = 4
+                    onAsk(question)
+                }
             )
                 .tabItem { Label("Plan", systemImage: "map.fill") }
                 .tag(1)
@@ -136,7 +148,12 @@ private struct DashboardTabs: View {
                 .tabItem { Label("Scenarios", systemImage: "sparkles") }
                 .tag(2)
 
-            ComparisonTab(comparison: content.comparison, disclaimer: content.disclaimer)
+            ComparisonTab(
+                comparison: content.comparison,
+                scenarios: content.scenarios,
+                disclaimer: content.disclaimer,
+                onCompare: onCompare
+            )
                 .tabItem { Label("Compare", systemImage: "rectangle.split.2x1") }
                 .tag(3)
 
@@ -211,8 +228,8 @@ private struct FinancialGpsCard: View {
                     .clipShape(Capsule())
             }
             HStack(spacing: 9) {
-                GpsMetric(label: "CURRENT PATH", value: moneyCompact(gps.currentFiveYearNetWorth))
-                GpsMetric(label: "IMPROVED PATH", value: moneyCompact(gps.improvedFiveYearNetWorth))
+                GpsMetric(label: "CURRENT TRAJECTORY", value: moneyCompact(gps.currentFiveYearNetWorth))
+                GpsMetric(label: "IMPROVED TRAJECTORY", value: moneyCompact(gps.improvedFiveYearNetWorth))
             }
             Text("Potential five-year lift: " + money(gps.difference))
                 .font(.headline)
@@ -1016,20 +1033,55 @@ private struct ScenarioListTab: View {
 }
 
 private struct PlanningTab: View {
-    let events: [LifeEventPlan]
-    let leaks: [MoneyLeak]
+    let content: FutureMeDashboardContent
+    let onPlanScenario: (String) -> Void
+    let onAsk: (String) -> Void
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 12) {
                     SectionTitle(
+                        eyebrow: "PROACTIVE INSIGHTS",
+                        title: "Every signal worth reviewing"
+                    )
+                    ForEach(content.insights, id: \.id) { insight in
+                        InsightDetailCard(insight: insight)
+                    }
+
+                    FinancialGpsDetail(gps: content.financialGps) {
+                        onAsk("How can I improve my 5-year outlook?")
+                    }
+                    .padding(.top, 18)
+
+                    SectionTitle(
+                        eyebrow: "GOAL READINESS",
+                        title: "What stands between you and each goal"
+                    )
+                    .padding(.top, 18)
+                    ForEach(content.goals, id: \.id) { goal in
+                        NavigationLink {
+                            GoalDetail(goal: goal)
+                        } label: {
+                            GoalSummaryCard(goal: goal)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(
+                            "\(goal.title), \(goal.probabilityPercentage) percent ready"
+                        )
+                    }
+
+                    SectionTitle(
                         eyebrow: "LIFE EVENT PLANNER",
                         title: "Plan the moments that change everything"
                     )
-                    ForEach(events, id: \.id) { event in
+                    .padding(.top, 18)
+                    ForEach(content.lifeEvents, id: \.id) { event in
                         NavigationLink {
-                            LifeEventDetail(event: event)
+                            LifeEventDetail(
+                                event: event,
+                                onPlanScenario: onPlanScenario
+                            )
                         } label: {
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
@@ -1067,7 +1119,7 @@ private struct PlanningTab: View {
                     )
                     .padding(.top, 18)
 
-                    ForEach(leaks, id: \.id) { leak in
+                    ForEach(content.moneyLeaks, id: \.id) { leak in
                         VStack(alignment: .leading, spacing: 7) {
                             HStack {
                                 Text(leak.title)
@@ -1080,6 +1132,9 @@ private struct PlanningTab: View {
                             }
                             Text(leak.summary)
                                 .font(.caption)
+                                .foregroundStyle(AppTheme.muted)
+                            Text("Five-year impact " + money(leak.estimatedFiveYearLoss))
+                                .font(.caption2)
                                 .foregroundStyle(AppTheme.muted)
                             Text(leak.fixRecommendation)
                                 .font(.caption2.bold())
@@ -1098,8 +1153,197 @@ private struct PlanningTab: View {
     }
 }
 
+private struct InsightDetailCard: View {
+    let insight: Insight
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack {
+                Eyebrow(insight.category.name.replacingOccurrences(of: "_", with: " "))
+                Spacer()
+                if insight.estimatedDollarImpact > 0 {
+                    Text(money(insight.estimatedDollarImpact))
+                        .font(.caption.bold())
+                        .foregroundStyle(AppTheme.positive)
+                }
+            }
+            Text(insight.title)
+                .font(.headline)
+                .foregroundStyle(AppTheme.ink)
+            Text(insight.summary)
+                .font(.caption)
+                .foregroundStyle(AppTheme.muted)
+            Text(insight.recommendedAction)
+                .font(.caption2.bold())
+                .foregroundStyle(AppTheme.positive)
+        }
+        .padding(16)
+        .futureMeCard()
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct FinancialGpsDetail: View {
+    let gps: FinancialGpsResult
+    let onExplain: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 13) {
+            SectionTitle(
+                eyebrow: "FINANCIAL GPS",
+                title: "Current route versus improved route"
+            )
+            HStack(spacing: 9) {
+                GpsMetric(label: "CURRENT TRAJECTORY", value: moneyCompact(gps.currentFiveYearNetWorth))
+                GpsMetric(label: "IMPROVED TRAJECTORY", value: moneyCompact(gps.improvedFiveYearNetWorth))
+            }
+            Chart {
+                ForEach(gps.currentTrajectory, id: \.year) { point in
+                    LineMark(
+                        x: .value("Year", point.year),
+                        y: .value("Current route", point.scenarioNetWorth)
+                    )
+                    .foregroundStyle(by: .value("Route", "Current route"))
+                    .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round))
+                }
+                ForEach(gps.improvedTrajectory, id: \.year) { point in
+                    LineMark(
+                        x: .value("Year", point.year),
+                        y: .value("Improved route", point.scenarioNetWorth)
+                    )
+                    .foregroundStyle(by: .value("Route", "Improved route"))
+                    .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                }
+            }
+            .chartForegroundStyleScale([
+                "Current route": Color.gray.opacity(0.7),
+                "Improved route": AppTheme.positive,
+            ])
+            .chartYAxis(.hidden)
+            .frame(height: 175)
+            .accessibilityLabel("Five-year Financial GPS current and improved trajectories")
+
+            Text("Potential five-year lift: " + money(gps.difference))
+                .font(.headline)
+                .foregroundStyle(AppTheme.positive)
+            Text(gps.explanation)
+                .font(.caption)
+                .foregroundStyle(AppTheme.muted)
+            ForEach(gps.monthlyActionPlan, id: \.self) { action in
+                Label(action, systemImage: "arrow.turn.down.right")
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.ink)
+            }
+            Button("Explain my improved route", action: onExplain)
+                .buttonStyle(.borderedProminent)
+                .tint(AppTheme.forest)
+                .frame(maxWidth: .infinity)
+        }
+        .padding(18)
+        .futureMeCard(fill: AppTheme.softMint, showsBorder: false)
+    }
+}
+
+private struct GoalSummaryCard: View {
+    let goal: GoalProbabilityResult
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            HStack {
+                Text(goal.title)
+                    .font(.headline)
+                    .foregroundStyle(AppTheme.ink)
+                Spacer()
+                Text("\(goal.probabilityPercentage)%")
+                    .font(.title3.bold())
+                    .foregroundStyle(AppTheme.positive)
+            }
+            ProgressView(value: Double(goal.probabilityPercentage), total: 100)
+                .tint(AppTheme.positive)
+            Text(goal.explanation)
+                .font(.caption)
+                .foregroundStyle(AppTheme.muted)
+            HStack {
+                Text("Modeled ready \(goal.projectedReadyDate)")
+                    .font(.caption2)
+                    .foregroundStyle(AppTheme.muted)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(AppTheme.muted)
+            }
+        }
+        .padding(16)
+        .futureMeCard()
+    }
+}
+
+private struct GoalDetail: View {
+    let goal: GoalProbabilityResult
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Eyebrow(goal.type.name.replacingOccurrences(of: "_", with: " "))
+                Text(goal.title)
+                    .font(.largeTitle.bold())
+                    .foregroundStyle(AppTheme.ink)
+                Text("\(goal.probabilityPercentage)% ready")
+                    .font(.title3.bold())
+                    .foregroundStyle(AppTheme.positive)
+                ProgressView(value: Double(goal.probabilityPercentage), total: 100)
+                    .tint(AppTheme.positive)
+                Text(goal.explanation)
+                    .foregroundStyle(AppTheme.muted)
+
+                GoalListCard(title: "BLOCKERS", items: goal.blockers)
+                GoalListCard(title: "RECOMMENDED ACTIONS", items: goal.recommendedActions)
+
+                HStack(spacing: 10) {
+                    GpsMetric(
+                        label: "MONTHLY IMPROVEMENT",
+                        value: money(goal.requiredMonthlyImprovement)
+                    )
+                    GpsMetric(
+                        label: "MODELED READY",
+                        value: goal.projectedReadyDate
+                    )
+                }
+            }
+            .padding(20)
+        }
+        .background(AppTheme.canvas)
+        .navigationTitle("Goal plan")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct GoalListCard: View {
+    let title: String
+    let items: [String]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            Eyebrow(title)
+            if items.isEmpty {
+                Text("No blockers detected in the current model.")
+                    .font(.callout)
+                    .foregroundStyle(AppTheme.muted)
+            } else {
+                ForEach(items, id: \.self) { item in
+                    Label(item, systemImage: "checkmark.circle")
+                        .font(.callout)
+                        .foregroundStyle(AppTheme.ink)
+                }
+            }
+        }
+        .padding(18)
+        .futureMeCard()
+    }
+}
+
 private struct LifeEventDetail: View {
     let event: LifeEventPlan
+    let onPlanScenario: (String) -> Void
 
     var body: some View {
         ScrollView {
@@ -1133,10 +1377,28 @@ private struct LifeEventDetail: View {
                 .padding(18)
                 .futureMeCard()
 
-                Button("Plan this event") {}
+                if !event.relatedInsights.isEmpty {
+                    VStack(alignment: .leading, spacing: 9) {
+                        Eyebrow("RELATED INSIGHTS")
+                        ForEach(event.relatedInsights, id: \.self) { insight in
+                            Label(insight, systemImage: "lightbulb")
+                                .font(.callout)
+                                .foregroundStyle(AppTheme.ink)
+                        }
+                    }
+                    .padding(18)
+                    .futureMeCard()
+                }
+
+                Button("Plan this event") {
+                    if let scenarioId = event.suggestedScenarioIds.first {
+                        onPlanScenario(scenarioId)
+                    }
+                }
                     .buttonStyle(.borderedProminent)
                     .tint(AppTheme.forest)
                     .frame(maxWidth: .infinity)
+                    .disabled(event.suggestedScenarioIds.isEmpty)
                     .accessibilityHint("Uses the linked deterministic scenarios")
 
                 Text("Suggested scenarios: " + event.suggestedScenarioIds.joined(separator: ", "))
@@ -1153,13 +1415,55 @@ private struct LifeEventDetail: View {
 
 private struct ComparisonTab: View {
     let comparison: ScenarioComparison
+    let scenarios: [ScenarioCardModel]
     let disclaimer: String
+    let onCompare: (ScenarioCardModel, ScenarioCardModel) -> Void
+    @State private var leftId: String
+    @State private var rightId: String
+
+    init(
+        comparison: ScenarioComparison,
+        scenarios: [ScenarioCardModel],
+        disclaimer: String,
+        onCompare: @escaping (ScenarioCardModel, ScenarioCardModel) -> Void
+    ) {
+        self.comparison = comparison
+        self.scenarios = scenarios
+        self.disclaimer = disclaimer
+        self.onCompare = onCompare
+        _leftId = State(initialValue: comparison.left.scenario.id)
+        _rightId = State(initialValue: comparison.right.scenario.id)
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
                     SectionTitle(eyebrow: "SIDE BY SIDE", title: "Compare two paths")
+                    VStack(spacing: 10) {
+                        Picker("Option A", selection: $leftId) {
+                            ForEach(scenarios.filter { $0.id != rightId }) { scenario in
+                                Text(scenario.title).tag(scenario.id)
+                            }
+                        }
+                        .accessibilityLabel("Option A scenario")
+                        .onChange(of: leftId) { newValue in
+                            requestComparison(leftId: newValue, rightId: rightId)
+                        }
+
+                        Picker("Option B", selection: $rightId) {
+                            ForEach(scenarios.filter { $0.id != leftId }) { scenario in
+                                Text(scenario.title).tag(scenario.id)
+                            }
+                        }
+                        .accessibilityLabel("Option B scenario")
+                        .onChange(of: rightId) { newValue in
+                            requestComparison(leftId: leftId, rightId: newValue)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .padding(14)
+                    .futureMeCard()
                     ComparisonCard(comparison: comparison)
                     Label(disclaimer, systemImage: "shield.checkered")
                         .font(.caption2)
@@ -1170,6 +1474,17 @@ private struct ComparisonTab: View {
             .background(AppTheme.canvas)
             .navigationTitle("Comparison")
         }
+    }
+
+    private func requestComparison(leftId: String, rightId: String) {
+        guard
+            leftId != rightId,
+            let left = scenarios.first(where: { $0.id == leftId }),
+            let right = scenarios.first(where: { $0.id == rightId })
+        else {
+            return
+        }
+        onCompare(left, right)
     }
 }
 

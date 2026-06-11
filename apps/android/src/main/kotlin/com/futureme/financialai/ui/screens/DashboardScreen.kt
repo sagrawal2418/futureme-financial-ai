@@ -39,6 +39,7 @@ fun DashboardScreen(
     content: FutureMeContent,
     onScenarioClick: (Scenario) -> Unit,
     onOpenAssistant: () -> Unit,
+    onOpenScenarios: () -> Unit,
     onOpenLifeEvents: () -> Unit,
     onOpenMoneyLeaks: () -> Unit,
     onImproveOutlook: () -> Unit,
@@ -64,6 +65,15 @@ fun DashboardScreen(
             onImproveOutlook = onImproveOutlook,
             modifier = Modifier.padding(top = 14.dp),
         )
+
+        content.recentResults.firstOrNull()?.let { result ->
+            ProjectionCard(
+                result = result,
+                headline = "Five-year outlook",
+                value = compactMoney(result.projectedNetWorth5Years),
+                modifier = Modifier.padding(top = 14.dp),
+            )
+        }
 
         Row(
             modifier = Modifier.padding(top = 14.dp),
@@ -132,7 +142,7 @@ fun DashboardScreen(
                 .horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Button(onClick = { content.scenarios.firstOrNull()?.let(onScenarioClick) }) {
+            Button(onClick = onOpenScenarios) {
                 Text("Simulate decision")
             }
             OutlinedButton(onClick = onOpenAssistant) {

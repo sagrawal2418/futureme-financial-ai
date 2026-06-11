@@ -29,6 +29,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 
 import { ComparisonChart } from "./components/ComparisonChart";
+import { GpsTrajectoryChart } from "./components/GpsTrajectoryChart";
 import { ProjectionChart } from "./components/ProjectionChart";
 import {
   askFutureMe,
@@ -83,6 +84,8 @@ function App() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [selectedLifeEventId, setSelectedLifeEventId] = useState("event-baby");
+  const [showAllInsights, setShowAllInsights] = useState(false);
+  const [showAllScenarios, setShowAllScenarios] = useState(false);
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -289,12 +292,20 @@ function App() {
           <div className="section-title">
             <div>
               <p className="eyebrow">This week's financial checkup</p>
-              <h2 id="checkup-title">Your top three proactive insights</h2>
+              <h2 id="checkup-title">
+                {showAllInsights ? "Every proactive insight" : "Your top three proactive insights"}
+              </h2>
             </div>
-            <span className="education-pill">Updated from 90 days of mock activity</span>
+            <button
+              className="text-button"
+              onClick={() => setShowAllInsights((current) => !current)}
+              aria-expanded={showAllInsights}
+            >
+              {showAllInsights ? "Show top three" : "View all insights"} <ArrowRight size={16} />
+            </button>
           </div>
           <div className="insights-grid">
-            {data.insights.slice(0, 3).map((insight) => (
+            {(showAllInsights ? data.insights : data.insights.slice(0, 3)).map((insight) => (
               <article className={`proactive-card ${insight.severity.toLowerCase()}`} key={insight.id}>
                 <div className="insight-label">
                   <span>{insight.category.replaceAll("_", " ")}</span>
@@ -320,6 +331,10 @@ function App() {
                 <div><span>Improved trajectory</span><strong>{money(data.financialGps.improvedFiveYearNetWorth, true)}</strong></div>
               </div>
               <div className="gps-lift">+{money(data.financialGps.difference)} five-year lift</div>
+              <GpsTrajectoryChart
+                current={data.financialGps.currentTrajectory}
+                improved={data.financialGps.improvedTrajectory}
+              />
             </div>
             <div className="gps-actions">
               <span className="confidence-pill">{data.financialGps.confidenceLevel} confidence</span>
@@ -376,7 +391,18 @@ function App() {
                   <i style={{ width: `${goal.probabilityPercentage}%` }} />
                 </div>
                 <p>{goal.explanation}</p>
-                <b>{goal.recommendedActions[0]}</b>
+                <details className="goal-details">
+                  <summary>View blockers and action plan</summary>
+                  <strong>Blockers</strong>
+                  {goal.blockers.length > 0 ? (
+                    <ul>{goal.blockers.map((blocker) => <li key={blocker}>{blocker}</li>)}</ul>
+                  ) : (
+                    <p>No blockers detected in the current model.</p>
+                  )}
+                  <strong>Recommended actions</strong>
+                  <ul>{goal.recommendedActions.map((action) => <li key={action}>{action}</li>)}</ul>
+                  <b>Required monthly improvement {money(goal.requiredMonthlyImprovement)}</b>
+                </details>
                 <small>Modeled ready {goal.projectedReadyDate}</small>
               </article>
             ))}
@@ -446,9 +472,15 @@ function App() {
         <section className="section-block" id="scenarios">
           <div className="section-title">
             <div><p className="eyebrow">Decision lab</p><h2>Explore a different future</h2></div>
-            <button className="text-button">View all scenarios <ArrowRight size={16} /></button>
+            <button
+              className="text-button"
+              onClick={() => setShowAllScenarios((current) => !current)}
+              aria-expanded={showAllScenarios}
+            >
+              {showAllScenarios ? "Show featured scenarios" : "View all scenarios"} <ArrowRight size={16} />
+            </button>
           </div>
-          <div className="scenario-strip">
+          <div className={`scenario-strip ${showAllScenarios ? "show-all" : ""}`}>
             {selectable.map((item) => (
               <ScenarioCard
                 key={item.id}
@@ -517,7 +549,7 @@ function App() {
             <ComparisonColumn
               label="Option A"
               scenario={left}
-              scenarios={selectable}
+              scenarios={selectable.filter((item) => item.id !== right.id)}
               result={leftResult}
               onChange={setLeftId}
               preferred={preferred.scenario.id === left.id}
@@ -526,7 +558,7 @@ function App() {
             <ComparisonColumn
               label="Option B"
               scenario={right}
-              scenarios={selectable}
+              scenarios={selectable.filter((item) => item.id !== left.id)}
               result={rightResult}
               onChange={setRightId}
               preferred={preferred.scenario.id === right.id}
@@ -536,7 +568,14 @@ function App() {
           <div className="comparison-summary">
             <div className="summary-icon"><Sparkles size={19} /></div>
             <p><strong>FutureMe take:</strong> {comparison.summary}</p>
-            <button className="text-button">Open full comparison <ArrowRight size={16} /></button>
+            <button
+              className="text-button"
+              onClick={() => submitQuestion(
+                `Explain the tradeoffs between ${left.title} and ${right.title}.`,
+              )}
+            >
+              Ask about comparison <ArrowRight size={16} />
+            </button>
           </div>
         </section>
 
