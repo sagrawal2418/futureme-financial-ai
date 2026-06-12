@@ -79,6 +79,7 @@ class FutureMeProduct {
     private val missionService = MissionService()
     private val missionExecutionService = MissionExecutionService()
     private val missionCoachPreviewService = MissionCoachPreviewService()
+    private val productStrategyService = ProductStrategyService()
     private val decisionJournalEntries = decisionJournalEngine.seedEntries().toMutableList()
     private val completedMissionActionIds = mutableSetOf<String>()
     private val analyticsEventLog = mutableListOf(
@@ -372,6 +373,10 @@ class FutureMeProduct {
             missionExecution = context.missionExecution,
             missionCoachBriefings = context.missionCoachBriefings,
             missionAnalytics = context.missionAnalytics,
+            productStrategy = productStrategyService.strategy(),
+            aiEvaluationDashboard = productStrategyService.aiEvaluationDashboard(),
+            customerPersonas = productStrategyService.personas(),
+            executiveDemoStory = productStrategyService.executiveDemoStory(),
             suggestedQuestions = suggestedQuestions(),
             designTokens = FutureMeDesignTokens.current,
             disclaimer = DISCLAIMER,

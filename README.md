@@ -1,6 +1,6 @@
 # FutureMe Financial
 
-> FutureMe Financial is an AI-powered Life Readiness Platform that helps families understand their readiness for major life decisions and provides a roadmap to achieve them.
+> FutureMe turns household financial data into a clear answer about what to do next and how ready a customer is for a major life decision.
 
 [![Product CI](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/product-ci.yml/badge.svg)](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/product-ci.yml)
 [![GitHub Pages](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/deploy-pages.yml)
@@ -20,6 +20,20 @@ Traditional banking apps explain what already happened: balances, transactions, 
 - How much better could our five-year outlook become?
 
 FutureMe models the household as a living financial system. Deterministic engines calculate readiness and future impact; AI translates those results into clear next steps.
+
+## Simplified Product Architecture
+
+The product has five primary destinations:
+
+1. **Home:** What should I focus on today?
+2. **Missions:** What am I trying to achieve?
+3. **Insights:** What changed?
+4. **Coach:** Help me understand.
+5. **Profile:** Who am I?
+
+Readiness, scenarios, timelines, Financial GPS, goal probability, money leaks, and banking intelligence remain available as supporting services inside these destinations rather than competing top-level dashboards.
+
+The Coach experience also includes a 50-prompt AI evaluation framework covering mission readiness, home purchase, child readiness, debt, retirement, relocation, and risk analysis.
 
 ## Mission Control First
 
@@ -150,7 +164,7 @@ flowchart LR
 
 The backend never replaces the financial core. Claude receives structured, already-calculated outputs and cannot alter balances, probabilities, or projections.
 
-See [Mission Framework](docs/mission-framework.md), [Mission Control Architecture](docs/mission-control-architecture.md), [Mission Execution Layer](docs/mission-execution-layer.md), [Mission Coach](docs/mission-coach.md), [LLM Integration](docs/llm-integration.md), [Action Engine](docs/action-engine.md), [Mission Health](docs/mission-health.md), [Mission Roadmaps](docs/mission-roadmaps.md), [Readiness Framework](docs/readiness-framework.md), [Architecture](docs/architecture.md), [Client Feature Parity](docs/feature-parity.md), and [Security Architecture](docs/security-architecture.md).
+See [Executive Product Review](docs/executive-product-review.md), [AI Evaluation Framework](docs/ai-evaluation-framework.md), [Customer Personas](docs/customer-personas.md), [Production Readiness Roadmap](docs/production-readiness-roadmap.md), [Mission Framework](docs/mission-framework.md), [Mission Control Architecture](docs/mission-control-architecture.md), [Mission Execution Layer](docs/mission-execution-layer.md), [Mission Coach](docs/mission-coach.md), [LLM Integration](docs/llm-integration.md), [Action Engine](docs/action-engine.md), [Mission Health](docs/mission-health.md), [Mission Roadmaps](docs/mission-roadmaps.md), [Readiness Framework](docs/readiness-framework.md), [Architecture](docs/architecture.md), [Client Feature Parity](docs/feature-parity.md), and [Security Architecture](docs/security-architecture.md).
 
 ## Repository
 

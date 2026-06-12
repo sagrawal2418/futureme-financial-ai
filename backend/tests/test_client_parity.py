@@ -15,57 +15,18 @@ CLIENT_SOURCES = {
 }
 
 CAPABILITY_MARKERS = {
-    "mission control": ("mission control",),
-    "mission detail": ("mission detail",),
-    "mission timeline": ("mission timeline",),
-    "mission coach": ("mission coach",),
-    "claude mission coach": (
-        "claude mission coach",
-        "what if i do nothing?",
-        "suggested questions",
-    ),
-    "mission readiness": ("mission readiness",),
-    "mission analytics": ("mission analytics",),
-    "mission action engine": ("mission action engine",),
-    "mission roadmaps": ("mission roadmaps",),
-    "mission health": ("mission health",),
-    "mission notifications": ("mission notifications",),
-    "mission history": ("mission history",),
-    "mission scenarios": ("mission scenarios",),
-    "highest impact action": ("highest impact action",),
-    "ranked opportunities": ("ranked opportunities",),
-    "financial health explainability": ("why my score changed",),
-    "scenario impact heatmap": ("scenario impact heatmap",),
-    "monthly financial review": ("monthly financial review",),
-    "decision journal": ("decision journal",),
-    "future outcome attribution": ("what improved my future",),
-    "life readiness dashboard": ("life readiness dashboard",),
-    "readiness improvement plan": ("readiness improvement plan",),
-    "life decision simulator": ("life decision simulator", "readiness impact"),
-    "life timeline": ("life timeline",),
-    "ai coach": ("ai coach",),
-    "executive banking demo": ("executive banking demo",),
-    "proactive insights": ("proactive insights",),
-    "financial gps trajectory": (
-        "financial gps",
-        "current trajectory",
-        "improved trajectory",
-    ),
-    "goal readiness detail": (
-        "goal readiness",
-        "blockers",
-        "recommended actions",
-    ),
-    "life-event planning": ("life event planner", "plan this event"),
-    "money-leak detector": ("money leak", "five-year impact"),
-    "scenario lab": ("scenario", "simulate"),
-    "risk explanation": ("risk score", "risk"),
-    "dynamic comparison": ("option a", "option b", "compare"),
+    "five-tab navigation": ("home", "missions", "insights", "coach", "profile"),
+    "mission execution": ("missionexecution",),
+    "financial explainability": ("financialexplainability",),
+    "money-leak intelligence": ("moneyleaks",),
+    "ai quality evaluation": ("aievaluationdashboard",),
+    "realistic personas": ("customerpersonas",),
+    "executive demo story": ("executivedemostory",),
 }
 
 
 class ClientFeatureParityTest(unittest.TestCase):
-    def test_every_client_exposes_the_product_capability_contract(self) -> None:
+    def test_every_client_exposes_the_simplified_product_contract(self) -> None:
         for client, paths in CLIENT_SOURCES.items():
             source = "\n".join(
                 path.read_text(encoding="utf-8")

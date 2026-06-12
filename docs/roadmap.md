@@ -1,5 +1,15 @@
 # Roadmap
 
+## Product Simplification
+
+- Five destinations: Home, Missions, Insights, Coach, and Profile
+- One monthly highest-impact action on Home
+- Scenarios, readiness, and timelines nested inside Missions
+- Money leaks, score changes, and reviews consolidated in Insights
+- Five realistic customer personas
+- 50-prompt AI quality benchmark and evaluation dashboard
+- Executive product review and production-readiness plan
+
 ## Version 3: Life Readiness Intelligence
 
 - Shared Life Readiness Engine across Android, iOS, and web

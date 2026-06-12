@@ -38,8 +38,16 @@ import com.futureme.shared.models.ScenarioImpactHeatmap
 import com.futureme.shared.models.ScenarioResult
 import com.futureme.shared.models.SuggestedQuestion
 import com.futureme.shared.models.UserIdentity
+import com.futureme.shared.models.AiEvaluationDashboard
+import com.futureme.shared.models.CustomerPersona
+import com.futureme.shared.models.ExecutiveDemoStory
+import com.futureme.shared.models.ProductStrategy
 
 enum class FutureMeScreen {
+    HOME,
+    MISSIONS,
+    INSIGHTS,
+    PROFILE,
     DASHBOARD,
     BANKING,
     READINESS,
@@ -89,6 +97,10 @@ data class FutureMeContent(
     val missionExecution: MissionExecutionCenter,
     val missionCoachBriefings: List<MissionCoachBriefing>,
     val missionAnalytics: MissionAnalyticsSnapshot,
+    val productStrategy: ProductStrategy,
+    val aiEvaluationDashboard: AiEvaluationDashboard,
+    val customerPersonas: List<CustomerPersona>,
+    val executiveDemoStory: ExecutiveDemoStory,
     val suggestedQuestions: List<SuggestedQuestion>,
     val disclaimer: String,
     val selectedScenario: Scenario? = null,
@@ -102,7 +114,7 @@ data class FutureMeContent(
             isUser = false,
         ),
     ),
-    val screen: FutureMeScreen = FutureMeScreen.DASHBOARD,
+    val screen: FutureMeScreen = FutureMeScreen.HOME,
 )
 
 sealed interface FutureMeUiState {
@@ -160,6 +172,10 @@ class FutureMeViewModel(
                         missionExecution = bootstrap.missionExecution,
                         missionCoachBriefings = bootstrap.missionCoachBriefings,
                         missionAnalytics = bootstrap.missionAnalytics,
+                        productStrategy = bootstrap.productStrategy,
+                        aiEvaluationDashboard = bootstrap.aiEvaluationDashboard,
+                        customerPersonas = bootstrap.customerPersonas,
+                        executiveDemoStory = bootstrap.executiveDemoStory,
                         suggestedQuestions = bootstrap.suggestedQuestions,
                         disclaimer = bootstrap.disclaimer,
                         comparison = product.compare("move-to-texas", "stay-in-new-jersey"),

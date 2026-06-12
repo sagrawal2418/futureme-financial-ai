@@ -46,170 +46,366 @@ private struct DashboardTabs: View {
     let onAcceptMissionAction: (String) -> Void
     let onSaveDecision: () -> Void
     @State private var selectedTab = 0
-    @State private var showSupportingServices = false
 
     var body: some View {
         TabView(selection: $selectedTab) {
+            ProductHomeTab(
+                content: content,
+                onOpenMissions: { selectedTab = 1 },
+                onOpenCoach: { selectedTab = 3 },
+                onAccept: onAcceptRecommendation
+            )
+            .tabItem { Label("Home", systemImage: "house") }
+            .tag(0)
+
             NavigationStack {
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         Header(name: content.displayName, householdName: content.householdName)
                         MissionControlView(
                             content: content,
-                            onOpenTimeline: { selectedTab = 3 },
-                            onOpenSimulator: { selectedTab = 2 },
-                            onOpenCoach: { selectedTab = 4 },
+                            onOpenTimeline: { selectedTab = 2 },
+                            onOpenSimulator: { selectedTab = 1 },
+                            onOpenCoach: { selectedTab = 3 },
                             onAskCoach: { prompt in
-                                selectedTab = 4
+                                selectedTab = 3
                                 onAsk(prompt)
                             },
                             onAcceptAction: onAcceptMissionAction
                         )
-                            .padding(.horizontal, 20)
-                        DisclosureGroup(
-                            "Supporting financial services",
-                            isExpanded: $showSupportingServices
-                        ) {
-                            VStack(spacing: 0) {
-                        HighestImpactActionCard(
-                            action: content.nextBestAction,
-                            onAccept: onAcceptRecommendation
-                        )
-                            .padding(.horizontal, 20)
-                        ReadinessHeroCard(readiness: content.readiness) {
-                            selectedTab = 3
-                        }
-                            .padding(.horizontal, 20)
-                        HealthCard(dashboard: content.dashboard)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 14)
-                        WeeklyCheckupCard(insights: content.insights)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 14)
-                        FinancialGpsCard(gps: content.financialGps) {
-                            selectedTab = 4
-                            onAsk("How can I improve my 5-year outlook?")
-                        }
-                            .padding(.horizontal, 20)
-                            .padding(.top, 14)
-                        MetricsGrid(dashboard: content.dashboard)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 12)
-                        AlertsCard(alerts: content.dashboard.alerts)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 12)
-                        Button {
-                            selectedTab = 4
-                        } label: {
-                            Label("Ask my AI coach about this plan", systemImage: "sparkles")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(AppTheme.forest)
                         .padding(.horizontal, 20)
-                        .padding(.top, 14)
-                        .accessibilityHint("Opens the financial assistant")
-                        MoneyLeakPreview(leaks: content.moneyLeaks) {
-                            selectedTab = 1
-                        }
-                            .padding(.horizontal, 20)
-                            .padding(.top, 14)
-                        GoalReadinessCard(goals: content.goals)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 14)
-                        ProjectionCard(result: content.result)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 14)
-                        SectionTitle(eyebrow: "DECISION LAB", title: "Explore a different future")
-                            .padding(.horizontal, 20)
-                            .padding(.top, 30)
-                        ScenarioCarousel(
-                            scenarios: content.scenarios,
-                            selected: content.selected,
-                            onSelect: onSelect
-                        )
-                            .padding(.top, 13)
-                        InsightCard(result: content.result)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
-                        RiskExplanationCard(result: content.result)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 12)
-                        SectionTitle(eyebrow: "SIDE BY SIDE", title: "Compare two paths")
-                            .padding(.horizontal, 20)
-                            .padding(.top, 30)
-                        ComparisonCard(comparison: content.comparison)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 13)
-                            }
-                        }
-                        .font(.headline)
-                        .foregroundStyle(AppTheme.forest)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 22)
-                        Label(
-                            "Educational simulation only, not financial advice.",
-                            systemImage: "shield.checkered"
-                        )
-                        .font(.caption2)
-                        .foregroundStyle(AppTheme.muted)
-                        .padding(.vertical, 28)
                     }
                 }
                 .background(AppTheme.canvas)
-                .toolbar(.hidden, for: .navigationBar)
+                .navigationTitle("Missions")
             }
-            .tabItem { Label("Mission", systemImage: "target") }
-            .tag(0)
+            .tabItem { Label("Missions", systemImage: "target") }
+            .tag(1)
 
-            BankingIntelligenceTab(
-                content: content,
-                onAccept: onAcceptRecommendation,
-                onAsk: { question in
-                    selectedTab = 4
-                    onAsk(question)
-                }
-            )
-                .tabItem { Label("Banking", systemImage: "chart.bar.doc.horizontal") }
-                .tag(1)
-
-            ScenarioListTab(
-                scenarios: content.scenarios,
-                selected: content.selected,
-                simulations: content.decisionSimulations,
-                heatmaps: content.scenarioImpactHeatmaps,
-                onSelect: onSelect,
-                onSaveDecision: onSaveDecision
-            )
-                .tabItem { Label("Simulator", systemImage: "sparkles") }
+            ProductInsightsTab(content: content)
+                .tabItem { Label("Insights", systemImage: "lightbulb") }
                 .tag(2)
-
-            PlanningTab(
-                content: content,
-                onPlanScenario: { scenarioId in
-                    guard let scenario = content.scenarios.first(where: { $0.id == scenarioId }) else {
-                        return
-                    }
-                    onSelect(scenario)
-                    selectedTab = 2
-                },
-                onAsk: { question in
-                    selectedTab = 4
-                    onAsk(question)
-                }
-            )
-                .tabItem { Label("Readiness", systemImage: "target") }
-                .tag(3)
 
             AssistantTab(
                 messages: content.messages,
                 suggestions: content.suggestions,
+                evaluation: content.aiEvaluationDashboard,
                 onAsk: onAsk
             )
                 .tabItem { Label("Coach", systemImage: "bubble.left.and.sparkles") }
+                .tag(3)
+
+            ProductProfileTab(content: content)
+                .tabItem { Label("Profile", systemImage: "person.crop.circle") }
                 .tag(4)
         }
         .tint(AppTheme.positive)
+    }
+}
+
+private struct ProductHomeTab: View {
+    let content: FutureMeDashboardContent
+    let onOpenMissions: () -> Void
+    let onOpenCoach: () -> Void
+    let onAccept: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    HighestImpactActionCard(
+                        action: content.nextBestAction,
+                        onAccept: onAccept
+                    )
+
+                    SectionTitle(
+                        eyebrow: "TODAY",
+                        title: "The three signals that matter"
+                    )
+                    ProductSignalCard(
+                        eyebrow: "READINESS CHANGE",
+                        title: "\(content.financialExplainability.netChange >= 0 ? "+" : "")\(content.financialExplainability.netChange) points",
+                        body: content.financialExplainability.summary,
+                        systemImage: "arrow.up.right"
+                    )
+                    ProductSignalCard(
+                        eyebrow: "BIGGEST RISK",
+                        title: content.missionControl.risks.first?.title ?? "No critical risk",
+                        body: content.missionControl.risks.first?.description ?? "No new risk was modeled.",
+                        systemImage: "exclamationmark.triangle"
+                    )
+                    ProductSignalCard(
+                        eyebrow: "BIGGEST OPPORTUNITY",
+                        title: content.missionControl.opportunities.first?.title ?? "Stay on plan",
+                        body: content.missionControl.opportunities.first?.description
+                            ?? "Continue the current action plan.",
+                        systemImage: "lightbulb"
+                    )
+
+                    SectionTitle(
+                        eyebrow: "ACTIVE MISSIONS",
+                        title: "What you are preparing for"
+                    )
+                    ForEach(Array(content.missionControl.activeMissions.prefix(4)), id: \.missionId) { mission in
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(mission.title)
+                                    .font(.headline)
+                                    .foregroundStyle(AppTheme.ink)
+                                Text(mission.blockers.first ?? "No critical blocker")
+                                    .font(.caption)
+                                    .foregroundStyle(AppTheme.muted)
+                            }
+                            Spacer()
+                            Text("\(mission.readinessScore)")
+                                .font(.title2.bold())
+                                .foregroundStyle(AppTheme.positive)
+                        }
+                        .padding(16)
+                        .futureMeCard()
+                    }
+
+                    Button(action: onOpenMissions) {
+                        Label("Open my mission plan", systemImage: "target")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(AppTheme.forest)
+
+                    Button(action: onOpenCoach) {
+                        Label("Ask why this action matters", systemImage: "sparkles")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(AppTheme.forest)
+                }
+                .padding(20)
+            }
+            .background(AppTheme.canvas)
+            .navigationTitle("Home")
+        }
+    }
+}
+
+private struct ProductSignalCard: View {
+    let eyebrow: String
+    let title: String
+    let body: String
+    let systemImage: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 13) {
+            Image(systemName: systemImage)
+                .font(.title3)
+                .foregroundStyle(AppTheme.positive)
+                .frame(width: 38, height: 38)
+                .background(AppTheme.softMint)
+                .clipShape(RoundedRectangle(cornerRadius: 11))
+            VStack(alignment: .leading, spacing: 5) {
+                Eyebrow(eyebrow)
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(AppTheme.ink)
+                Text(body)
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.muted)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .futureMeCard()
+    }
+}
+
+private struct ProductInsightsTab: View {
+    let content: FutureMeDashboardContent
+
+    private var review: MonthlyFinancialReview {
+        content.monthlyReviews[0]
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Eyebrow(review.label.uppercased(), light: true)
+                        Text(review.aiSummary)
+                            .font(.title2.bold())
+                            .foregroundStyle(.white)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(20)
+                    .futureMeCard(fill: AppTheme.forest, showsBorder: false)
+
+                    ProductInsightGroup(title: "Risks", items: review.risks)
+                    ProductInsightGroup(title: "Opportunities", items: review.opportunities)
+                    ProductInsightGroup(title: "Recommended actions", items: review.recommendedActions)
+
+                    SectionTitle(
+                        eyebrow: "MONEY LEAKS",
+                        title: "Costs worth fixing"
+                    )
+                    ForEach(Array(content.moneyLeaks.prefix(4)), id: \.id) { leak in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(leak.title)
+                                    .font(.headline)
+                                    .foregroundStyle(AppTheme.ink)
+                                Text(leak.fixRecommendation)
+                                    .font(.caption)
+                                    .foregroundStyle(AppTheme.muted)
+                            }
+                            Spacer()
+                            Text("\(money(leak.estimatedAnnualLoss))/yr")
+                                .font(.subheadline.bold())
+                                .foregroundStyle(AppTheme.positive)
+                        }
+                        .padding(16)
+                        .futureMeCard()
+                    }
+
+                    ExplainabilityCard(explanation: content.financialExplainability)
+                }
+                .padding(20)
+            }
+            .background(AppTheme.canvas)
+            .navigationTitle("Insights")
+        }
+    }
+}
+
+private struct ProductInsightGroup: View {
+    let title: String
+    let items: [String]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.headline)
+                .foregroundStyle(AppTheme.ink)
+            ForEach(Array(items.prefix(4)), id: \.self) { item in
+                Label(item, systemImage: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.muted)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(17)
+        .futureMeCard()
+    }
+}
+
+private struct ProductProfileTab: View {
+    let content: FutureMeDashboardContent
+    @State private var selectedPersonaId: String?
+
+    init(content: FutureMeDashboardContent) {
+        self.content = content
+        _selectedPersonaId = State(initialValue: content.customerPersonas.first?.id)
+    }
+
+    private var persona: CustomerPersona {
+        content.customerPersonas.first { $0.id == (selectedPersonaId ?? "") }
+            ?? content.customerPersonas[0]
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    SectionTitle(
+                        eyebrow: "FINANCIAL PROFILE",
+                        title: content.householdName
+                    )
+                    VStack(spacing: 10) {
+                        ProfileRow("Annual income", money(content.profile.annualGrossIncome))
+                        ProfileRow("Current net worth", money(content.dashboard.currentNetWorth))
+                        ProfileRow("Liquid savings", money(content.profile.liquidSavings))
+                        ProfileRow("Investments", money(content.profile.investmentBalance))
+                    }
+                    .padding(17)
+                    .futureMeCard()
+
+                    SectionTitle(
+                        eyebrow: "REALISTIC CUSTOMER JOURNEYS",
+                        title: "Test five different households"
+                    )
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(content.customerPersonas, id: \.id) { item in
+                                Button(item.title) {
+                                    selectedPersonaId = item.id
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(AppTheme.positive)
+                            }
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Eyebrow(persona.title.uppercased())
+                        Text(persona.summary)
+                            .font(.headline)
+                            .foregroundStyle(AppTheme.ink)
+                        HStack(spacing: 16) {
+                            ForEach(persona.expectedReadinessScores, id: \.category) { score in
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("\(score.score)")
+                                        .font(.title2.bold())
+                                        .foregroundStyle(AppTheme.positive)
+                                    Text(score.category)
+                                        .font(.caption2)
+                                        .foregroundStyle(AppTheme.muted)
+                                }
+                            }
+                        }
+                        ForEach(Array(persona.expectedMissionPlan.enumerated()), id: \.offset) { index, action in
+                            Text("\(index + 1). \(action)")
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.ink)
+                        }
+                    }
+                    .padding(18)
+                    .futureMeCard()
+
+                    SectionTitle(
+                        eyebrow: "EXECUTIVE DEMO MODE",
+                        title: content.executiveDemoStory.title
+                    )
+                    VStack(alignment: .leading, spacing: 9) {
+                        Text(content.executiveDemoStory.opening)
+                            .font(.body)
+                            .foregroundStyle(AppTheme.ink)
+                        ForEach(Array(content.executiveDemoStory.steps.enumerated()), id: \.offset) { index, step in
+                            Text("\(index + 1). \(step)")
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.muted)
+                        }
+                        Text(content.executiveDemoStory.closing)
+                            .font(.subheadline.bold())
+                            .foregroundStyle(AppTheme.positive)
+                    }
+                    .padding(18)
+                    .futureMeCard(fill: AppTheme.softMint, showsBorder: false)
+                }
+                .padding(20)
+            }
+            .background(AppTheme.canvas)
+            .navigationTitle("Profile")
+        }
+    }
+
+    @ViewBuilder
+    private func ProfileRow(_ label: String, _ value: String) -> some View {
+        HStack {
+            Text(label)
+                .foregroundStyle(AppTheme.muted)
+            Spacer()
+            Text(value)
+                .fontWeight(.bold)
+                .foregroundStyle(AppTheme.ink)
+        }
     }
 }
 
@@ -402,8 +598,10 @@ private struct MissionControlView: View {
                     )
                 }
                 Button {
-                    onAcceptAction(mission.nextAction.id)
-                    acceptedAction = false
+                    if let actionId = execution.actionPlan.nextAction?.actionId {
+                        onAcceptAction(actionId)
+                        acceptedAction = true
+                    }
                 } label: {
                     Label(
                         execution.actionPlan.nextAction == nil
@@ -2877,6 +3075,7 @@ private struct ComparisonTab: View {
 private struct AssistantTab: View {
     let messages: [AssistantMessage]
     let suggestions: [SuggestedQuestion]
+    let evaluation: AiEvaluationDashboard
     let onAsk: (String) -> Void
     @State private var question = ""
 
@@ -2919,6 +3118,33 @@ private struct AssistantTab: View {
                                 "\(message.isUser ? "Your question" : "FutureMe response"): \(message.text)"
                             )
                         }
+
+                        VStack(alignment: .leading, spacing: 10) {
+                            SectionTitle(
+                                eyebrow: "AI EVALUATION DASHBOARD",
+                                title: "Can we trust the explanation quality?"
+                            )
+                            Text(evaluation.statusLabel)
+                                .font(.subheadline.bold())
+                                .foregroundStyle(AppTheme.ink)
+                            Text(evaluation.methodologyNote)
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.muted)
+                            ForEach(evaluation.categories, id: \.category) { category in
+                                HStack {
+                                    Text(category.label)
+                                        .font(.caption)
+                                        .foregroundStyle(AppTheme.ink)
+                                    Spacer()
+                                    Text("\(category.promptCount) prompts")
+                                        .font(.caption.bold())
+                                        .foregroundStyle(AppTheme.positive)
+                                }
+                            }
+                        }
+                        .padding(18)
+                        .futureMeCard()
+                        .padding(.top, 10)
                     }
                     .padding(20)
                 }
