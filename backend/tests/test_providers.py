@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import json
+import ssl
 import unittest
+from io import BytesIO
+from urllib.error import HTTPError
 
 from backend.normalizers.financial_data import FinancialDataNormalizer
 from backend.api.routes import BackendApi
 from backend.providers.llm import (
+    AnthropicApiError,
     AnthropicLlmProvider,
     AnthropicResponseParser,
     ClaudeModel,
@@ -119,6 +123,40 @@ class AnthropicRequestGenerationTest(unittest.TestCase):
         provider._api_key = None
         with self.assertRaises(RuntimeError):
             provider.explain_mission({"missionId": "mission-home"})
+
+    def test_ssl_context_keeps_certificate_verification_enabled(self) -> None:
+        context = AnthropicLlmProvider(api_key="test")._ssl_context()
+
+        self.assertEqual(ssl.CERT_REQUIRED, context.verify_mode)
+        self.assertTrue(context.check_hostname)
+
+    def test_decodes_safe_anthropic_api_error(self) -> None:
+        error = HTTPError(
+            url="https://api.anthropic.com/v1/messages",
+            code=400,
+            msg="Bad Request",
+            hdrs=None,
+            fp=BytesIO(
+                json.dumps(
+                    {
+                        "type": "error",
+                        "error": {
+                            "type": "invalid_request_error",
+                            "message": "Example validation message.",
+                        },
+                        "request_id": "req_test",
+                    }
+                ).encode("utf-8")
+            ),
+        )
+
+        decoded = AnthropicLlmProvider(api_key="test")._api_error(error)
+
+        self.assertIsInstance(decoded, AnthropicApiError)
+        self.assertEqual(400, decoded.status_code)
+        self.assertEqual("invalid_request_error", decoded.error_type)
+        self.assertIn("Example validation message.", str(decoded))
+        self.assertIn("req_test", str(decoded))
 
 
 class AnthropicResponseParserTest(unittest.TestCase):

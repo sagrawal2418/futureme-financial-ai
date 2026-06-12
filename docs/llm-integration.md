@@ -37,3 +37,15 @@ The fallback uses only supplied mission facts and returns the same response shap
 - `GET /v1/missions/{missionId}/explanations`
 
 The route facade is transport-neutral so a FastAPI adapter can expose it without moving provider logic into controllers.
+
+## Live Validation
+
+With `ANTHROPIC_API_KEY` available to the backend process, run:
+
+```bash
+python3 -m backend.validate_claude_live
+```
+
+The suite makes 22 live requests covering all eight mission types, all nine supported decision scenarios, the remaining explanation methods, and the Haiku summary route. It verifies provider/model routing, nonempty output, and preservation of required readiness values.
+
+The transport keeps certificate verification enabled and checks standard Python, macOS, and Linux CA bundle locations. Anthropic failures are decoded into a safe error containing only the HTTP status, error type, message, and request ID.
