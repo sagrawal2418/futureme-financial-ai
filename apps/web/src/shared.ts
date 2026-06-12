@@ -68,6 +68,12 @@ export interface FinancialProfile {
   monthlyRetirementContribution: number;
   monthlyDebtPayments: number;
   dependents: number;
+  primaryMonthlyNetIncome: number;
+  spouseMonthlyNetIncome: number;
+  monthlyChildcare: number;
+  monthlyInsurance: number;
+  monthlySubscriptions: number;
+  monthlyUtilities: number;
 }
 
 export interface Scenario {
@@ -684,6 +690,84 @@ export interface MissionCoachBriefing {
   isFallback: boolean;
 }
 
+export type ProductPriority =
+  | "MUST_HAVE"
+  | "NICE_TO_HAVE"
+  | "FUTURE_RELEASE"
+  | "POTENTIALLY_REMOVE";
+
+export interface ProductNavigationTab {
+  id: string;
+  label: string;
+  customerQuestion: string;
+  contents: string[];
+  rationale: string;
+}
+
+export interface FeatureRecommendation {
+  name: string;
+  priority: ProductPriority;
+  rationale: string;
+}
+
+export interface ProductStrategy {
+  positioningStatement: string;
+  productPromise: string;
+  navigation: ProductNavigationTab[];
+  featureRecommendations: FeatureRecommendation[];
+}
+
+export interface AiEvaluationCategoryScore {
+  category: string;
+  label: string;
+  promptCount: number;
+  responseQualityScore: number;
+  reasoningQualityScore: number;
+  consistencyScore: number;
+  hallucinationRiskScore: number;
+  explanationUsefulnessScore: number;
+  passRate: number;
+}
+
+export interface AiEvaluationDashboard {
+  totalPrompts: number;
+  lastRunDate: string;
+  overallQualityScore: number;
+  reasoningQualityScore: number;
+  consistencyScore: number;
+  hallucinationRiskScore: number;
+  explanationUsefulnessScore: number;
+  categories: AiEvaluationCategoryScore[];
+  statusLabel: string;
+  methodologyNote: string;
+}
+
+export interface PersonaReadinessScore {
+  category: string;
+  score: number;
+}
+
+export interface CustomerPersona {
+  id: string;
+  title: string;
+  summary: string;
+  profile: FinancialProfile;
+  goals: string[];
+  challenges: string[];
+  expectedRecommendations: string[];
+  expectedReadinessScores: PersonaReadinessScore[];
+  expectedMissionPlan: string[];
+}
+
+export interface ExecutiveDemoStory {
+  title: string;
+  audience: string[];
+  personaId: string;
+  opening: string;
+  steps: string[];
+  closing: string;
+}
+
 export interface Transaction {
   id: string;
   postedDate: string;
@@ -728,6 +812,10 @@ export interface ProductBootstrap {
   missionExecution: MissionExecutionCenter;
   missionCoachBriefings: MissionCoachBriefing[];
   missionAnalytics: MissionAnalyticsSnapshot;
+  productStrategy: ProductStrategy;
+  aiEvaluationDashboard: AiEvaluationDashboard;
+  customerPersonas: CustomerPersona[];
+  executiveDemoStory: ExecutiveDemoStory;
   suggestedQuestions: SuggestedQuestion[];
   designTokens: {
     spacing: Record<string, number>;

@@ -12,60 +12,65 @@ beforeAll(() => {
       removeEventListener: () => undefined,
     }),
   });
+  Object.defineProperty(window, "scrollTo", {
+    writable: true,
+    value: () => undefined,
+  });
 });
 
 afterEach(cleanup);
 
-describe("Mission Control execution layer", () => {
-  it("renders the shared action plan, roadmap, health, history, and scenarios", async () => {
+describe("simplified FutureMe product architecture", () => {
+  it("starts with one highest-impact action and four supporting signals", async () => {
     render(<App />);
 
-    expect(await screen.findByText("Your dynamic action plan")).toBeTruthy();
-    expect(screen.getByText("Mission health")).toBeTruthy();
-    expect(screen.getByText("Readiness over time")).toBeTruthy();
-    expect(screen.getByText("Evaluate the decision")).toBeTruthy();
-    expect(screen.getByText("30 Days")).toBeTruthy();
-    expect(screen.getByText("90 Days")).toBeTruthy();
-    expect(screen.getByText("1 Year")).toBeTruthy();
-    expect(screen.getByText("Your mission briefing")).toBeTruthy();
-    expect(screen.getByText("Claude Mission Coach")).toBeTruthy();
+    expect(await screen.findByText("Your highest-impact action")).toBeTruthy();
+    expect(screen.getByText("Readiness change")).toBeTruthy();
+    expect(screen.getByText("Biggest risk")).toBeTruthy();
+    expect(screen.getByText("Biggest opportunity")).toBeTruthy();
+    expect(screen.getByText("What you are preparing for")).toBeTruthy();
   });
 
-  it("switches Claude explanations and asks a mission-specific question", async () => {
+  it("uses the five-tab customer-question navigation", async () => {
     render(<App />);
 
-    const noAction = await screen.findByRole("button", {
-      name: "What if I do nothing?",
-    });
-    fireEvent.click(noAction);
-
-    expect(screen.getByText(/remains unrealized/)).toBeTruthy();
-
-    fireEvent.click(screen.getByRole("button", { name: "Can I buy this home?" }));
-    expect(screen.getByRole("dialog", { name: "Move the mission forward" })).toBeTruthy();
-    expect(screen.getByText("Can I realistically buy this home?")).toBeTruthy();
+    expect(await screen.findByRole("button", { name: /Home/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Missions/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Insights/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Coach/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Profile/ })).toBeTruthy();
   });
 
-  it("opens the local mission notification center", async () => {
+  it("keeps mission execution actionable without exposing another dashboard", async () => {
     render(<App />);
-    const notifications = await screen.findByRole("button", {
-      name: "Mission notifications",
-    });
 
-    fireEvent.click(notifications);
+    fireEvent.click(await screen.findByRole("button", { name: /Missions/ }));
 
-    expect(screen.getByRole("heading", { name: "What changed" })).toBeTruthy();
-    expect(screen.getAllByText("New action unlocked").length).toBeGreaterThan(0);
+    expect(screen.getByText("One sequence, not another dashboard")).toBeTruthy();
+    expect(screen.getByText("Biggest blocker")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Mark complete/ })).toBeTruthy();
   });
 
-  it("completes an unlocked action and refreshes mission progress", async () => {
+  it("shows the 50-prompt AI quality benchmark in Coach", async () => {
     render(<App />);
-    const complete = await screen.findByRole("button", {
-      name: /Mark action complete/,
-    });
 
-    fireEvent.click(complete);
+    fireEvent.click(await screen.findByRole("button", { name: /Coach/ }));
 
-    expect((await screen.findAllByText("Completed")).length).toBeGreaterThan(0);
+    expect(screen.getByText("AI evaluation dashboard")).toBeTruthy();
+    expect(screen.getByText("50 realistic prompts")).toBeTruthy();
+    expect(screen.getByText("50-prompt quality benchmark ready to run")).toBeTruthy();
+  });
+
+  it("shows five realistic customer journeys and executive demo mode", async () => {
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole("button", { name: /Profile/ }));
+
+    expect(screen.getAllByText("Young Family").length).toBeGreaterThan(0);
+    expect(screen.getByText("High Income Professional")).toBeTruthy();
+    expect(screen.getByText("Pre-Retirement Couple")).toBeTruthy();
+    expect(screen.getByText("New Home Buyer")).toBeTruthy();
+    expect(screen.getByText("Single Parent")).toBeTruthy();
+    expect(screen.getByText("Executive demo mode")).toBeTruthy();
   });
 });

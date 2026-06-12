@@ -18,6 +18,7 @@ struct AssistantMessage: Identifiable {
 struct FutureMeDashboardContent {
     let displayName: String
     let householdName: String
+    let profile: FinancialProfile
     let dashboard: DashboardSnapshot
     let scenarios: [ScenarioCardModel]
     let selected: ScenarioCardModel
@@ -47,6 +48,10 @@ struct FutureMeDashboardContent {
     let missionExecution: MissionExecutionCenter
     let missionCoachBriefings: [MissionCoachBriefing]
     let missionAnalytics: MissionAnalyticsSnapshot
+    let productStrategy: ProductStrategy
+    let aiEvaluationDashboard: AiEvaluationDashboard
+    let customerPersonas: [CustomerPersona]
+    let executiveDemoStory: ExecutiveDemoStory
     let suggestions: [SuggestedQuestion]
     let messages: [AssistantMessage]
     let disclaimer: String
@@ -99,6 +104,7 @@ final class FutureMeViewModel: ObservableObject {
             FutureMeDashboardContent(
                 displayName: bootstrap.identity.displayName,
                 householdName: bootstrap.identity.householdName,
+                profile: bootstrap.profile,
                 dashboard: bootstrap.dashboard,
                 scenarios: mappedScenarios,
                 selected: initial,
@@ -131,6 +137,10 @@ final class FutureMeViewModel: ObservableObject {
                 missionExecution: bootstrap.missionExecution,
                 missionCoachBriefings: bootstrap.missionCoachBriefings,
                 missionAnalytics: bootstrap.missionAnalytics,
+                productStrategy: bootstrap.productStrategy,
+                aiEvaluationDashboard: bootstrap.aiEvaluationDashboard,
+                customerPersonas: bootstrap.customerPersonas,
+                executiveDemoStory: bootstrap.executiveDemoStory,
                 suggestions: bootstrap.suggestedQuestions,
                 messages: [
                     AssistantMessage(
@@ -157,6 +167,7 @@ final class FutureMeViewModel: ObservableObject {
             FutureMeDashboardContent(
                 displayName: content.displayName,
                 householdName: content.householdName,
+                profile: content.profile,
                 dashboard: content.dashboard,
                 scenarios: content.scenarios,
                 selected: scenario,
@@ -186,6 +197,10 @@ final class FutureMeViewModel: ObservableObject {
                 missionExecution: content.missionExecution,
                 missionCoachBriefings: content.missionCoachBriefings,
                 missionAnalytics: content.missionAnalytics,
+                productStrategy: content.productStrategy,
+                aiEvaluationDashboard: content.aiEvaluationDashboard,
+                customerPersonas: content.customerPersonas,
+                executiveDemoStory: content.executiveDemoStory,
                 suggestions: content.suggestions,
                 messages: content.messages,
                 disclaimer: content.disclaimer
@@ -202,6 +217,7 @@ final class FutureMeViewModel: ObservableObject {
             FutureMeDashboardContent(
                 displayName: content.displayName,
                 householdName: content.householdName,
+                profile: content.profile,
                 dashboard: content.dashboard,
                 scenarios: content.scenarios,
                 selected: content.selected,
@@ -234,6 +250,10 @@ final class FutureMeViewModel: ObservableObject {
                 missionExecution: content.missionExecution,
                 missionCoachBriefings: content.missionCoachBriefings,
                 missionAnalytics: content.missionAnalytics,
+                productStrategy: content.productStrategy,
+                aiEvaluationDashboard: content.aiEvaluationDashboard,
+                customerPersonas: content.customerPersonas,
+                executiveDemoStory: content.executiveDemoStory,
                 suggestions: content.suggestions,
                 messages: content.messages,
                 disclaimer: content.disclaimer
@@ -262,6 +282,7 @@ final class FutureMeViewModel: ObservableObject {
             FutureMeDashboardContent(
                 displayName: content.displayName,
                 householdName: content.householdName,
+                profile: content.profile,
                 dashboard: content.dashboard,
                 scenarios: content.scenarios,
                 selected: content.selected,
@@ -291,6 +312,10 @@ final class FutureMeViewModel: ObservableObject {
                 missionExecution: content.missionExecution,
                 missionCoachBriefings: content.missionCoachBriefings,
                 missionAnalytics: content.missionAnalytics,
+                productStrategy: content.productStrategy,
+                aiEvaluationDashboard: content.aiEvaluationDashboard,
+                customerPersonas: content.customerPersonas,
+                executiveDemoStory: content.executiveDemoStory,
                 suggestions: content.suggestions,
                 messages: messages,
                 disclaimer: content.disclaimer
@@ -351,6 +376,7 @@ final class FutureMeViewModel: ObservableObject {
             FutureMeDashboardContent(
                 displayName: content.displayName,
                 householdName: content.householdName,
+                profile: content.profile,
                 dashboard: content.dashboard,
                 scenarios: content.scenarios,
                 selected: content.selected,
@@ -380,6 +406,10 @@ final class FutureMeViewModel: ObservableObject {
                 missionExecution: missionExecution ?? content.missionExecution,
                 missionCoachBriefings: missionCoachBriefings ?? content.missionCoachBriefings,
                 missionAnalytics: missionAnalytics ?? content.missionAnalytics,
+                productStrategy: content.productStrategy,
+                aiEvaluationDashboard: content.aiEvaluationDashboard,
+                customerPersonas: content.customerPersonas,
+                executiveDemoStory: content.executiveDemoStory,
                 suggestions: content.suggestions,
                 messages: content.messages,
                 disclaimer: content.disclaimer

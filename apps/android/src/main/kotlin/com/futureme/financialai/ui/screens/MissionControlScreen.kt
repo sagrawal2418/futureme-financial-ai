@@ -102,7 +102,9 @@ fun MissionControlScreen(
         MissionNextActionCard(
             mission = mission,
             hasNextAction = execution.actionPlan.nextAction != null,
-            onAccept = { onAcceptAction(mission.nextAction.id) },
+            onAccept = {
+                execution.actionPlan.nextAction?.actionId?.let(onAcceptAction)
+            },
             modifier = Modifier.padding(top = 14.dp),
         )
 

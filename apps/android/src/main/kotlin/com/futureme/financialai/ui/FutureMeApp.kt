@@ -38,6 +38,9 @@ import com.futureme.financialai.ui.screens.MessageScreen
 import com.futureme.financialai.ui.screens.MoneyLeakScreen
 import com.futureme.financialai.ui.screens.MonthlyReviewScreen
 import com.futureme.financialai.ui.screens.MissionControlScreen
+import com.futureme.financialai.ui.screens.ProductHomeScreen
+import com.futureme.financialai.ui.screens.ProductInsightsScreen
+import com.futureme.financialai.ui.screens.ProductProfileScreen
 import com.futureme.financialai.ui.screens.ScenarioDetailScreen
 import com.futureme.financialai.ui.screens.ScenarioListScreen
 
@@ -109,11 +112,11 @@ private fun ContentScaffold(
                 containerColor = MaterialTheme.colorScheme.surface,
             ) {
                 listOf(
-                    FutureMeScreen.DASHBOARD to "Mission",
-                    FutureMeScreen.TIMELINE to "Timeline",
-                    FutureMeScreen.BANKING to "Actions",
-                    FutureMeScreen.SCENARIOS to "Simulate",
+                    FutureMeScreen.HOME to "Home",
+                    FutureMeScreen.MISSIONS to "Missions",
+                    FutureMeScreen.INSIGHTS to "Insights",
                     FutureMeScreen.ASSISTANT to "Coach",
+                    FutureMeScreen.PROFILE to "Profile",
                 ).forEach { (screen, label) ->
                     NavigationBarItem(
                         selected = content.screen == screen,
@@ -148,6 +151,25 @@ private fun ContentScaffold(
             }
             item {
                 when (content.screen) {
+                    FutureMeScreen.HOME -> ProductHomeScreen(
+                        content = content,
+                        onOpenMissions = { onNavigate(FutureMeScreen.MISSIONS) },
+                        onOpenCoach = { onNavigate(FutureMeScreen.ASSISTANT) },
+                    )
+                    FutureMeScreen.MISSIONS -> MissionControlScreen(
+                        content = content,
+                        onOpenTimeline = { onNavigate(FutureMeScreen.TIMELINE) },
+                        onOpenActions = { onNavigate(FutureMeScreen.BANKING) },
+                        onOpenSimulator = { onNavigate(FutureMeScreen.SCENARIOS) },
+                        onOpenCoach = { onNavigate(FutureMeScreen.ASSISTANT) },
+                        onAskCoach = { prompt ->
+                            onAskAssistant(prompt)
+                            onNavigate(FutureMeScreen.ASSISTANT)
+                        },
+                        onAcceptAction = onAcceptMissionAction,
+                    )
+                    FutureMeScreen.INSIGHTS -> ProductInsightsScreen(content)
+                    FutureMeScreen.PROFILE -> ProductProfileScreen(content)
                     FutureMeScreen.DASHBOARD -> MissionControlScreen(
                         content = content,
                         onOpenTimeline = { onNavigate(FutureMeScreen.TIMELINE) },
@@ -205,6 +227,7 @@ private fun ContentScaffold(
                     FutureMeScreen.ASSISTANT -> AssistantScreen(
                         messages = content.messages,
                         suggestions = content.suggestedQuestions,
+                        evaluation = content.aiEvaluationDashboard,
                         onAsk = onAskAssistant,
                     )
                 }
@@ -234,9 +257,9 @@ private fun AppHeader(
                 .padding(12.dp),
         )
         Column(modifier = Modifier.padding(start = 12.dp)) {
-            Eyebrow("Life readiness intelligence")
+            Eyebrow("FutureMe financial")
             Text(
-                "How ready are you for what comes next?",
+                "Know what matters now.",
                 style = MaterialTheme.typography.titleLarge,
             )
             Text(

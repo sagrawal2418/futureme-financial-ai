@@ -30,12 +30,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.futureme.financialai.presentation.ChatMessage
 import com.futureme.financialai.ui.components.SectionTitle
+import com.futureme.shared.models.AiEvaluationDashboard
 import com.futureme.shared.models.SuggestedQuestion
 
 @Composable
 fun AssistantScreen(
     messages: List<ChatMessage>,
     suggestions: List<SuggestedQuestion>,
+    evaluation: AiEvaluationDashboard,
     onAsk: (String) -> Unit,
 ) {
     var question by rememberSaveable { mutableStateOf("") }
@@ -106,6 +108,44 @@ fun AssistantScreen(
                 },
         ) {
             Text("Ask my coach")
+        }
+
+        SectionTitle(
+            eyebrow = "AI EVALUATION DASHBOARD",
+            title = "Can we trust the explanation quality?",
+            modifier = Modifier.padding(top = 28.dp),
+        )
+        Card(
+            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+            ),
+        ) {
+            Column(modifier = Modifier.padding(18.dp)) {
+                Text(
+                    evaluation.statusLabel,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    evaluation.methodologyNote,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+                evaluation.categories.forEach { category ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(category.label)
+                        Text(
+                            "${category.promptCount} prompts",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
+                }
+            }
         }
 
         Text(
