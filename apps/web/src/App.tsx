@@ -42,6 +42,7 @@ import {
   saveDecision,
   simulateScenario,
   type DecisionJournalEntry,
+  type MissionCoachBriefing,
   type MissionType,
   type ProductBootstrap,
   type ReadinessCategory,
@@ -55,6 +56,23 @@ interface ChatMessage {
   text: string;
   isUser: boolean;
 }
+
+type CoachExplanationKey =
+  | "whyNotReady"
+  | "whatImprovedRecently"
+  | "whatIsHurtingProgress"
+  | "whatShouldIFocusOn"
+  | "howCanIAccelerateTimeline"
+  | "whatHappensIfIDoNothing";
+
+const coachExplanationLabels: { key: CoachExplanationKey; label: string }[] = [
+  { key: "whyNotReady", label: "Why not ready?" },
+  { key: "whatImprovedRecently", label: "What improved?" },
+  { key: "whatIsHurtingProgress", label: "What is hurting?" },
+  { key: "whatShouldIFocusOn", label: "What should I focus on?" },
+  { key: "howCanIAccelerateTimeline", label: "How do I move faster?" },
+  { key: "whatHappensIfIDoNothing", label: "What if I do nothing?" },
+];
 
 const money = (value: number, compact = false) =>
   new Intl.NumberFormat("en-US", {
@@ -124,6 +142,8 @@ function App() {
   const [showFinancialDetails, setShowFinancialDetails] = useState(false);
   const [acceptedAction, setAcceptedAction] = useState(false);
   const [acceptedMissionAction, setAcceptedMissionAction] = useState(false);
+  const [coachExplanation, setCoachExplanation] =
+    useState<CoachExplanationKey>("whatShouldIFocusOn");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
   const [reviewOpen, setReviewOpen] = useState(true);
@@ -189,6 +209,9 @@ function App() {
   const selectedExecution =
     data.missionExecution.plans.find((plan) => plan.missionId === selectedMission.missionId) ??
     data.missionExecution.plans[0];
+  const selectedBriefing =
+    data.missionCoachBriefings.find((briefing) => briefing.missionId === selectedMission.missionId) ??
+    data.missionCoachBriefings[0];
   const activeMissionAction = selectedExecution.actionPlan.nextAction;
   const missionNextAction = activeMissionAction ?? selectedExecution.actionPlan.actions[0];
   const missionHealth = (missionId: string) =>
@@ -435,6 +458,7 @@ function App() {
                 onClick={() => {
                   setSelectedMissionId(mission.missionId);
                   setAcceptedMissionAction(false);
+                  setCoachExplanation("whatShouldIFocusOn");
                   recordAnalyticsEvent("readiness_viewed", mission.missionId);
                 }}
                 aria-pressed={mission.missionId === selectedMission.missionId}
@@ -501,6 +525,13 @@ function App() {
             </button>
           </article>
         </section>
+
+        <MissionCoachBriefingCard
+          briefing={selectedBriefing}
+          explanationKey={coachExplanation}
+          onSelectExplanation={setCoachExplanation}
+          onAsk={submitQuestion}
+        />
 
         <section className="mission-action-plan-section" aria-labelledby="mission-actions-title">
           <div className="mission-section-heading">
@@ -1388,7 +1419,7 @@ function App() {
               Grounded in readiness, blockers, timelines, and risk. Current mission: <strong>{selectedMission.title}</strong>.
             </p>
             <div className="suggestion-chips" aria-label="Suggested questions">
-              {data.suggestedQuestions.map((suggestion) => (
+              {selectedBriefing.suggestedQuestions.map((suggestion) => (
                 <button key={suggestion.id} onClick={() => submitQuestion(suggestion.prompt)}>
                   {suggestion.title}
                 </button>
@@ -1425,6 +1456,79 @@ function App() {
         </div>
       )}
     </div>
+  );
+}
+
+function MissionCoachBriefingCard({
+  briefing,
+  explanationKey,
+  onSelectExplanation,
+  onAsk,
+}: {
+  briefing: MissionCoachBriefing;
+  explanationKey: CoachExplanationKey;
+  onSelectExplanation: (key: CoachExplanationKey) => void;
+  onAsk: (question: string) => void;
+}) {
+  return (
+    <section className="claude-mission-briefing" aria-labelledby="claude-briefing-title">
+      <header>
+        <div className="claude-briefing-mark"><Sparkles size={22} /></div>
+        <div>
+          <p className="eyebrow light">Claude Mission Coach</p>
+          <h2 id="claude-briefing-title">Your mission briefing</h2>
+        </div>
+        <span>{briefing.isFallback ? "Demo fallback" : briefing.modelLabel}</span>
+      </header>
+
+      <p className="claude-briefing-summary">{briefing.coachingSummary}</p>
+
+      <div className="claude-briefing-signals">
+        <article>
+          <small>Focus now</small>
+          <strong>{briefing.recommendedFocusArea}</strong>
+        </article>
+        <article>
+          <small>Top risk</small>
+          <strong>{briefing.topRisk}</strong>
+        </article>
+        <article>
+          <small>Best opportunity</small>
+          <strong>{briefing.topOpportunity}</strong>
+        </article>
+      </div>
+
+      <div className="claude-explanation-picker" aria-label="Mission explanation views">
+        {coachExplanationLabels.map((item) => (
+          <button
+            className={item.key === explanationKey ? "active" : ""}
+            key={item.key}
+            onClick={() => onSelectExplanation(item.key)}
+            aria-pressed={item.key === explanationKey}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      <div className="claude-explanation-answer" aria-live="polite">
+        <Sparkles size={17} />
+        <p>{briefing[explanationKey]}</p>
+      </div>
+
+      <div className="claude-briefing-footer">
+        <div>
+          <small>What changed</small>
+          <strong>{briefing.whatChanged[0]}</strong>
+        </div>
+        <div className="claude-question-chips" aria-label="Mission-specific coach questions">
+          {briefing.suggestedQuestions.map((question) => (
+            <button key={question.id} onClick={() => onAsk(question.prompt)}>
+              {question.title}<ArrowRight size={14} />
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 

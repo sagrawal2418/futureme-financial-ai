@@ -34,3 +34,22 @@ class BackendApi:
 
     def get_plaid_investments(self) -> list[dict[str, Any]]:
         return self._service.plaid_investments()
+
+    def post_mission_coaching(
+        self,
+        mission_context: dict[str, Any],
+    ) -> dict[str, Any]:
+        return self._service.mission_coaching(mission_context)
+
+    def post_mission_question(
+        self,
+        question: str,
+        mission_context: dict[str, Any],
+    ) -> dict[str, Any]:
+        return self._service.answer_mission_question(question, mission_context)
+
+    def get_mission_explanation_history(
+        self,
+        mission_id: str,
+    ) -> dict[str, Any] | None:
+        return self._service.mission_explanation_history(mission_id)

@@ -59,6 +59,10 @@ private struct DashboardTabs: View {
                             onOpenTimeline: { selectedTab = 3 },
                             onOpenSimulator: { selectedTab = 2 },
                             onOpenCoach: { selectedTab = 4 },
+                            onAskCoach: { prompt in
+                                selectedTab = 4
+                                onAsk(prompt)
+                            },
                             onAcceptAction: onAcceptMissionAction
                         )
                             .padding(.horizontal, 20)
@@ -214,6 +218,7 @@ private struct MissionControlView: View {
     let onOpenTimeline: () -> Void
     let onOpenSimulator: () -> Void
     let onOpenCoach: () -> Void
+    let onAskCoach: (String) -> Void
     let onAcceptAction: (String) -> Void
     @State private var selectedMissionId: String
     @State private var acceptedAction = false
@@ -223,12 +228,14 @@ private struct MissionControlView: View {
         onOpenTimeline: @escaping () -> Void,
         onOpenSimulator: @escaping () -> Void,
         onOpenCoach: @escaping () -> Void,
+        onAskCoach: @escaping (String) -> Void,
         onAcceptAction: @escaping (String) -> Void
     ) {
         self.content = content
         self.onOpenTimeline = onOpenTimeline
         self.onOpenSimulator = onOpenSimulator
         self.onOpenCoach = onOpenCoach
+        self.onAskCoach = onAskCoach
         self.onAcceptAction = onAcceptAction
         _selectedMissionId = State(
             initialValue: content.missionControl.activeMissions.first?.missionId
@@ -244,6 +251,11 @@ private struct MissionControlView: View {
     private var execution: MissionExecutionPlan {
         content.missionExecution.plans.first(where: { $0.missionId == selectedMissionId })
             ?? content.missionExecution.plans[0]
+    }
+
+    private var briefing: MissionCoachBriefing {
+        content.missionCoachBriefings.first(where: { $0.missionId == selectedMissionId })
+            ?? content.missionCoachBriefings[0]
     }
 
     var body: some View {
@@ -360,6 +372,12 @@ private struct MissionControlView: View {
             }
             .padding(20)
             .futureMeCard()
+
+            ClaudeMissionBriefingCard(
+                briefing: briefing,
+                onAsk: onAskCoach
+            )
+            .id(briefing.missionId)
 
             VStack(alignment: .leading, spacing: 12) {
                 Eyebrow("NEXT BEST ACTION", light: true)
@@ -652,6 +670,133 @@ private struct MissionControlView: View {
 
     private func signed(_ value: Int32) -> String {
         value >= 0 ? "+\(value)" : "\(value)"
+    }
+}
+
+private struct ClaudeMissionBriefingCard: View {
+    let briefing: MissionCoachBriefing
+    let onAsk: (String) -> Void
+    @State private var selectedExplanation = 3
+
+    private let coachPurple = Color(red: 0.19, green: 0.14, blue: 0.38)
+    private let coachLavender = Color(red: 0.84, green: 0.81, blue: 1.0)
+    private var explanations: [(String, String)] {
+        [
+            ("Why not ready?", briefing.whyNotReady),
+            ("What improved?", briefing.whatImprovedRecently),
+            ("What is hurting?", briefing.whatIsHurtingProgress),
+            ("What should I focus on?", briefing.whatShouldIFocusOn),
+            ("How do I move faster?", briefing.howCanIAccelerateTimeline),
+            ("What if I do nothing?", briefing.whatHappensIfIDoNothing),
+        ]
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 15) {
+            HStack(spacing: 11) {
+                Image(systemName: "sparkles")
+                    .font(.title3.bold())
+                    .foregroundStyle(coachPurple)
+                    .frame(width: 42, height: 42)
+                    .background(coachLavender)
+                    .clipShape(RoundedRectangle(cornerRadius: 13))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("CLAUDE MISSION COACH")
+                        .font(.caption.bold())
+                        .foregroundStyle(coachLavender)
+                    Text("Your mission briefing")
+                        .font(.title2.bold())
+                        .foregroundStyle(.white)
+                }
+            }
+
+            Text(briefing.coachingSummary)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(Color.white.opacity(0.94))
+
+            CoachBriefingSignal(label: "FOCUS NOW", value: briefing.recommendedFocusArea)
+            CoachBriefingSignal(label: "TOP RISK", value: briefing.topRisk)
+            CoachBriefingSignal(label: "BEST OPPORTUNITY", value: briefing.topOpportunity)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(explanations.indices, id: \.self) { index in
+                        Button(explanations[index].0) {
+                            selectedExplanation = index
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(
+                            selectedExplanation == index
+                                ? coachLavender
+                                : Color.white.opacity(0.65)
+                        )
+                    }
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text(explanations[selectedExplanation].0.uppercased())
+                    .font(.caption.bold())
+                    .foregroundStyle(Color(red: 0.42, green: 0.33, blue: 0.72))
+                Text(explanations[selectedExplanation].1)
+                    .font(.subheadline)
+                    .foregroundStyle(coachPurple)
+            }
+            .padding(15)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(red: 0.96, green: 0.95, blue: 1.0))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+
+            CoachBriefingSignal(label: "WHAT CHANGED", value: briefing.whatChanged[0])
+
+            Text("SUGGESTED QUESTIONS")
+                .font(.caption.bold())
+                .foregroundStyle(coachLavender)
+            ForEach(briefing.suggestedQuestions, id: \.id) { question in
+                Button {
+                    onAsk(question.prompt)
+                } label: {
+                    HStack {
+                        Text(question.title)
+                        Spacer()
+                        Image(systemName: "arrow.right")
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(coachLavender)
+                .foregroundStyle(coachPurple)
+            }
+
+            Text(briefing.isFallback ? "Demo fallback • \(briefing.modelLabel)" : briefing.modelLabel)
+                .font(.caption2)
+                .foregroundStyle(Color.white.opacity(0.66))
+        }
+        .padding(20)
+        .background(
+            LinearGradient(
+                colors: [coachPurple, Color(red: 0.30, green: 0.21, blue: 0.52)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+    }
+}
+
+private struct CoachBriefingSignal: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(label)
+                .font(.caption2.bold())
+                .foregroundStyle(Color(red: 0.84, green: 0.81, blue: 1.0))
+            Text(value)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white)
+        }
     }
 }
 

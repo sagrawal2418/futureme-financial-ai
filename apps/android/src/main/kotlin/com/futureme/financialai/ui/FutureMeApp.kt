@@ -154,6 +154,10 @@ private fun ContentScaffold(
                         onOpenActions = { onNavigate(FutureMeScreen.BANKING) },
                         onOpenSimulator = { onNavigate(FutureMeScreen.SCENARIOS) },
                         onOpenCoach = { onNavigate(FutureMeScreen.ASSISTANT) },
+                        onAskCoach = { prompt ->
+                            onAskAssistant(prompt)
+                            onNavigate(FutureMeScreen.ASSISTANT)
+                        },
                         onAcceptAction = onAcceptMissionAction,
                     )
                     FutureMeScreen.BANKING -> BankingIntelligenceScreen(

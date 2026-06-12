@@ -45,6 +45,7 @@ struct FutureMeDashboardContent {
     let missions: [Mission]
     let missionControl: MissionControlSnapshot
     let missionExecution: MissionExecutionCenter
+    let missionCoachBriefings: [MissionCoachBriefing]
     let missionAnalytics: MissionAnalyticsSnapshot
     let suggestions: [SuggestedQuestion]
     let messages: [AssistantMessage]
@@ -128,6 +129,7 @@ final class FutureMeViewModel: ObservableObject {
                 missions: bootstrap.missions,
                 missionControl: bootstrap.missionControl,
                 missionExecution: bootstrap.missionExecution,
+                missionCoachBriefings: bootstrap.missionCoachBriefings,
                 missionAnalytics: bootstrap.missionAnalytics,
                 suggestions: bootstrap.suggestedQuestions,
                 messages: [
@@ -182,6 +184,7 @@ final class FutureMeViewModel: ObservableObject {
                 missions: content.missions,
                 missionControl: content.missionControl,
                 missionExecution: content.missionExecution,
+                missionCoachBriefings: content.missionCoachBriefings,
                 missionAnalytics: content.missionAnalytics,
                 suggestions: content.suggestions,
                 messages: content.messages,
@@ -229,6 +232,7 @@ final class FutureMeViewModel: ObservableObject {
                 missions: content.missions,
                 missionControl: content.missionControl,
                 missionExecution: content.missionExecution,
+                missionCoachBriefings: content.missionCoachBriefings,
                 missionAnalytics: content.missionAnalytics,
                 suggestions: content.suggestions,
                 messages: content.messages,
@@ -285,6 +289,7 @@ final class FutureMeViewModel: ObservableObject {
                 missions: content.missions,
                 missionControl: content.missionControl,
                 missionExecution: content.missionExecution,
+                missionCoachBriefings: content.missionCoachBriefings,
                 missionAnalytics: content.missionAnalytics,
                 suggestions: content.suggestions,
                 messages: messages,
@@ -315,6 +320,7 @@ final class FutureMeViewModel: ObservableObject {
             missions: bootstrap.missions,
             missionControl: bootstrap.missionControl,
             missionExecution: bootstrap.missionExecution,
+            missionCoachBriefings: bootstrap.missionCoachBriefings,
             missionAnalytics: bootstrap.missionAnalytics
         )
     }
@@ -338,6 +344,7 @@ final class FutureMeViewModel: ObservableObject {
         missions: [Mission]? = nil,
         missionControl: MissionControlSnapshot? = nil,
         missionExecution: MissionExecutionCenter? = nil,
+        missionCoachBriefings: [MissionCoachBriefing]? = nil,
         missionAnalytics: MissionAnalyticsSnapshot? = nil
     ) {
         state = .content(
@@ -371,6 +378,7 @@ final class FutureMeViewModel: ObservableObject {
                 missions: missions ?? content.missions,
                 missionControl: missionControl ?? content.missionControl,
                 missionExecution: missionExecution ?? content.missionExecution,
+                missionCoachBriefings: missionCoachBriefings ?? content.missionCoachBriefings,
                 missionAnalytics: missionAnalytics ?? content.missionAnalytics,
                 suggestions: content.suggestions,
                 messages: content.messages,

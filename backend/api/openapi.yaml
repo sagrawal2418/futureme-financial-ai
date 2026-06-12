@@ -149,6 +149,72 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/MoneyLeak"
+  /v1/missions/{missionId}/coach:
+    post:
+      operationId: explainMission
+      summary: Explain deterministic mission output through the backend Mission Coach
+      parameters:
+        - name: missionId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MissionContext"
+      responses:
+        "200":
+          description: Grounded Claude explanation or local fallback
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissionCoachResponse"
+  /v1/missions/{missionId}/questions:
+    post:
+      operationId: answerMissionQuestion
+      summary: Answer a mission-specific question without recalculating financial output
+      parameters:
+        - name: missionId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question, missionContext]
+              properties:
+                question: { type: string }
+                missionContext:
+                  $ref: "#/components/schemas/MissionContext"
+      responses:
+        "200":
+          description: Mission Coach answer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissionQuestionResponse"
+  /v1/missions/{missionId}/explanations:
+    get:
+      operationId: getMissionExplanationHistory
+      summary: Return the latest and previous stored mission explanations
+      parameters:
+        - name: missionId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Explanation history and summarized changes
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /plaid/link-token:
     post:
       operationId: createPlaidLinkToken
@@ -256,6 +322,50 @@ components:
             $ref: "#/components/schemas/SuggestedQuestion"
         disclaimer:
           type: string
+    MissionContext:
+      type: object
+      required: [missionId, title, readinessScore]
+      properties:
+        missionId: { type: string }
+        title: { type: string }
+        readinessScore: { type: integer, minimum: 0, maximum: 100 }
+      additionalProperties: true
+    MissionCoachResponse:
+      type: object
+      required:
+        - missionId
+        - coachingSummary
+        - recommendedFocusArea
+        - topRisk
+        - topOpportunity
+        - suggestedActions
+        - provider
+        - model
+        - generatedAt
+        - usedFallback
+      properties:
+        missionId: { type: string }
+        coachingSummary: { type: string }
+        recommendedFocusArea: { type: string }
+        topRisk: { type: string }
+        topOpportunity: { type: string }
+        suggestedActions:
+          type: array
+          items: { type: string }
+        readinessExplanation: { type: string }
+        blockerExplanation: { type: string }
+        timelineExplanation: { type: string }
+        provider: { type: string }
+        model: { type: string }
+        generatedAt: { type: string, format: date-time }
+        usedFallback: { type: boolean }
+    MissionQuestionResponse:
+      type: object
+      required: [answer, provider, model]
+      properties:
+        answer: { type: string }
+        provider: { type: string }
+        model: { type: string }
     UserIdentity:
       type: object
       required: [ownerId, displayName, householdName]

@@ -19,6 +19,11 @@ CAPABILITY_MARKERS = {
     "mission detail": ("mission detail",),
     "mission timeline": ("mission timeline",),
     "mission coach": ("mission coach",),
+    "claude mission coach": (
+        "claude mission coach",
+        "what if i do nothing?",
+        "suggested questions",
+    ),
     "mission readiness": ("mission readiness",),
     "mission analytics": ("mission analytics",),
     "mission action engine": ("mission action engine",),
