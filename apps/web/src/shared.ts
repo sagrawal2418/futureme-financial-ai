@@ -647,6 +647,43 @@ export interface MissionExecutionCenter {
   recentlyCompletedCount: number;
 }
 
+export interface MissionCoachQuestion {
+  id: string;
+  title: string;
+  prompt: string;
+}
+
+export interface MissionExplanationHistoryEntry {
+  explanationId: string;
+  generatedAt: string;
+  readinessScore: number;
+  coachingSummary: string;
+  recommendedFocusArea: string;
+  topRisk: string;
+}
+
+export interface MissionCoachBriefing {
+  missionId: string;
+  coachingSummary: string;
+  recommendedFocusArea: string;
+  topRisk: string;
+  topOpportunity: string;
+  suggestedActions: string[];
+  whyNotReady: string;
+  whatImprovedRecently: string;
+  whatIsHurtingProgress: string;
+  whatShouldIFocusOn: string;
+  howCanIAccelerateTimeline: string;
+  whatHappensIfIDoNothing: string;
+  suggestedQuestions: MissionCoachQuestion[];
+  latestExplanation: MissionExplanationHistoryEntry;
+  previousExplanation: MissionExplanationHistoryEntry | null;
+  whatChanged: string[];
+  providerLabel: string;
+  modelLabel: string;
+  isFallback: boolean;
+}
+
 export interface Transaction {
   id: string;
   postedDate: string;
@@ -689,6 +726,7 @@ export interface ProductBootstrap {
   missions: Mission[];
   missionControl: MissionControlSnapshot;
   missionExecution: MissionExecutionCenter;
+  missionCoachBriefings: MissionCoachBriefing[];
   missionAnalytics: MissionAnalyticsSnapshot;
   suggestedQuestions: SuggestedQuestion[];
   designTokens: {

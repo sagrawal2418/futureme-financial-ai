@@ -25,21 +25,24 @@ sequenceDiagram
 
 `LlmProvider` exposes:
 
-- `generateFinancialExplanation`
-- `generateScenarioAnswer`
-- `generateInsightSummary`
+- `explainMission`
+- `explainReadiness`
+- `explainBlockers`
+- `explainTimeline`
+- `explainRecommendation`
+- `answerMissionQuestion`
 
-Version 2 includes `MockLlmProvider` and a non-transport `AnthropicLlmProvider` request builder.
+The Python implementation uses snake_case method names. Compatibility methods remain for the original financial-explanation routes.
 
 ## Model Strategy
 
-| Workload | Strategy |
+| Workload | Backend model |
 | --- | --- |
-| Default financial explanation | Claude Sonnet |
-| Complex scenario reasoning | Claude Opus |
-| Short insight summary | Claude Haiku |
+| Mission and readiness explanations | `claude-sonnet-4-6` |
+| Open-ended mission questions | `claude-opus-4-8` |
+| Quick summaries | `claude-haiku-4-5-20251001` |
 
-The concrete model identifier should be configured and versioned on the backend when transport is enabled.
+`AnthropicLlmProvider` uses the Messages API and supports an injected transport for deterministic tests.
 
 ## Guardrails
 
@@ -49,3 +52,4 @@ The concrete model identifier should be configured and versioned on the backend 
 - System instruction forbids calculation and financial advice
 - Prompt/model versions are logged in future audit events
 - Evaluation fixtures verify number preservation, grounded claims, tone, and refusal behavior
+- Provider failures and malformed responses activate the local mock fallback

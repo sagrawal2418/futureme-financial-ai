@@ -23,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.futureme.financialai.presentation.FutureMeContent
@@ -31,6 +32,7 @@ import com.futureme.financialai.ui.components.SectionTitle
 import com.futureme.financialai.util.compactMoney
 import com.futureme.shared.models.Mission
 import com.futureme.shared.models.MissionActionStatus
+import com.futureme.shared.models.MissionCoachBriefing
 import com.futureme.shared.models.MissionExecutionPlan
 import com.futureme.shared.models.MissionSignal
 
@@ -41,6 +43,7 @@ fun MissionControlScreen(
     onOpenActions: () -> Unit,
     onOpenSimulator: () -> Unit,
     onOpenCoach: () -> Unit,
+    onAskCoach: (String) -> Unit,
     onAcceptAction: (String) -> Unit,
 ) {
     var selectedMissionId by remember {
@@ -48,6 +51,7 @@ fun MissionControlScreen(
     }
     val mission = content.missions.first { it.missionId == selectedMissionId }
     val execution = content.missionExecution.plans.first { it.missionId == selectedMissionId }
+    val briefing = content.missionCoachBriefings.first { it.missionId == selectedMissionId }
 
     Column {
         Eyebrow("MISSION CONTROL")
@@ -90,6 +94,11 @@ fun MissionControlScreen(
         }
 
         MissionDetailCard(mission, execution, Modifier.padding(top = 16.dp))
+        ClaudeMissionBriefingCard(
+            briefing = briefing,
+            onAskCoach = onAskCoach,
+            modifier = Modifier.padding(top = 14.dp),
+        )
         MissionNextActionCard(
             mission = mission,
             hasNextAction = execution.actionPlan.nextAction != null,
@@ -189,6 +198,149 @@ fun MissionControlScreen(
             OutlinedButton(onClick = onOpenSimulator) { Text("Simulate decision") }
         }
         Spacer(Modifier.height(28.dp))
+    }
+}
+
+@Composable
+private fun ClaudeMissionBriefingCard(
+    briefing: MissionCoachBriefing,
+    onAskCoach: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val explanations = listOf(
+        "Why not ready?" to briefing.whyNotReady,
+        "What improved?" to briefing.whatImprovedRecently,
+        "What is hurting?" to briefing.whatIsHurtingProgress,
+        "What should I focus on?" to briefing.whatShouldIFocusOn,
+        "How do I move faster?" to briefing.howCanIAccelerateTimeline,
+        "What if I do nothing?" to briefing.whatHappensIfIDoNothing,
+    )
+    var selectedExplanation by remember(briefing.missionId) { mutableStateOf(3) }
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF30235F),
+            contentColor = Color.White,
+        ),
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                "CLAUDE MISSION COACH",
+                color = Color(0xFFC9BFFF),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                "Your mission briefing",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            Text(
+                briefing.coachingSummary,
+                color = Color(0xFFF2EEFF),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 12.dp),
+            )
+
+            CoachSignal("FOCUS NOW", briefing.recommendedFocusArea)
+            CoachSignal("TOP RISK", briefing.topRisk)
+            CoachSignal("BEST OPPORTUNITY", briefing.topOpportunity)
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 15.dp)
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                explanations.forEachIndexed { index, explanation ->
+                    OutlinedButton(onClick = { selectedExplanation = index }) {
+                        Text(explanation.first)
+                    }
+                }
+            }
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFF5F2FF),
+                    contentColor = Color(0xFF30235F),
+                ),
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        explanations[selectedExplanation].first.uppercase(),
+                        color = Color(0xFF6B55B6),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        explanations[selectedExplanation].second,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = 5.dp),
+                    )
+                }
+            }
+            Text(
+                "WHAT CHANGED",
+                color = Color(0xFFC9BFFF),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 15.dp),
+            )
+            Text(
+                briefing.whatChanged.first(),
+                color = Color.White,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 3.dp),
+            )
+
+            Text(
+                "SUGGESTED QUESTIONS",
+                color = Color(0xFFC9BFFF),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 17.dp),
+            )
+            briefing.suggestedQuestions.forEach { question ->
+                OutlinedButton(
+                    onClick = { onAskCoach(question.prompt) },
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                ) {
+                    Text(question.title)
+                }
+            }
+            Text(
+                if (briefing.isFallback) "Demo fallback • ${briefing.modelLabel}" else briefing.modelLabel,
+                color = Color(0xFFB8AEEB),
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(top = 12.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun CoachSignal(label: String, value: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 14.dp),
+    ) {
+        Text(
+            label,
+            color = Color(0xFFC9BFFF),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            value,
+            color = Color.White,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(top = 3.dp),
+        )
     }
 }
 

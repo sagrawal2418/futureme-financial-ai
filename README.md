@@ -150,7 +150,7 @@ flowchart LR
 
 The backend never replaces the financial core. Claude receives structured, already-calculated outputs and cannot alter balances, probabilities, or projections.
 
-See [Mission Framework](docs/mission-framework.md), [Mission Control Architecture](docs/mission-control-architecture.md), [Mission Execution Layer](docs/mission-execution-layer.md), [Action Engine](docs/action-engine.md), [Mission Health](docs/mission-health.md), [Mission Roadmaps](docs/mission-roadmaps.md), [Readiness Framework](docs/readiness-framework.md), [Architecture](docs/architecture.md), [Client Feature Parity](docs/feature-parity.md), and [Security Architecture](docs/security-architecture.md).
+See [Mission Framework](docs/mission-framework.md), [Mission Control Architecture](docs/mission-control-architecture.md), [Mission Execution Layer](docs/mission-execution-layer.md), [Mission Coach](docs/mission-coach.md), [LLM Integration](docs/llm-integration.md), [Action Engine](docs/action-engine.md), [Mission Health](docs/mission-health.md), [Mission Roadmaps](docs/mission-roadmaps.md), [Readiness Framework](docs/readiness-framework.md), [Architecture](docs/architecture.md), [Client Feature Parity](docs/feature-parity.md), and [Security Architecture](docs/security-architecture.md).
 
 ## Repository
 
@@ -213,18 +213,18 @@ Seeded totals:
 
 The coach explains shared structured output; it does not perform financial arithmetic.
 
-## Claude Architecture
+## Claude Mission Coach Architecture
 
-`LlmProvider` is backend-only:
+Mission Coach is an explanation layer over the deterministic Mission Control engines:
 
-- `MockLlmProvider` runs in Version 2.
-- `AnthropicLlmProvider` builds requests but does not send them.
-- Sonnet is the default explanation strategy.
-- Opus is reserved for complex scenario reasoning.
-- Haiku is reserved for short insight summaries.
-- API keys belong only in backend secret storage.
+1. Shared engines calculate readiness, actions, dependencies, health, risk, and timelines.
+2. The backend sends only those structured facts and the user's mission question to `LlmProvider`.
+3. Claude explains why the mission is not ready, what changed, what is hurting progress, what to focus on, how to accelerate, and what happens without action.
+4. `MissionCoachService` stores the latest and previous explanations and falls back to `MockLlmProvider` when Claude is unavailable.
 
-See [docs/llm-architecture.md](docs/llm-architecture.md).
+`AnthropicLlmProvider` calls Claude only from the backend. Sonnet handles mission explanations, Opus handles open-ended mission questions, and Haiku handles quick summaries. Android, iOS, and web never receive or store `ANTHROPIC_API_KEY`; static and offline demos visibly identify their local fallback.
+
+See [Mission Coach](docs/mission-coach.md), [LLM Integration](docs/llm-integration.md), and [LLM Architecture](docs/llm-architecture.md).
 
 ## Plaid Architecture
 

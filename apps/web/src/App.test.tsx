@@ -27,6 +27,23 @@ describe("Mission Control execution layer", () => {
     expect(screen.getByText("30 Days")).toBeTruthy();
     expect(screen.getByText("90 Days")).toBeTruthy();
     expect(screen.getByText("1 Year")).toBeTruthy();
+    expect(screen.getByText("Your mission briefing")).toBeTruthy();
+    expect(screen.getByText("Claude Mission Coach")).toBeTruthy();
+  });
+
+  it("switches Claude explanations and asks a mission-specific question", async () => {
+    render(<App />);
+
+    const noAction = await screen.findByRole("button", {
+      name: "What if I do nothing?",
+    });
+    fireEvent.click(noAction);
+
+    expect(screen.getByText(/remains unrealized/)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Can I buy this home?" }));
+    expect(screen.getByRole("dialog", { name: "Move the mission forward" })).toBeTruthy();
+    expect(screen.getByText("Can I realistically buy this home?")).toBeTruthy();
   });
 
   it("opens the local mission notification center", async () => {
@@ -37,7 +54,7 @@ describe("Mission Control execution layer", () => {
 
     fireEvent.click(notifications);
 
-    expect(screen.getByText("What changed")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "What changed" })).toBeTruthy();
     expect(screen.getAllByText("New action unlocked").length).toBeGreaterThan(0);
   });
 

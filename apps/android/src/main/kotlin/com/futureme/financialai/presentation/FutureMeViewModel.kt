@@ -26,6 +26,7 @@ import com.futureme.shared.models.MoneyLeak
 import com.futureme.shared.models.MonthlyFinancialReview
 import com.futureme.shared.models.Mission
 import com.futureme.shared.models.MissionAnalyticsSnapshot
+import com.futureme.shared.models.MissionCoachBriefing
 import com.futureme.shared.models.MissionControlSnapshot
 import com.futureme.shared.models.MissionExecutionCenter
 import com.futureme.shared.models.NextBestAction
@@ -86,6 +87,7 @@ data class FutureMeContent(
     val missions: List<Mission>,
     val missionControl: MissionControlSnapshot,
     val missionExecution: MissionExecutionCenter,
+    val missionCoachBriefings: List<MissionCoachBriefing>,
     val missionAnalytics: MissionAnalyticsSnapshot,
     val suggestedQuestions: List<SuggestedQuestion>,
     val disclaimer: String,
@@ -156,6 +158,7 @@ class FutureMeViewModel(
                         missions = bootstrap.missions,
                         missionControl = bootstrap.missionControl,
                         missionExecution = bootstrap.missionExecution,
+                        missionCoachBriefings = bootstrap.missionCoachBriefings,
                         missionAnalytics = bootstrap.missionAnalytics,
                         suggestedQuestions = bootstrap.suggestedQuestions,
                         disclaimer = bootstrap.disclaimer,
@@ -276,6 +279,7 @@ class FutureMeViewModel(
                 missions = bootstrap.missions,
                 missionControl = bootstrap.missionControl,
                 missionExecution = bootstrap.missionExecution,
+                missionCoachBriefings = bootstrap.missionCoachBriefings,
                 missionAnalytics = bootstrap.missionAnalytics,
                 analyticsEvents = bootstrap.analyticsEvents,
             )

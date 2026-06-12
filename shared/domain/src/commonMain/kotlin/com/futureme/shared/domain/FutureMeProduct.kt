@@ -15,6 +15,7 @@ import com.futureme.shared.insights.ProactiveInsightsEngine
 import com.futureme.shared.lifeevents.LifeEventPlanner
 import com.futureme.shared.mission.MissionInputs
 import com.futureme.shared.mission.MissionExecutionService
+import com.futureme.shared.mission.MissionCoachPreviewService
 import com.futureme.shared.mission.MissionService
 import com.futureme.shared.mock.MockFinancialDataProvider
 import com.futureme.shared.models.AssistantPrompt
@@ -77,6 +78,7 @@ class FutureMeProduct {
     private val futureOutcomeEngine = FutureOutcomeEngine()
     private val missionService = MissionService()
     private val missionExecutionService = MissionExecutionService()
+    private val missionCoachPreviewService = MissionCoachPreviewService()
     private val decisionJournalEntries = decisionJournalEngine.seedEntries().toMutableList()
     private val completedMissionActionIds = mutableSetOf<String>()
     private val analyticsEventLog = mutableListOf(
@@ -296,6 +298,11 @@ class FutureMeProduct {
             completedMissionActionIds,
         )
         val missions = missionExecutionService.applyExecution(baseMissions, missionExecution)
+        val missionCoachBriefings = missionCoachPreviewService.briefings(
+            missions,
+            missionExecution,
+            gps,
+        )
         val missionControl = missionService.missionControl(missions)
         val missionAnalytics = missionService.analytics(missions, missionExecution)
         return FinancialCopilotContext(
@@ -313,6 +320,7 @@ class FutureMeProduct {
             missions = missions,
             missionControl = missionControl,
             missionExecution = missionExecution,
+            missionCoachBriefings = missionCoachBriefings,
             missionAnalytics = missionAnalytics,
         )
     }
@@ -362,6 +370,7 @@ class FutureMeProduct {
             missions = context.missions,
             missionControl = context.missionControl,
             missionExecution = context.missionExecution,
+            missionCoachBriefings = context.missionCoachBriefings,
             missionAnalytics = context.missionAnalytics,
             suggestedQuestions = suggestedQuestions(),
             designTokens = FutureMeDesignTokens.current,

@@ -31,6 +31,62 @@ class MockAiAssistantService(
         }
 
         val matchedMission = missionFor(question, context)
+        val missionBriefing = matchedMission?.let { mission ->
+            context.missionCoachBriefings.firstOrNull { it.missionId == mission.missionId }
+        }
+
+        if (missionBriefing != null && "what happens if i do nothing" in question) {
+            return AssistantResponse(
+                answer = missionBriefing.whatHappensIfIDoNothing,
+                relatedScenarioId = matchedMission?.nextAction?.relatedScenarioId,
+                suggestedActions = missionBriefing.suggestedActions,
+            )
+        }
+
+        if (
+            missionBriefing != null &&
+            (
+                "improves my score the most" in question ||
+                    "what should we prepare for first" in question ||
+                    "what should i focus on" in question
+                )
+        ) {
+            return AssistantResponse(
+                answer = missionBriefing.whatShouldIFocusOn,
+                relatedScenarioId = matchedMission?.nextAction?.relatedScenarioId,
+                suggestedActions = missionBriefing.suggestedActions,
+            )
+        }
+
+        if (
+            missionBriefing != null &&
+            (
+                "realistically" in question ||
+                    "financially ready" in question ||
+                    "are we ready" in question
+                )
+        ) {
+            return AssistantResponse(
+                answer = "${missionBriefing.coachingSummary} ${missionBriefing.whyNotReady}",
+                relatedScenarioId = matchedMission?.nextAction?.relatedScenarioId,
+                suggestedActions = missionBriefing.suggestedActions,
+            )
+        }
+
+        if (
+            missionBriefing != null &&
+            (
+                "accelerate my timeline" in question ||
+                    "become ready sooner" in question ||
+                    "how do i become ready sooner" in question
+                )
+        ) {
+            return AssistantResponse(
+                answer = missionBriefing.howCanIAccelerateTimeline,
+                relatedScenarioId = matchedMission?.nextAction?.relatedScenarioId,
+                suggestedActions = missionBriefing.suggestedActions,
+            )
+        }
 
         if ("why" in question && "readiness" in question && "change" in question) {
             val mission = matchedMission ?: context.missionControl.lowestReadinessMission
