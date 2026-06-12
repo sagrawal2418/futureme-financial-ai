@@ -34,7 +34,7 @@ Mission Control is the primary product experience. It organizes the entire platf
 - Support Parents
 - Start a Business
 
-Each mission shows one readiness score, progress, risk, blockers, a highest-impact next action, and a five-horizon timeline. Financial GPS, goal probability, money leaks, life events, opportunity ranking, scenarios, and AI explanations now operate as supporting services.
+Each mission shows readiness, derived progress, health, dependencies, a prioritized action plan, and a three-horizon execution roadmap. Financial GPS, goal probability, money leaks, life events, opportunity ranking, scenarios, and AI explanations operate as supporting services.
 
 The first screen answers five questions immediately:
 
@@ -43,6 +43,21 @@ The first screen answers five questions immediately:
 3. What is blocking me?
 4. What should I do next?
 5. When could I be ready?
+
+## How FutureMe Turns Goals Into Action Plans
+
+Mission Control continuously converts each readiness assessment into an execution plan:
+
+- Four measurable actions per mission
+- Blocked and unlocked actions based on dependencies
+- Progress derived from completed work, financial metrics, and readiness
+- Green, yellow, or red mission health
+- 30-day, 90-day, and one-year roadmaps
+- Local notifications and mission history
+- Mission-specific decision scenarios
+- Mission Coach answers grounded in the current plan
+
+The shared Kotlin execution layer is the source of truth for Android, iOS, and web. Clients render the plan; they do not maintain separate action or progress formulas.
 
 ## Version 4: Banking Intelligence
 
@@ -135,7 +150,7 @@ flowchart LR
 
 The backend never replaces the financial core. Claude receives structured, already-calculated outputs and cannot alter balances, probabilities, or projections.
 
-See [Mission Framework](docs/mission-framework.md), [Readiness Framework](docs/readiness-framework.md), [Mission Control Architecture](docs/mission-control-architecture.md), [Architecture](docs/architecture.md), [Client Feature Parity](docs/feature-parity.md), and [Security Architecture](docs/security-architecture.md).
+See [Mission Framework](docs/mission-framework.md), [Mission Control Architecture](docs/mission-control-architecture.md), [Mission Execution Layer](docs/mission-execution-layer.md), [Action Engine](docs/action-engine.md), [Mission Health](docs/mission-health.md), [Mission Roadmaps](docs/mission-roadmaps.md), [Readiness Framework](docs/readiness-framework.md), [Architecture](docs/architecture.md), [Client Feature Parity](docs/feature-parity.md), and [Security Architecture](docs/security-architecture.md).
 
 ## Repository
 
@@ -188,12 +203,13 @@ Seeded totals:
 
 1. Open **Mission Control** and scan all eight active missions.
 2. Select **Buy a Home** and explain readiness, progress, and the biggest blocker.
-3. Show the mission’s single **Next Best Action** and expected readiness lift.
-4. Walk through Today, 30 Days, 90 Days, 1 Year, and 3 Years.
-5. Compare Mission Risks and Mission Opportunities.
-6. Open Mission Analytics to show readiness gains, actions, and timeline improvement.
-7. Ask Mission Coach, “Which mission should I prioritize?”
-8. Open supporting financial services to show the deterministic evidence behind the mission.
+3. Show the mission’s unlocked, in-progress, completed, and blocked actions.
+4. Walk through the 30-day, 90-day, and one-year mission roadmap.
+5. Explain green, yellow, or red Mission Health.
+6. Open Mission Notifications and Mission History.
+7. Compare mission-specific scenario impacts.
+8. Ask Mission Coach, “What should I do next?”
+9. Open supporting financial services to show the deterministic evidence behind the mission.
 
 The coach explains shared structured output; it does not perform financial arithmetic.
 

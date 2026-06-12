@@ -44,6 +44,7 @@ struct FutureMeDashboardContent {
     let analyticsEvents: [AnalyticsEvent]
     let missions: [Mission]
     let missionControl: MissionControlSnapshot
+    let missionExecution: MissionExecutionCenter
     let missionAnalytics: MissionAnalyticsSnapshot
     let suggestions: [SuggestedQuestion]
     let messages: [AssistantMessage]
@@ -126,6 +127,7 @@ final class FutureMeViewModel: ObservableObject {
                 analyticsEvents: bootstrap.analyticsEvents,
                 missions: bootstrap.missions,
                 missionControl: bootstrap.missionControl,
+                missionExecution: bootstrap.missionExecution,
                 missionAnalytics: bootstrap.missionAnalytics,
                 suggestions: bootstrap.suggestedQuestions,
                 messages: [
@@ -179,6 +181,7 @@ final class FutureMeViewModel: ObservableObject {
                 analyticsEvents: product.analyticsEvents(),
                 missions: content.missions,
                 missionControl: content.missionControl,
+                missionExecution: content.missionExecution,
                 missionAnalytics: content.missionAnalytics,
                 suggestions: content.suggestions,
                 messages: content.messages,
@@ -225,6 +228,7 @@ final class FutureMeViewModel: ObservableObject {
                 analyticsEvents: content.analyticsEvents,
                 missions: content.missions,
                 missionControl: content.missionControl,
+                missionExecution: content.missionExecution,
                 missionAnalytics: content.missionAnalytics,
                 suggestions: content.suggestions,
                 messages: content.messages,
@@ -280,6 +284,7 @@ final class FutureMeViewModel: ObservableObject {
                 analyticsEvents: product.analyticsEvents(),
                 missions: content.missions,
                 missionControl: content.missionControl,
+                missionExecution: content.missionExecution,
                 missionAnalytics: content.missionAnalytics,
                 suggestions: content.suggestions,
                 messages: messages,
@@ -303,11 +308,15 @@ final class FutureMeViewModel: ObservableObject {
         guard case let .content(content) = state else {
             return
         }
-        _ = product.recordAnalyticsEvent(
-            typeCode: "mission_action_completed",
-            subjectId: actionId
+        let bootstrap = product.completeMissionAction(actionId: actionId)
+        replace(
+            content,
+            analyticsEvents: bootstrap.analyticsEvents,
+            missions: bootstrap.missions,
+            missionControl: bootstrap.missionControl,
+            missionExecution: bootstrap.missionExecution,
+            missionAnalytics: bootstrap.missionAnalytics
         )
-        replace(content, analyticsEvents: product.analyticsEvents())
     }
 
     func saveDecision() {
@@ -325,7 +334,11 @@ final class FutureMeViewModel: ObservableObject {
     private func replace(
         _ content: FutureMeDashboardContent,
         decisionJournal: [DecisionJournalEntry]? = nil,
-        analyticsEvents: [AnalyticsEvent]? = nil
+        analyticsEvents: [AnalyticsEvent]? = nil,
+        missions: [Mission]? = nil,
+        missionControl: MissionControlSnapshot? = nil,
+        missionExecution: MissionExecutionCenter? = nil,
+        missionAnalytics: MissionAnalyticsSnapshot? = nil
     ) {
         state = .content(
             FutureMeDashboardContent(
@@ -355,9 +368,10 @@ final class FutureMeViewModel: ObservableObject {
                 futureOutcomeContributions: content.futureOutcomeContributions,
                 bankingVisionDemo: content.bankingVisionDemo,
                 analyticsEvents: analyticsEvents ?? content.analyticsEvents,
-                missions: content.missions,
-                missionControl: content.missionControl,
-                missionAnalytics: content.missionAnalytics,
+                missions: missions ?? content.missions,
+                missionControl: missionControl ?? content.missionControl,
+                missionExecution: missionExecution ?? content.missionExecution,
+                missionAnalytics: missionAnalytics ?? content.missionAnalytics,
                 suggestions: content.suggestions,
                 messages: content.messages,
                 disclaimer: content.disclaimer

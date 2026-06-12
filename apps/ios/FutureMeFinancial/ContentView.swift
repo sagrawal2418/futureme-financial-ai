@@ -57,6 +57,7 @@ private struct DashboardTabs: View {
                         MissionControlView(
                             content: content,
                             onOpenTimeline: { selectedTab = 3 },
+                            onOpenSimulator: { selectedTab = 2 },
                             onOpenCoach: { selectedTab = 4 },
                             onAcceptAction: onAcceptMissionAction
                         )
@@ -211,6 +212,7 @@ private struct DashboardTabs: View {
 private struct MissionControlView: View {
     let content: FutureMeDashboardContent
     let onOpenTimeline: () -> Void
+    let onOpenSimulator: () -> Void
     let onOpenCoach: () -> Void
     let onAcceptAction: (String) -> Void
     @State private var selectedMissionId: String
@@ -219,11 +221,13 @@ private struct MissionControlView: View {
     init(
         content: FutureMeDashboardContent,
         onOpenTimeline: @escaping () -> Void,
+        onOpenSimulator: @escaping () -> Void,
         onOpenCoach: @escaping () -> Void,
         onAcceptAction: @escaping (String) -> Void
     ) {
         self.content = content
         self.onOpenTimeline = onOpenTimeline
+        self.onOpenSimulator = onOpenSimulator
         self.onOpenCoach = onOpenCoach
         self.onAcceptAction = onAcceptAction
         _selectedMissionId = State(
@@ -235,6 +239,11 @@ private struct MissionControlView: View {
     private var mission: Mission {
         content.missions.first(where: { $0.missionId == selectedMissionId })
             ?? content.missions[0]
+    }
+
+    private var execution: MissionExecutionPlan {
+        content.missionExecution.plans.first(where: { $0.missionId == selectedMissionId })
+            ?? content.missionExecution.plans[0]
     }
 
     var body: some View {
@@ -271,7 +280,9 @@ private struct MissionControlView: View {
                                 Text(item.title)
                                     .font(.headline)
                                     .foregroundStyle(AppTheme.ink)
-                                Text(missionStatus(item))
+                                Text(
+                                    "\(health(for: item).name.lowercased()) health"
+                                )
                                     .font(.subheadline)
                                     .foregroundStyle(AppTheme.muted)
                                 Text("\(item.readinessScore)%")
@@ -313,10 +324,12 @@ private struct MissionControlView: View {
                         .font(.title.bold())
                         .foregroundStyle(AppTheme.positive)
                 }
-                Text(mission.description)
+                Text(execution.health.summary)
                     .font(.body)
                     .foregroundStyle(AppTheme.muted)
-                Text("MISSION READINESS")
+                Text(
+                    "MISSION READINESS • \(execution.health.status.name) HEALTH"
+                )
                     .font(.caption.bold())
                     .foregroundStyle(AppTheme.muted)
                     .padding(.top, 4)
@@ -372,10 +385,12 @@ private struct MissionControlView: View {
                 }
                 Button {
                     onAcceptAction(mission.nextAction.id)
-                    acceptedAction = true
+                    acceptedAction = false
                 } label: {
                     Label(
-                        acceptedAction ? "Added to mission plan" : "Make this my focus",
+                        execution.actionPlan.nextAction == nil
+                            ? "Mission complete"
+                            : "Mark action complete",
                         systemImage: acceptedAction ? "checkmark.circle.fill" : "arrow.right.circle.fill"
                     )
                     .frame(maxWidth: .infinity)
@@ -383,26 +398,89 @@ private struct MissionControlView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(AppTheme.mint)
                 .foregroundStyle(AppTheme.forest)
-                .disabled(acceptedAction)
+                .disabled(acceptedAction || execution.actionPlan.nextAction == nil)
             }
             .padding(20)
             .futureMeCard(fill: AppTheme.forest, showsBorder: false)
 
-            SectionTitle(eyebrow: "MISSION TIMELINE", title: "\(mission.title) path forward")
-            ForEach(mission.timeline, id: \.label) { point in
+            VStack(alignment: .leading, spacing: 12) {
+                Eyebrow("MISSION ACTION ENGINE")
+                HStack {
+                    Text("Your dynamic action plan")
+                        .font(.title3.bold())
+                    Spacer()
+                    Text(
+                        "\(execution.progress.completedActions)/\(execution.progress.totalActions) complete"
+                    )
+                    .font(.caption.bold())
+                    .foregroundStyle(AppTheme.positive)
+                }
+                ForEach(Array(execution.actionPlan.actions.enumerated()), id: \.element.actionId) {
+                    index, action in
+                    VStack(alignment: .leading, spacing: 7) {
+                        HStack(alignment: .top) {
+                            Text("\(index + 1). \(action.title)")
+                                .font(.headline)
+                            Spacer()
+                            Text(action.completionStatus.name.replacingOccurrences(
+                                of: "_",
+                                with: " "
+                            ))
+                            .font(.caption2.bold())
+                            .foregroundStyle(AppTheme.positive)
+                        }
+                        Text(action.blockerMessage ?? action.description)
+                            .font(.subheadline)
+                            .foregroundStyle(AppTheme.muted)
+                        Text(
+                            "+\(action.readinessGain) readiness • " +
+                                "\(action.effort.name.lowercased()) effort • " +
+                                "target \(action.targetDate)"
+                        )
+                        .font(.caption.bold())
+                        .foregroundStyle(AppTheme.positive)
+                        ProgressView(value: Double(action.metricProgressPercentage), total: 100)
+                            .tint(AppTheme.positive)
+                    }
+                    .padding(14)
+                    .background(
+                        action.completionStatus.name == "LOCKED"
+                            ? AppTheme.canvas
+                            : AppTheme.surface
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 13))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 13)
+                            .stroke(AppTheme.line, lineWidth: 1)
+                    )
+                }
+            }
+            .padding(20)
+            .futureMeCard()
+
+            SectionTitle(eyebrow: "MISSION ROADMAPS", title: "\(mission.title) path forward")
+            ForEach(execution.roadmap.stages, id: \.label) { stage in
                 HStack(alignment: .top, spacing: 12) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(AppTheme.positive)
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Text(point.label).font(.headline)
+                            Text(stage.label).font(.headline)
                             Spacer()
-                            Text("\(point.readinessScore)%").font(.headline)
+                            Text("+\(stage.expectedReadinessGrowth)").font(.headline)
                         }
-                        Text(point.milestone)
+                        Text(
+                            stage.upcomingActions.map(\.title).joined(separator: " • ")
+                                .isEmpty
+                                ? "Maintain completed actions."
+                                : stage.upcomingActions.map(\.title).joined(separator: " • ")
+                        )
                             .font(.body)
                             .foregroundStyle(AppTheme.muted)
-                        Text("\(point.completedActions) actions complete")
+                        Text(
+                            "\(stage.completedActions.count) complete • projected " +
+                                stage.projectedCompletionDate
+                        )
                             .font(.caption.bold())
                             .foregroundStyle(AppTheme.positive)
                     }
@@ -411,8 +489,97 @@ private struct MissionControlView: View {
                 .futureMeCard()
             }
 
+            VStack(alignment: .leading, spacing: 11) {
+                Eyebrow("MISSION HEALTH")
+                HStack {
+                    Text(execution.health.status.name)
+                        .font(.title2.bold())
+                    Spacer()
+                    Text("\(execution.health.score)/100")
+                        .font(.headline)
+                        .foregroundStyle(healthColor(execution.health.status))
+                }
+                Text(execution.health.summary)
+                    .foregroundStyle(AppTheme.muted)
+                ForEach(execution.health.factors, id: \.id) { factor in
+                    HStack(alignment: .top) {
+                        Text(factor.title)
+                        Spacer()
+                        Text(factor.triggered ? factor.explanation : "Clear")
+                            .font(.caption)
+                            .foregroundStyle(factor.triggered ? Color.red : AppTheme.positive)
+                            .multilineTextAlignment(.trailing)
+                    }
+                }
+            }
+            .padding(20)
+            .futureMeCard()
+
+            VStack(alignment: .leading, spacing: 12) {
+                Eyebrow("MISSION NOTIFICATIONS")
+                Text("Notification center")
+                    .font(.title3.bold())
+                ForEach(content.missionExecution.notifications.prefix(5), id: \.notificationId) {
+                    notification in
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "bell.fill")
+                            .foregroundStyle(AppTheme.positive)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(notification.title).font(.headline)
+                            Text(notification.message)
+                                .font(.subheadline)
+                                .foregroundStyle(AppTheme.muted)
+                        }
+                    }
+                }
+            }
+            .padding(20)
+            .futureMeCard()
+
+            VStack(alignment: .leading, spacing: 12) {
+                Eyebrow("MISSION HISTORY")
+                Text("Readiness history graph")
+                    .font(.title3.bold())
+                Chart(execution.history.points, id: \.date) { point in
+                    BarMark(
+                        x: .value("Date", point.date),
+                        y: .value("Readiness", point.readinessScore)
+                    )
+                    .foregroundStyle(AppTheme.positive.gradient)
+                }
+                .frame(height: 150)
+                Text(execution.history.events.first?.detail ?? "Mission history is current.")
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.muted)
+            }
+            .padding(20)
+            .futureMeCard()
+
+            VStack(alignment: .leading, spacing: 12) {
+                Eyebrow("MISSION SCENARIOS")
+                Text("Evaluate the decision")
+                    .font(.title3.bold())
+                ForEach(execution.scenarioImpacts, id: \.scenarioId) { scenario in
+                    HStack {
+                        Text(scenario.title)
+                            .font(.headline)
+                        Spacer()
+                        Text(
+                            "\(signed(scenario.readinessImpact)) ready • " +
+                                "\(signed(scenario.timelineImpactMonths)) mo"
+                        )
+                        .font(.caption.bold())
+                        .foregroundStyle(AppTheme.positive)
+                    }
+                }
+                Button("Open mission scenario evaluator", action: onOpenSimulator)
+                    .buttonStyle(.bordered)
+            }
+            .padding(20)
+            .futureMeCard()
+
             HStack {
-                Button("Open Mission Readiness", action: onOpenTimeline)
+                Button("Open Mission Timeline", action: onOpenTimeline)
                     .buttonStyle(.bordered)
                 Button("Ask Mission Coach", action: onOpenCoach)
                     .buttonStyle(.borderedProminent)
@@ -468,6 +635,23 @@ private struct MissionControlView: View {
         String(describing: mission.status)
             .replacingOccurrences(of: "_", with: " ")
             .capitalized
+    }
+
+    private func health(for mission: Mission) -> MissionHealthStatus {
+        content.missionExecution.plans.first(where: { $0.missionId == mission.missionId })?
+            .health.status ?? content.missionExecution.plans[0].health.status
+    }
+
+    private func healthColor(_ status: MissionHealthStatus) -> Color {
+        switch status.name {
+        case "GREEN": AppTheme.positive
+        case "RED": .red
+        default: .orange
+        }
+    }
+
+    private func signed(_ value: Int32) -> String {
+        value >= 0 ? "+\(value)" : "\(value)"
     }
 }
 

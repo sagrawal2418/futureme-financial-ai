@@ -36,6 +36,7 @@ data class ProductBootstrap(
     val analyticsEvents: List<AnalyticsEvent>,
     val missions: List<Mission>,
     val missionControl: MissionControlSnapshot,
+    val missionExecution: MissionExecutionCenter,
     val missionAnalytics: MissionAnalyticsSnapshot,
     val suggestedQuestions: List<SuggestedQuestion>,
     val designTokens: DesignTokens,

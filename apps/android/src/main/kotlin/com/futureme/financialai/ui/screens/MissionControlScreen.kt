@@ -30,6 +30,8 @@ import com.futureme.financialai.ui.components.Eyebrow
 import com.futureme.financialai.ui.components.SectionTitle
 import com.futureme.financialai.util.compactMoney
 import com.futureme.shared.models.Mission
+import com.futureme.shared.models.MissionActionStatus
+import com.futureme.shared.models.MissionExecutionPlan
 import com.futureme.shared.models.MissionSignal
 
 @Composable
@@ -45,6 +47,7 @@ fun MissionControlScreen(
         mutableStateOf(content.missionControl.activeMissions.first().missionId)
     }
     val mission = content.missions.first { it.missionId == selectedMissionId }
+    val execution = content.missionExecution.plans.first { it.missionId == selectedMissionId }
 
     Column {
         Eyebrow("MISSION CONTROL")
@@ -77,25 +80,31 @@ fun MissionControlScreen(
             content.missionControl.activeMissions.forEach { item ->
                 MissionPickerCard(
                     mission = item,
+                    health = content.missionExecution.plans
+                        .first { it.missionId == item.missionId }
+                        .health.status.name,
                     selected = item.missionId == selectedMissionId,
                     onClick = { selectedMissionId = item.missionId },
                 )
             }
         }
 
-        MissionDetailCard(mission, Modifier.padding(top = 16.dp))
+        MissionDetailCard(mission, execution, Modifier.padding(top = 16.dp))
         MissionNextActionCard(
             mission = mission,
+            hasNextAction = execution.actionPlan.nextAction != null,
             onAccept = { onAcceptAction(mission.nextAction.id) },
             modifier = Modifier.padding(top = 14.dp),
         )
 
+        MissionActionPlanCard(execution, Modifier.padding(top = 22.dp))
+
         SectionTitle(
-            eyebrow = "MISSION TIMELINE",
+            eyebrow = "MISSION ROADMAPS",
             title = "${mission.title} path forward",
             modifier = Modifier.padding(top = 28.dp),
         )
-        mission.timeline.forEach { point ->
+        execution.roadmap.stages.forEach { stage ->
             Card(
                 modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                 colors = CardDefaults.cardColors(
@@ -107,16 +116,24 @@ fun MissionControlScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(point.label, fontWeight = FontWeight.Bold)
+                        Text(stage.label, fontWeight = FontWeight.Bold)
                         Text(
-                            point.milestone,
+                            stage.upcomingActions.joinToString(" • ") { it.title }
+                                .ifBlank { "Maintain completed actions." },
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(top = 4.dp),
                         )
+                        Text(
+                            "${stage.completedActions.size} complete • projected " +
+                                stage.projectedCompletionDate,
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.padding(top = 7.dp),
+                        )
                     }
                     Text(
-                        "${point.readinessScore}%",
+                        "+${stage.expectedReadinessGrowth}",
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                     )
@@ -129,6 +146,11 @@ fun MissionControlScreen(
         ) {
             Text("Open Mission Timeline")
         }
+
+        MissionHealthCard(execution, Modifier.padding(top = 22.dp))
+        MissionNotificationCenter(content, Modifier.padding(top = 22.dp))
+        MissionHistoryCard(execution, Modifier.padding(top = 22.dp))
+        MissionScenarioCard(execution, onOpenSimulator, Modifier.padding(top = 22.dp))
 
         SectionTitle(
             eyebrow = "MISSION RISKS",
@@ -231,6 +253,7 @@ private fun MissionSummaryCard(
 @Composable
 private fun MissionPickerCard(
     mission: Mission,
+    health: String,
     selected: Boolean,
     onClick: () -> Unit,
 ) {
@@ -248,7 +271,7 @@ private fun MissionPickerCard(
         Column(modifier = Modifier.padding(16.dp)) {
             Text(mission.title, fontWeight = FontWeight.Bold)
             Text(
-                mission.status.name.replace('_', ' ').lowercase(),
+                "${health.lowercase()} health",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = 3.dp),
@@ -271,6 +294,7 @@ private fun MissionPickerCard(
 @Composable
 private fun MissionDetailCard(
     mission: Mission,
+    execution: MissionExecutionPlan,
     modifier: Modifier = Modifier,
 ) {
     Card(modifier = modifier.fillMaxWidth()) {
@@ -288,7 +312,8 @@ private fun MissionDetailCard(
                 modifier = Modifier.padding(top = 6.dp),
             )
             Text(
-                "Mission Readiness ${mission.readinessScore}%",
+                "Mission Readiness ${mission.readinessScore}% • " +
+                    "${execution.health.status.name.lowercase()} health",
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 18.dp),
@@ -322,8 +347,212 @@ private fun MissionDetailCard(
 }
 
 @Composable
+private fun MissionActionPlanCard(
+    execution: MissionExecutionPlan,
+    modifier: Modifier = Modifier,
+) {
+    Card(modifier = modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Eyebrow("MISSION ACTION ENGINE")
+            Text(
+                "Your dynamic action plan",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                "${execution.progress.completedActions} of ${execution.progress.totalActions} complete",
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            execution.actionPlan.actions.forEachIndexed { index, action ->
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (action.completionStatus == MissionActionStatus.LOCKED) {
+                            MaterialTheme.colorScheme.surfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.surface
+                        },
+                    ),
+                ) {
+                    Column(modifier = Modifier.padding(15.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(
+                                "${index + 1}. ${action.title}",
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Text(
+                                action.completionStatus.name.replace('_', ' ').lowercase(),
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.labelSmall,
+                            )
+                        }
+                        Text(
+                            action.blockerMessage ?: action.description,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 5.dp),
+                        )
+                        Text(
+                            "+${action.readinessGain} readiness • ${action.effort.name.lowercase()} effort",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                        LinearProgressIndicator(
+                            progress = { action.metricProgressPercentage / 100f },
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MissionHealthCard(
+    execution: MissionExecutionPlan,
+    modifier: Modifier = Modifier,
+) {
+    Card(modifier = modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Eyebrow("MISSION HEALTH")
+            Text(
+                "${execution.health.status.name} • ${execution.health.score}/100",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                execution.health.summary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 5.dp),
+            )
+            execution.health.factors.forEach { factor ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(factor.title)
+                    Text(
+                        if (factor.triggered) factor.explanation else "Clear",
+                        color = if (factor.triggered) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.weight(1f).padding(start = 12.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MissionNotificationCenter(
+    content: FutureMeContent,
+    modifier: Modifier = Modifier,
+) {
+    Card(modifier = modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Eyebrow("MISSION NOTIFICATIONS")
+            Text(
+                "Notification center",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+            )
+            content.missionExecution.notifications.take(5).forEach { notification ->
+                Column(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
+                    Text(notification.title, fontWeight = FontWeight.Bold)
+                    Text(
+                        notification.message,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MissionHistoryCard(
+    execution: MissionExecutionPlan,
+    modifier: Modifier = Modifier,
+) {
+    Card(modifier = modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Eyebrow("MISSION HISTORY")
+            Text(
+                "Readiness history graph",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+            )
+            execution.history.points.forEach { point ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(point.date)
+                    Text("${point.readinessScore}%", fontWeight = FontWeight.Bold)
+                }
+                LinearProgressIndicator(
+                    progress = { point.readinessScore / 100f },
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MissionScenarioCard(
+    execution: MissionExecutionPlan,
+    onOpenSimulator: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(modifier = modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Eyebrow("MISSION SCENARIOS")
+            Text(
+                "Evaluate the decision",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+            )
+            execution.scenarioImpacts.forEach { scenario ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(scenario.title, fontWeight = FontWeight.Bold)
+                    Text(
+                        "${if (scenario.readinessImpact >= 0) "+" else ""}" +
+                            "${scenario.readinessImpact} ready • " +
+                            "${scenario.timelineImpactMonths} mo",
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+            OutlinedButton(
+                onClick = onOpenSimulator,
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+            ) {
+                Text("Open mission scenario evaluator")
+            }
+        }
+    }
+}
+
+@Composable
 private fun MissionNextActionCard(
     mission: Mission,
+    hasNextAction: Boolean,
     onAccept: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -353,9 +582,10 @@ private fun MissionNextActionCard(
             )
             Button(
                 onClick = onAccept,
+                enabled = hasNextAction,
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
             ) {
-                Text("Make this my focus")
+                Text(if (hasNextAction) "Mark action complete" else "Mission complete")
             }
         }
     }

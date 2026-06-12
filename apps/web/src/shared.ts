@@ -530,6 +530,123 @@ export interface MissionAnalyticsSnapshot {
   }[];
 }
 
+export type MissionActionStatus =
+  | "LOCKED"
+  | "AVAILABLE"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "MISSED";
+
+export interface MissionAction {
+  actionId: string;
+  missionId: string;
+  title: string;
+  description: string;
+  category: "DEBT" | "SAVINGS" | "CASH_FLOW" | "EMERGENCY_FUND" | "INVESTING" | "RISK" | "PLANNING";
+  effort: "LOW" | "MEDIUM" | "HIGH";
+  impact: "LOW" | "MEDIUM" | "HIGH";
+  readinessGain: number;
+  targetDate: string;
+  completionStatus: MissionActionStatus;
+  dependencyActionIds: string[];
+  blockerMessage: string | null;
+  metricLabel: string;
+  currentMetricValue: number;
+  targetMetricValue: number;
+  metricProgressPercentage: number;
+}
+
+export interface MissionExecutionPlan {
+  missionId: string;
+  actionPlan: {
+    missionId: string;
+    actions: MissionAction[];
+    nextAction: MissionAction | null;
+    blockedActions: MissionAction[];
+    unlockedActions: MissionAction[];
+  };
+  progress: {
+    missionId: string;
+    progressPercentage: number;
+    completedActions: number;
+    totalActions: number;
+    actionProgressPercentage: number;
+    metricProgressPercentage: number;
+    readinessContributionPercentage: number;
+    summary: string;
+  };
+  roadmap: {
+    missionId: string;
+    stages: {
+      horizon: "THIRTY_DAYS" | "NINETY_DAYS" | "ONE_YEAR";
+      label: string;
+      currentStatus: "GREEN" | "YELLOW" | "RED";
+      upcomingActions: MissionAction[];
+      completedActions: MissionAction[];
+      expectedReadinessGrowth: number;
+      projectedCompletionDate: string;
+    }[];
+  };
+  health: {
+    missionId: string;
+    status: "GREEN" | "YELLOW" | "RED";
+    score: number;
+    factors: {
+      id: string;
+      title: string;
+      triggered: boolean;
+      explanation: string;
+      penaltyPoints: number;
+    }[];
+    summary: string;
+  };
+  notifications: MissionNotification[];
+  history: {
+    missionId: string;
+    events: {
+      eventId: string;
+      missionId: string;
+      type: "READINESS_CHANGED" | "ACTION_COMPLETED" | "TIMELINE_CHANGED" | "RISK_CHANGED" | "HEALTH_CHANGED";
+      occurredAt: string;
+      title: string;
+      detail: string;
+    }[];
+    points: {
+      date: string;
+      readinessScore: number;
+      progressPercentage: number;
+      riskScore: number;
+      healthStatus: "GREEN" | "YELLOW" | "RED";
+    }[];
+  };
+  scenarioImpacts: {
+    scenarioId: string;
+    title: string;
+    readinessImpact: number;
+    timelineImpactMonths: number;
+    riskImpact: number;
+    summary: string;
+  }[];
+}
+
+export interface MissionNotification {
+  notificationId: string;
+  missionId: string;
+  type: "ACTION_UNLOCKED" | "MISSION_AT_RISK" | "READINESS_IMPROVED" | "MILESTONE_COMPLETED" | "TIMELINE_ACCELERATED" | "MISSION_COMPLETED";
+  title: string;
+  message: string;
+  createdAt: string;
+  isRead: boolean;
+}
+
+export interface MissionExecutionCenter {
+  plans: MissionExecutionPlan[];
+  notifications: MissionNotification[];
+  atRiskMissionCount: number;
+  actionsDueCount: number;
+  recentlyCompletedCount: number;
+}
+
 export interface Transaction {
   id: string;
   postedDate: string;
@@ -571,6 +688,7 @@ export interface ProductBootstrap {
   analyticsEvents: AnalyticsEvent[];
   missions: Mission[];
   missionControl: MissionControlSnapshot;
+  missionExecution: MissionExecutionCenter;
   missionAnalytics: MissionAnalyticsSnapshot;
   suggestedQuestions: SuggestedQuestion[];
   designTokens: {
@@ -625,3 +743,6 @@ export const recordAnalyticsEvent = (
 
 export const saveDecision = (scenarioId: string): DecisionJournalEntry =>
   parse<DecisionJournalEntry>(api.saveDecisionJson(scenarioId));
+
+export const completeMissionAction = (actionId: string): ProductBootstrap =>
+  parse<ProductBootstrap>(api.completeMissionActionJson(actionId));
