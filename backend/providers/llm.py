@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import json
 import os
+import ssl
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from typing import Any, Callable
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 
@@ -32,6 +35,26 @@ class LlmResponse:
     text: str
     model: ClaudeModel
     provider: str
+
+
+class AnthropicApiError(RuntimeError):
+    """Safe Anthropic error that excludes credentials and request content."""
+
+    def __init__(
+        self,
+        status_code: int,
+        error_type: str,
+        message: str,
+        request_id: str | None = None,
+    ) -> None:
+        request_suffix = f" Request ID: {request_id}." if request_id else ""
+        super().__init__(
+            f"Anthropic API error {status_code} ({error_type}): "
+            f"{message}{request_suffix}"
+        )
+        self.status_code = status_code
+        self.error_type = error_type
+        self.request_id = request_id
 
 
 AnthropicTransport = Callable[
@@ -371,5 +394,44 @@ class AnthropicLlmProvider(LlmProvider):
             headers=headers,
             method="POST",
         )
-        with urlopen(request, timeout=30) as response:
-            return json.loads(response.read().decode("utf-8"))
+        try:
+            with urlopen(
+                request,
+                timeout=30,
+                context=self._ssl_context(),
+            ) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except HTTPError as error:
+            raise self._api_error(error) from None
+
+    def _api_error(self, error: HTTPError) -> AnthropicApiError:
+        try:
+            payload = json.loads(error.read().decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            payload = {}
+        details = payload.get("error") if isinstance(payload, dict) else None
+        details = details if isinstance(details, dict) else {}
+        return AnthropicApiError(
+            status_code=error.code,
+            error_type=str(details.get("type", "http_error")),
+            message=str(details.get("message", error.reason or "Request failed.")),
+            request_id=payload.get("request_id") if isinstance(payload, dict) else None,
+        )
+
+    def _ssl_context(self) -> ssl.SSLContext:
+        verify_paths = ssl.get_default_verify_paths()
+        candidates = [
+            os.getenv("SSL_CERT_FILE"),
+            verify_paths.cafile,
+            "/etc/ssl/cert.pem",
+            "/private/etc/ssl/cert.pem",
+        ]
+        ca_file = next(
+            (
+                candidate
+                for candidate in candidates
+                if candidate and Path(candidate).is_file()
+            ),
+            None,
+        )
+        return ssl.create_default_context(cafile=ca_file)
