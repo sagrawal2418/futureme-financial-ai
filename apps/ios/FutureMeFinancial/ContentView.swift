@@ -30,6 +30,7 @@ struct ContentView: View {
                 onCompare: viewModel.compare,
                 onAsk: viewModel.ask,
                 onAcceptRecommendation: viewModel.acceptRecommendation,
+                onAcceptMissionAction: viewModel.acceptMissionAction,
                 onSaveDecision: viewModel.saveDecision
             )
         }
@@ -42,8 +43,10 @@ private struct DashboardTabs: View {
     let onCompare: (ScenarioCardModel, ScenarioCardModel) -> Void
     let onAsk: (String) -> Void
     let onAcceptRecommendation: () -> Void
+    let onAcceptMissionAction: (String) -> Void
     let onSaveDecision: () -> Void
     @State private var selectedTab = 0
+    @State private var showSupportingServices = false
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -51,6 +54,18 @@ private struct DashboardTabs: View {
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         Header(name: content.displayName, householdName: content.householdName)
+                        MissionControlView(
+                            content: content,
+                            onOpenTimeline: { selectedTab = 3 },
+                            onOpenCoach: { selectedTab = 4 },
+                            onAcceptAction: onAcceptMissionAction
+                        )
+                            .padding(.horizontal, 20)
+                        DisclosureGroup(
+                            "Supporting financial services",
+                            isExpanded: $showSupportingServices
+                        ) {
+                            VStack(spacing: 0) {
                         HighestImpactActionCard(
                             action: content.nextBestAction,
                             onAccept: onAcceptRecommendation
@@ -121,6 +136,12 @@ private struct DashboardTabs: View {
                         ComparisonCard(comparison: content.comparison)
                             .padding(.horizontal, 20)
                             .padding(.top, 13)
+                            }
+                        }
+                        .font(.headline)
+                        .foregroundStyle(AppTheme.forest)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 22)
                         Label(
                             "Educational simulation only, not financial advice.",
                             systemImage: "shield.checkered"
@@ -133,7 +154,7 @@ private struct DashboardTabs: View {
                 .background(AppTheme.canvas)
                 .toolbar(.hidden, for: .navigationBar)
             }
-            .tabItem { Label("Overview", systemImage: "chart.bar.fill") }
+            .tabItem { Label("Mission", systemImage: "target") }
             .tag(0)
 
             BankingIntelligenceTab(
@@ -184,6 +205,313 @@ private struct DashboardTabs: View {
                 .tag(4)
         }
         .tint(AppTheme.positive)
+    }
+}
+
+private struct MissionControlView: View {
+    let content: FutureMeDashboardContent
+    let onOpenTimeline: () -> Void
+    let onOpenCoach: () -> Void
+    let onAcceptAction: (String) -> Void
+    @State private var selectedMissionId: String
+    @State private var acceptedAction = false
+
+    init(
+        content: FutureMeDashboardContent,
+        onOpenTimeline: @escaping () -> Void,
+        onOpenCoach: @escaping () -> Void,
+        onAcceptAction: @escaping (String) -> Void
+    ) {
+        self.content = content
+        self.onOpenTimeline = onOpenTimeline
+        self.onOpenCoach = onOpenCoach
+        self.onAcceptAction = onAcceptAction
+        _selectedMissionId = State(
+            initialValue: content.missionControl.activeMissions.first?.missionId
+                ?? content.missions[0].missionId
+        )
+    }
+
+    private var mission: Mission {
+        content.missions.first(where: { $0.missionId == selectedMissionId })
+            ?? content.missions[0]
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 8) {
+                Eyebrow("MISSION CONTROL", light: true)
+                Text("How ready are you for your next major life decision?")
+                    .font(.largeTitle.bold())
+                    .foregroundStyle(.white)
+                Text("Your goals, readiness, blockers, next action, and timeline in one place.")
+                    .font(.body)
+                    .foregroundStyle(Color.white.opacity(0.76))
+                ProgressView(
+                    value: Double(content.missionControl.missionProgressPercentage),
+                    total: 100
+                )
+                .tint(AppTheme.mint)
+                Text("\(content.missionControl.missionProgressPercentage)% overall mission progress")
+                    .font(.headline)
+                    .foregroundStyle(AppTheme.mint)
+            }
+            .padding(22)
+            .futureMeCard(fill: AppTheme.forest, showsBorder: false)
+
+            SectionTitle(eyebrow: "ACTIVE MISSIONS", title: "Choose what matters now")
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(content.missionControl.activeMissions, id: \.missionId) { item in
+                        Button {
+                            selectedMissionId = item.missionId
+                            acceptedAction = false
+                        } label: {
+                            VStack(alignment: .leading, spacing: 7) {
+                                Text(item.title)
+                                    .font(.headline)
+                                    .foregroundStyle(AppTheme.ink)
+                                Text(missionStatus(item))
+                                    .font(.subheadline)
+                                    .foregroundStyle(AppTheme.muted)
+                                Text("\(item.readinessScore)%")
+                                    .font(.title.bold())
+                                    .foregroundStyle(AppTheme.positive)
+                                ProgressView(value: Double(item.progressPercentage), total: 100)
+                                    .tint(AppTheme.positive)
+                            }
+                            .frame(width: 165, alignment: .leading)
+                            .padding(15)
+                            .background(
+                                item.missionId == selectedMissionId
+                                    ? AppTheme.mint.opacity(0.35)
+                                    : AppTheme.surface
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(
+                                        item.missionId == selectedMissionId
+                                            ? AppTheme.positive
+                                            : AppTheme.line,
+                                        lineWidth: item.missionId == selectedMissionId ? 2 : 1
+                                    )
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 14) {
+                Eyebrow("MISSION DETAIL")
+                HStack(alignment: .firstTextBaseline) {
+                    Text(mission.title)
+                        .font(.title.bold())
+                    Spacer()
+                    Text("\(mission.readinessScore)%")
+                        .font(.title.bold())
+                        .foregroundStyle(AppTheme.positive)
+                }
+                Text(mission.description)
+                    .font(.body)
+                    .foregroundStyle(AppTheme.muted)
+                Text("MISSION READINESS")
+                    .font(.caption.bold())
+                    .foregroundStyle(AppTheme.muted)
+                    .padding(.top, 4)
+                ForEach(mission.readinessFactors, id: \.category) { factor in
+                    VStack(spacing: 5) {
+                        HStack {
+                            Text(factor.title)
+                                .font(.subheadline)
+                            Spacer()
+                            Text("\(factor.score)%")
+                                .font(.subheadline.bold())
+                        }
+                        ProgressView(value: Double(factor.score), total: 100)
+                            .tint(AppTheme.positive)
+                    }
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("BIGGEST BLOCKER")
+                        .font(.caption.bold())
+                        .foregroundStyle(.red)
+                    Text(mission.blockers[0])
+                        .font(.headline)
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.red.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 13))
+            }
+            .padding(20)
+            .futureMeCard()
+
+            VStack(alignment: .leading, spacing: 12) {
+                Eyebrow("NEXT BEST ACTION", light: true)
+                Text(mission.nextAction.title)
+                    .font(.title2.bold())
+                    .foregroundStyle(.white)
+                Text(mission.nextAction.description)
+                    .font(.body)
+                    .foregroundStyle(Color.white.opacity(0.76))
+                HStack {
+                    ImpactPill(
+                        value: "+\(mission.nextAction.estimatedReadinessIncrease)",
+                        label: "READINESS"
+                    )
+                    ImpactPill(
+                        value: "-\(mission.nextAction.estimatedTimelineReductionMonths) mo",
+                        label: "TIMELINE"
+                    )
+                    ImpactPill(
+                        value: moneyCompact(mission.nextAction.fiveYearBenefitEstimate),
+                        label: "5-YEAR VALUE"
+                    )
+                }
+                Button {
+                    onAcceptAction(mission.nextAction.id)
+                    acceptedAction = true
+                } label: {
+                    Label(
+                        acceptedAction ? "Added to mission plan" : "Make this my focus",
+                        systemImage: acceptedAction ? "checkmark.circle.fill" : "arrow.right.circle.fill"
+                    )
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(AppTheme.mint)
+                .foregroundStyle(AppTheme.forest)
+                .disabled(acceptedAction)
+            }
+            .padding(20)
+            .futureMeCard(fill: AppTheme.forest, showsBorder: false)
+
+            SectionTitle(eyebrow: "MISSION TIMELINE", title: "\(mission.title) path forward")
+            ForEach(mission.timeline, id: \.label) { point in
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(AppTheme.positive)
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(point.label).font(.headline)
+                            Spacer()
+                            Text("\(point.readinessScore)%").font(.headline)
+                        }
+                        Text(point.milestone)
+                            .font(.body)
+                            .foregroundStyle(AppTheme.muted)
+                        Text("\(point.completedActions) actions complete")
+                            .font(.caption.bold())
+                            .foregroundStyle(AppTheme.positive)
+                    }
+                }
+                .padding(16)
+                .futureMeCard()
+            }
+
+            HStack {
+                Button("Open Mission Readiness", action: onOpenTimeline)
+                    .buttonStyle(.bordered)
+                Button("Ask Mission Coach", action: onOpenCoach)
+                    .buttonStyle(.borderedProminent)
+                    .tint(AppTheme.forest)
+            }
+            .frame(maxWidth: .infinity)
+
+            SectionTitle(eyebrow: "MISSION RISKS", title: "What needs attention")
+            ForEach(content.missionControl.risks, id: \.id) { signal in
+                MissionSignalRow(signal: signal, icon: "exclamationmark.triangle.fill")
+            }
+
+            SectionTitle(eyebrow: "MISSION OPPORTUNITIES", title: "Ways to move faster")
+            ForEach(content.missionControl.opportunities, id: \.id) { signal in
+                MissionSignalRow(signal: signal, icon: "arrow.up.right.circle.fill")
+            }
+
+            VStack(alignment: .leading, spacing: 12) {
+                Eyebrow("MISSION ANALYTICS")
+                Text("Progress across every mission")
+                    .font(.title3.bold())
+                HStack {
+                    MissionMetric(
+                        value: "\(content.missionAnalytics.readinessImprovements)",
+                        label: "Readiness gains"
+                    )
+                    MissionMetric(
+                        value: "\(content.missionAnalytics.actionsCompleted)",
+                        label: "Actions done"
+                    )
+                    MissionMetric(
+                        value: "\(content.missionAnalytics.timelineImprovements)",
+                        label: "Months saved"
+                    )
+                }
+                ForEach(content.missionAnalytics.trends.prefix(3), id: \.missionId) { trend in
+                    HStack {
+                        Text(trend.title)
+                        Spacer()
+                        Text("+\(trend.readinessChange) pts")
+                            .fontWeight(.bold)
+                            .foregroundStyle(AppTheme.positive)
+                    }
+                    .font(.subheadline)
+                }
+            }
+            .padding(20)
+            .futureMeCard()
+        }
+    }
+
+    private func missionStatus(_ mission: Mission) -> String {
+        String(describing: mission.status)
+            .replacingOccurrences(of: "_", with: " ")
+            .capitalized
+    }
+}
+
+private struct MissionSignalRow: View {
+    let signal: MissionSignal
+    let icon: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .foregroundStyle(AppTheme.positive)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(signal.title).font(.headline)
+                Text(signal.description)
+                    .font(.subheadline)
+                    .foregroundStyle(AppTheme.muted)
+            }
+            Spacer()
+            Text(signal.impactLabel)
+                .font(.caption.bold())
+                .foregroundStyle(AppTheme.positive)
+        }
+        .padding(16)
+        .futureMeCard()
+    }
+}
+
+private struct MissionMetric: View {
+    let value: String
+    let label: String
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.title2.bold())
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(AppTheme.muted)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background(AppTheme.canvas)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 

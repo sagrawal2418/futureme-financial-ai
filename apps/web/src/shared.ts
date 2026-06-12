@@ -28,6 +28,23 @@ export type ReadinessLevel =
 
 export type ReadinessTrend = "IMPROVING" | "STABLE" | "DECLINING";
 
+export type MissionType =
+  | "BUY_HOME"
+  | "HAVE_CHILD"
+  | "RELOCATE"
+  | "RETIRE_EARLY"
+  | "BECOME_DEBT_FREE"
+  | "BUILD_EMERGENCY_FUND"
+  | "SUPPORT_PARENTS"
+  | "START_BUSINESS";
+
+export type MissionStatus =
+  | "NOT_STARTED"
+  | "IN_PROGRESS"
+  | "AT_RISK"
+  | "ON_TRACK"
+  | "COMPLETED";
+
 export interface UserIdentity {
   ownerId: string;
   displayName: string;
@@ -407,9 +424,110 @@ export interface AnalyticsEvent {
     | "RECOMMENDATION_ACCEPTED"
     | "READINESS_VIEWED"
     | "AI_QUESTION_ASKED"
-    | "MONTHLY_REVIEW_OPENED";
+    | "MONTHLY_REVIEW_OPENED"
+    | "MISSION_CREATED"
+    | "MISSION_COMPLETED"
+    | "MISSION_READINESS_IMPROVED"
+    | "MISSION_TIMELINE_IMPROVED"
+    | "MISSION_ACTION_COMPLETED"
+    | "MISSION_GOAL_ACHIEVED";
   occurredAt: string;
   properties: { name: string; value: string }[];
+}
+
+export interface MissionNextAction {
+  id: string;
+  title: string;
+  description: string;
+  estimatedReadinessIncrease: number;
+  estimatedTimelineReductionMonths: number;
+  annualBenefitEstimate: number;
+  fiveYearBenefitEstimate: number;
+  impactScore: number;
+  confidenceScore: number;
+  relatedScenarioId: string | null;
+}
+
+export interface MissionTimelinePoint {
+  horizon: "TODAY" | "THIRTY_DAYS" | "NINETY_DAYS" | "ONE_YEAR" | "THREE_YEARS";
+  label: string;
+  monthsFromNow: number;
+  readinessScore: number;
+  progressPercentage: number;
+  completedActions: number;
+  milestone: string;
+  projectedCompletionDate: string;
+}
+
+export interface Mission {
+  missionId: string;
+  missionType: MissionType;
+  title: string;
+  description: string;
+  targetDate: string;
+  readinessScore: number;
+  progressPercentage: number;
+  riskLevel: "LOW" | "MODERATE" | "ELEVATED" | "HIGH";
+  estimatedCost: number;
+  projectedBenefit: number;
+  blockers: string[];
+  recommendations: string[];
+  nextAction: MissionNextAction;
+  timeline: MissionTimelinePoint[];
+  createdDate: string;
+  updatedDate: string;
+  status: MissionStatus;
+  readinessFactors: {
+    category: "FINANCIAL" | "CASH_FLOW" | "RISK" | "EMERGENCY_FUND" | "DEBT" | "GOAL";
+    title: string;
+    score: number;
+    explanation: string;
+  }[];
+  strengths: string[];
+  weaknesses: string[];
+  confidenceLevel: "HIGH" | "MEDIUM" | "LOW";
+  goalProbabilityPercentage: number;
+}
+
+export interface MissionControlSnapshot {
+  activeMissions: Mission[];
+  highestReadinessMission: Mission;
+  lowestReadinessMission: Mission;
+  missionProgressPercentage: number;
+  missionTimeline: MissionTimelinePoint[];
+  nextBestAction: MissionNextAction;
+  risks: {
+    id: string;
+    missionId: string;
+    title: string;
+    description: string;
+    impactLabel: string;
+  }[];
+  opportunities: {
+    id: string;
+    missionId: string;
+    title: string;
+    description: string;
+    impactLabel: string;
+  }[];
+}
+
+export interface MissionAnalyticsSnapshot {
+  missionsCreated: number;
+  missionsCompleted: number;
+  readinessImprovements: number;
+  timelineImprovements: number;
+  actionsCompleted: number;
+  goalsAchieved: number;
+  trends: {
+    missionId: string;
+    title: string;
+    startingReadinessScore: number;
+    currentReadinessScore: number;
+    readinessChange: number;
+    timelineReductionMonths: number;
+    actionsCompleted: number;
+  }[];
 }
 
 export interface Transaction {
@@ -451,6 +569,9 @@ export interface ProductBootstrap {
   futureOutcomeContributions: FutureOutcomeContribution[];
   bankingVisionDemo: BankingVisionDemo;
   analyticsEvents: AnalyticsEvent[];
+  missions: Mission[];
+  missionControl: MissionControlSnapshot;
+  missionAnalytics: MissionAnalyticsSnapshot;
   suggestedQuestions: SuggestedQuestion[];
   designTokens: {
     spacing: Record<string, number>;

@@ -6,18 +6,17 @@
 
 ## Walkthrough
 
-1. Open the Life Readiness Dashboard for the dual-income Lee family.
-2. Compare home, child, retirement, relocation, and parent-support readiness.
-3. Select Home Purchase Readiness and explain the score, trend, blockers, confidence, and ready date.
-4. Show the Readiness Improvement Plan from the current score to 85%.
-5. Open the Life Decision Simulator and select Buy a $700K Home.
-6. Review readiness impact, cash-flow impact, five-year net-worth impact, risk change, and timeline change.
-7. Select Move to Austin and compare its readiness effect.
-8. Ask the FutureMe AI Coach, “What is preventing me from buying a home?”
-9. Ask, “What decision improves my future the most?”
-10. Review the Life Timeline at today, six months, one year, three years, and five years.
-11. Walk through the five Executive Demo steps.
-12. Close by showing that Android, iOS, and web use the same shared output.
+1. Open Mission Control for the dual-income Lee family.
+2. Scan all eight active missions and the overall progress score.
+3. Select Buy a Home.
+4. Explain the six Mission Readiness dimensions and biggest blocker.
+5. Show the single Next Best Action, expected readiness increase, and timeline reduction.
+6. Walk through Today, 30 Days, 90 Days, 1 Year, and 3 Years.
+7. Review Mission Risks, Mission Opportunities, and Mission Analytics.
+8. Ask Mission Coach, “Which mission should I prioritize?”
+9. Ask, “How can I become ready faster?”
+10. Open supporting services and show the scenario, Financial GPS, and money-leak evidence.
+11. Close by showing that Android, iOS, and web use the same mission output.
 
 ## Executive Close
 

@@ -15,6 +15,12 @@ CLIENT_SOURCES = {
 }
 
 CAPABILITY_MARKERS = {
+    "mission control": ("mission control",),
+    "mission detail": ("mission detail",),
+    "mission timeline": ("mission timeline",),
+    "mission coach": ("mission coach",),
+    "mission readiness": ("mission readiness",),
+    "mission analytics": ("mission analytics",),
     "highest impact action": ("highest impact action",),
     "ranked opportunities": ("ranked opportunities",),
     "financial health explainability": ("why my score changed",),

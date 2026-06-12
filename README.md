@@ -1,6 +1,6 @@
 # FutureMe Financial
 
-> FutureMe Financial is an AI-powered Banking Intelligence and Life Readiness Platform that helps families understand how prepared they are for major decisions and what action matters most next.
+> FutureMe Financial is an AI-powered Life Readiness Platform that helps families understand their readiness for major life decisions and provides a roadmap to achieve them.
 
 [![Product CI](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/product-ci.yml/badge.svg)](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/product-ci.yml)
 [![GitHub Pages](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/deploy-pages.yml)
@@ -20,6 +20,29 @@ Traditional banking apps explain what already happened: balances, transactions, 
 - How much better could our five-year outlook become?
 
 FutureMe models the household as a living financial system. Deterministic engines calculate readiness and future impact; AI translates those results into clear next steps.
+
+## Mission Control First
+
+Mission Control is the primary product experience. It organizes the entire platform around eight household missions:
+
+- Buy a Home
+- Have a Child
+- Relocate
+- Retire Early
+- Become Debt Free
+- Build Emergency Fund
+- Support Parents
+- Start a Business
+
+Each mission shows one readiness score, progress, risk, blockers, a highest-impact next action, and a five-horizon timeline. Financial GPS, goal probability, money leaks, life events, opportunity ranking, scenarios, and AI explanations now operate as supporting services.
+
+The first screen answers five questions immediately:
+
+1. What am I trying to achieve?
+2. How ready am I?
+3. What is blocking me?
+4. What should I do next?
+5. When could I be ready?
 
 ## Version 4: Banking Intelligence
 
@@ -93,23 +116,26 @@ flowchart LR
     IOS --> CORE
     WEB --> BRIDGE["Kotlin/JS bridge"] --> CORE
 
+    CORE --> MISSION["Mission Control<br/>Orchestration"]
+    MISSION --> GPS["Financial GPS"]
+    MISSION --> READY["Life Readiness"]
+    MISSION --> GOALS["Goal Probability"]
+    MISSION --> LEAKS["Money Leaks"]
+    MISSION --> BANK["Recommendations"]
+    MISSION --> AI["AI Explanations"]
+
     CORE --> API["Backend services"]
     API --> CLAUDE["Claude provider<br/>explanations only"]
     API --> PLAID["Plaid provider<br/>financial data only"]
 
     CORE --> CALC["Deterministic calculators"]
-    CORE --> GPS["Financial GPS"]
-    CORE --> READY["Life Readiness Engine"]
-    CORE --> BANK["Banking Intelligence Engines"]
-    CORE --> GOALS["Goal engine"]
-    CORE --> LEAKS["Money leak detector"]
     CORE --> EVENTS["Life event planner"]
     CORE --> INSIGHTS["Insights engine"]
 ```
 
 The backend never replaces the financial core. Claude receives structured, already-calculated outputs and cannot alter balances, probabilities, or projections.
 
-See [Banking Vision](docs/banking-vision.md), [Future Banking Roadmap](docs/future-banking-roadmap.md), [Life Readiness Framework](docs/life-readiness-framework.md), [Architecture](docs/architecture.md), [Client Feature Parity](docs/feature-parity.md), and [Security Architecture](docs/security-architecture.md).
+See [Mission Framework](docs/mission-framework.md), [Readiness Framework](docs/readiness-framework.md), [Mission Control Architecture](docs/mission-control-architecture.md), [Architecture](docs/architecture.md), [Client Feature Parity](docs/feature-parity.md), and [Security Architecture](docs/security-architecture.md).
 
 ## Repository
 
@@ -123,6 +149,7 @@ shared/
 ├── models/                  # Serializable cross-platform contracts
 ├── calculators/             # Pure financial formulas
 ├── life-readiness-engine/   # Readiness, decision impact, plans, and timeline
+├── mission-control/         # Mission orchestration, progress, actions, timeline, and analytics
 ├── banking-intelligence/    # Opportunity ranking, explainability, reviews, heatmaps, and outcomes
 ├── scenario-engine/         # Five-year simulation and comparison
 ├── financial-gps/           # Current versus improved trajectory
@@ -159,14 +186,14 @@ Seeded totals:
 
 ## Demo Flow
 
-1. Open **My Highest Impact Action** and show the modeled five-year value.
-2. Review the ranked opportunities and explain why the top action wins.
-3. Show **Why My Score Changed** and its factor-level point impacts.
-4. Use the **Life Decision Simulator** and review its six-dimension heatmap.
-5. Save the decision and compare expected versus actual outcomes in the journal.
-6. Open the **Monthly Financial Review** and **What Improved My Future?**
-7. Ask the AI Coach, “If I can only do one thing this month, what should it be?”
-8. Finish with the seven-step **FutureMe Banking Vision** demo.
+1. Open **Mission Control** and scan all eight active missions.
+2. Select **Buy a Home** and explain readiness, progress, and the biggest blocker.
+3. Show the mission’s single **Next Best Action** and expected readiness lift.
+4. Walk through Today, 30 Days, 90 Days, 1 Year, and 3 Years.
+5. Compare Mission Risks and Mission Opportunities.
+6. Open Mission Analytics to show readiness gains, actions, and timeline improvement.
+7. Ask Mission Coach, “Which mission should I prioritize?”
+8. Open supporting financial services to show the deterministic evidence behind the mission.
 
 The coach explains shared structured output; it does not perform financial arithmetic.
 

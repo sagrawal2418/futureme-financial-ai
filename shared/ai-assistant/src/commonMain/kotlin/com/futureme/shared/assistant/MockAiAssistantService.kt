@@ -6,6 +6,7 @@ import com.futureme.shared.models.AssistantPrompt
 import com.futureme.shared.models.AssistantResponse
 import com.futureme.shared.models.FinancialProfile
 import com.futureme.shared.models.FinancialCopilotContext
+import com.futureme.shared.models.Mission
 import com.futureme.shared.models.ScenarioResult
 import com.futureme.shared.mock.MockFinancialData
 import com.futureme.shared.scenario.ScenarioEngine
@@ -24,7 +25,66 @@ class MockAiAssistantService(
         val question = prompt.question.trim().lowercase()
         if (question.isBlank()) {
             return AssistantResponse(
-                answer = "Ask me which life decision you are ready for, what is blocking it, or what to focus on this month.",
+                answer = "Ask me which mission to prioritize, what is blocking it, or how to become ready faster.",
+            )
+        }
+
+        val matchedMission = missionFor(question, context)
+
+        if ("which mission" in question && ("prioritize" in question || "first" in question)) {
+            val mission = context.missionControl.lowestReadinessMission
+            return AssistantResponse(
+                answer = "Prioritize ${mission.title}. It is ${mission.readinessScore}% ready, " +
+                    "and its biggest blocker is ${mission.blockers.first()} " +
+                    "The next move is ${mission.nextAction.title.lowercase()}.",
+                relatedScenarioId = mission.nextAction.relatedScenarioId,
+                suggestedActions = mission.recommendations.take(3),
+            )
+        }
+
+        if ("biggest blocker" in question) {
+            val mission = matchedMission ?: context.missionControl.lowestReadinessMission
+            return AssistantResponse(
+                answer = "${mission.title} is ${mission.readinessScore}% ready. " +
+                    "Its biggest blocker is ${mission.blockers.first()}",
+                relatedScenarioId = mission.nextAction.relatedScenarioId,
+                suggestedActions = mission.recommendations.take(3),
+            )
+        }
+
+        if ("why" in question && "readiness" in question && "low" in question) {
+            val mission = matchedMission ?: context.missionControl.lowestReadinessMission
+            val weakest = mission.readinessFactors.minByOrNull { it.score }
+            return AssistantResponse(
+                answer = "${mission.title} readiness is ${mission.readinessScore}%. " +
+                    "${weakest?.title ?: "The weakest factor"} is the main drag at " +
+                    "${weakest?.score ?: mission.readinessScore}%. ${mission.blockers.first()}",
+                relatedScenarioId = mission.nextAction.relatedScenarioId,
+                suggestedActions = mission.recommendations.take(3),
+            )
+        }
+
+        if ("ready faster" in question || ("become ready" in question && "faster" in question)) {
+            val mission = matchedMission ?: context.missionControl.lowestReadinessMission
+            return AssistantResponse(
+                answer = "For ${mission.title}, ${mission.nextAction.title.lowercase()} is the fastest " +
+                    "modeled move. It may add ${mission.nextAction.estimatedReadinessIncrease} readiness " +
+                    "points and shorten the timeline by ${mission.nextAction.estimatedTimelineReductionMonths} months.",
+                relatedScenarioId = mission.nextAction.relatedScenarioId,
+                suggestedActions = mission.recommendations.take(3),
+            )
+        }
+
+        if ("what should i do next" in question) {
+            val action = context.missionControl.nextBestAction
+            val mission = matchedMission ?: context.missions.first { it.nextAction.id == action.id }
+            val missionAction = if (matchedMission == null) action else mission.nextAction
+            return AssistantResponse(
+                answer = "For ${mission.title}, do this next: ${missionAction.title}. " +
+                    "It may improve readiness by ${missionAction.estimatedReadinessIncrease} points and " +
+                    "reduce the mission timeline by ${missionAction.estimatedTimelineReductionMonths} months.",
+                relatedScenarioId = missionAction.relatedScenarioId,
+                suggestedActions = mission.recommendations.take(3),
             )
         }
 
@@ -99,13 +159,13 @@ class MockAiAssistantService(
             ("focus" in question && ("month" in question || "now" in question)) ||
             ("one thing" in question && "month" in question)
         ) {
-            val action = context.nextBestAction
+            val action = context.missionControl.nextBestAction
+            val mission = context.missions.first { it.nextAction.id == action.id }
             return AssistantResponse(
-                answer = "${action.callout} ${action.description}",
-                relatedScenarioId = context.opportunities.firstOrNull {
-                    it.id == action.recommendationId
-                }?.relatedScenarioId,
-                suggestedActions = context.opportunities.take(3).map { it.title },
+                answer = "Focus on ${mission.title}: ${action.title}. ${action.description} " +
+                    "This is the strongest current move for your five-year outlook.",
+                relatedScenarioId = action.relatedScenarioId,
+                suggestedActions = mission.recommendations.take(3),
             )
         }
 
@@ -201,13 +261,13 @@ class MockAiAssistantService(
         }
 
         if ("one action" in question) {
-            val action = context.nextBestAction
+            val action = context.missionControl.nextBestAction
+            val mission = context.missions.first { it.nextAction.id == action.id }
             return AssistantResponse(
-                answer = action.callout + " " + action.description,
-                relatedScenarioId = context.opportunities.firstOrNull {
-                    it.id == action.recommendationId
-                }?.relatedScenarioId,
-                suggestedActions = context.opportunities.take(3).map { it.title },
+                answer = "${action.title} is the highest-impact action for ${mission.title}. " +
+                    "${action.description} It is the strongest current move for your five-year outlook.",
+                relatedScenarioId = action.relatedScenarioId,
+                suggestedActions = mission.recommendations.take(3),
             )
         }
 
@@ -238,6 +298,23 @@ class MockAiAssistantService(
                 "Ask whether to pay off debt or invest more",
             ),
         )
+    }
+
+    private fun missionFor(
+        question: String,
+        context: FinancialCopilotContext,
+    ): Mission? = context.missions.firstOrNull { mission ->
+        when (mission.missionType.name) {
+            "BUY_HOME" -> "home" in question || "house" in question
+            "HAVE_CHILD" -> "child" in question || "baby" in question
+            "RELOCATE" -> "relocate" in question || "move" in question || "texas" in question
+            "RETIRE_EARLY" -> "retire" in question
+            "BECOME_DEBT_FREE" -> "debt" in question || "card" in question
+            "BUILD_EMERGENCY_FUND" -> "emergency" in question || "runway" in question
+            "SUPPORT_PARENTS" -> "parent" in question
+            "START_BUSINESS" -> "business" in question || "startup" in question
+            else -> false
+        }
     }
 }
 

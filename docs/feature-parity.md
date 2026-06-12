@@ -2,10 +2,18 @@
 
 FutureMe treats Android, iOS, and web as three native presentations of one product, not three independent products. Every financial value and recommendation input comes from `FutureMeProduct`; platform code owns only interaction and rendering.
 
-## Version 4 Contract
+## Mission Control Contract
 
 | Capability | Android | iOS | Web |
 | --- | --- | --- | --- |
+| Mission Control landing | Primary Mission tab | Primary Mission tab | Primary landing dashboard |
+| Eight active missions | Shared selectable cards | Shared selectable cards | Shared selectable cards |
+| Mission detail | Score, status, factors, blocker | Score, status, factors, blocker | Score, status, factors, blocker |
+| Mission timeline | Today through three years | Today through three years | Today through three years |
+| Mission Coach | Dedicated Coach route | Dedicated Coach tab | Mission Coach drawer |
+| Mission readiness | Six shared dimensions | Six shared dimensions | Six shared dimensions |
+| Mission analytics | Trends, actions, months saved | Trends, actions, months saved | Trends, actions, months saved |
+| Mission risks and opportunities | Mission Control sections | Mission Control sections | Mission Control sections |
 | Highest-impact action | Dashboard and Actions screen | Overview and Banking tab | Dashboard top card |
 | Ranked opportunities | Actions screen | Banking tab | Banking intelligence panel |
 | Financial health explainability | Factor-level Actions card | Factor-level Banking card | Score change panel |
