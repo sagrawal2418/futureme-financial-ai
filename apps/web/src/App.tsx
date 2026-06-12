@@ -5,11 +5,14 @@ import {
   BarChart3,
   Bell,
   BriefcaseBusiness,
+  CheckCircle2,
   ChevronDown,
   CircleDollarSign,
+  Clock3,
   CreditCard,
   Home,
   Landmark,
+  LockKeyhole,
   Menu,
   MessageCircle,
   Moon,
@@ -33,6 +36,7 @@ import { ProjectionChart } from "./components/ProjectionChart";
 import {
   askFutureMe,
   bootstrapProduct,
+  completeMissionAction,
   compareScenarios,
   recordAnalyticsEvent,
   saveDecision,
@@ -120,6 +124,8 @@ function App() {
   const [showFinancialDetails, setShowFinancialDetails] = useState(false);
   const [acceptedAction, setAcceptedAction] = useState(false);
   const [acceptedMissionAction, setAcceptedMissionAction] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
   const [reviewOpen, setReviewOpen] = useState(true);
   const [decisionJournal, setDecisionJournal] = useState<DecisionJournalEntry[]>([]);
   const [question, setQuestion] = useState("");
@@ -180,6 +186,14 @@ function App() {
   const selectedMission =
     data.missions.find((mission) => mission.missionId === selectedMissionId) ??
     data.missionControl.activeMissions[0];
+  const selectedExecution =
+    data.missionExecution.plans.find((plan) => plan.missionId === selectedMission.missionId) ??
+    data.missionExecution.plans[0];
+  const activeMissionAction = selectedExecution.actionPlan.nextAction;
+  const missionNextAction = activeMissionAction ?? selectedExecution.actionPlan.actions[0];
+  const missionHealth = (missionId: string) =>
+    data.missionExecution.plans.find((plan) => plan.missionId === missionId)?.health.status ??
+    "YELLOW";
   const selectable = data.scenarios;
   if (selectable.length < 2) {
     return <EmptyState onRetry={loadDashboard} />;
@@ -221,6 +235,9 @@ function App() {
       "biggest blocker",
       "why is my readiness low",
       "ready faster",
+      "speed up this mission",
+      "why did readiness change",
+      "still on track",
     ].some((phrase) => normalized.toLowerCase().includes(phrase));
     const coachPrompt = shouldScopeToMission
       ? `${normalized} Focus on my ${selectedMission.title} mission.`
@@ -246,8 +263,11 @@ function App() {
   };
 
   const focusMissionAction = () => {
-    recordAnalyticsEvent("mission_action_completed", selectedMission.nextAction.id);
-    setAcceptedMissionAction(true);
+    if (!activeMissionAction) return;
+    const refreshed = completeMissionAction(activeMissionAction.actionId);
+    setDecisionJournal(refreshed.decisionJournal);
+    setLoadState({ status: "content", data: refreshed });
+    setAcceptedMissionAction(false);
   };
 
   const saveSelectedDecision = () => {
@@ -307,7 +327,19 @@ function App() {
             <h1>Your path to the next major life decision</h1>
           </div>
           <div className="header-actions">
-            <button className="icon-button" aria-label="Notifications"><Bell size={19} /></button>
+            <button
+              className="icon-button"
+              aria-label="Mission notifications"
+              aria-expanded={notificationsOpen}
+              onClick={() => setNotificationsOpen((current) => !current)}
+            >
+              <Bell size={19} />
+              {data.missionExecution.notifications.length - readNotificationIds.length > 0 && (
+                <span className="notification-count">
+                  {data.missionExecution.notifications.length - readNotificationIds.length}
+                </span>
+              )}
+            </button>
             <button
               className="icon-button"
               aria-label={darkMode ? "Use light theme" : "Use dark theme"}
@@ -320,6 +352,41 @@ function App() {
             </button>
           </div>
         </header>
+
+        {notificationsOpen && (
+          <section className="mission-notification-center" aria-label="Mission notification center">
+            <div className="mission-section-heading">
+              <div>
+                <p className="eyebrow">Mission notifications</p>
+                <h2>What changed</h2>
+              </div>
+              <span>{data.missionExecution.notifications.length} updates</span>
+            </div>
+            <div>
+              {data.missionExecution.notifications.slice(0, 8).map((notification) => {
+                const isRead = readNotificationIds.includes(notification.notificationId);
+                return (
+                  <button
+                    className={isRead ? "read" : ""}
+                    key={notification.notificationId}
+                    onClick={() => {
+                      setSelectedMissionId(notification.missionId);
+                      setReadNotificationIds((current) => (
+                        current.includes(notification.notificationId)
+                          ? current
+                          : [...current, notification.notificationId]
+                      ));
+                    }}
+                  >
+                    <Bell size={16} />
+                    <span><strong>{notification.title}</strong><small>{notification.message}</small></span>
+                    <b>{isRead ? "Read" : "New"}</b>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         <div className="offline-banner" role="status">
           <ShieldCheck size={16} />
@@ -375,7 +442,10 @@ function App() {
                 <span className="mission-card-icon">{missionIcon(mission.missionType)}</span>
                 <span className="mission-card-copy">
                   <strong>{mission.title}</strong>
-                  <small>{readinessLevel(mission.status)}</small>
+                  <small>
+                    <i className={`mission-health-dot ${missionHealth(mission.missionId).toLowerCase()}`} />
+                    {readinessLevel(missionHealth(mission.missionId))} health
+                  </small>
                 </span>
                 <b>{mission.readinessScore}</b>
                 <span className="mission-card-progress"><i style={{ width: `${mission.progressPercentage}%` }} /></span>
@@ -392,9 +462,11 @@ function App() {
                 <span>ready</span>
               </div>
               <div>
-                <p className="eyebrow">Mission readiness · {readinessLevel(selectedMission.status)}</p>
+                <p className="eyebrow">
+                  Mission readiness · {readinessLevel(selectedExecution.health.status)} health
+                </p>
                 <h2>{selectedMission.title}</h2>
-                <p>{selectedMission.description}</p>
+                <p>{selectedExecution.health.summary}</p>
               </div>
             </div>
             <div className="mission-factor-grid">
@@ -414,34 +486,135 @@ function App() {
 
           <article className="mission-action-panel">
             <p className="eyebrow light">Next best action</p>
-            <h2>{selectedMission.nextAction.title}</h2>
-            <p>{selectedMission.nextAction.description}</p>
+            <h2>{missionNextAction.title}</h2>
+            <p>{missionNextAction.description}</p>
             <div className="mission-action-impact">
-              <div><span>Readiness</span><strong>+{selectedMission.nextAction.estimatedReadinessIncrease}</strong></div>
+              <div><span>Readiness</span><strong>+{missionNextAction.readinessGain}</strong></div>
               <div><span>Timeline</span><strong>-{selectedMission.nextAction.estimatedTimelineReductionMonths} mo</strong></div>
-              <div><span>5-year value</span><strong>{money(selectedMission.nextAction.fiveYearBenefitEstimate, true)}</strong></div>
+              <div><span>Target</span><strong>{displayDate(missionNextAction.targetDate)}</strong></div>
             </div>
-            <button onClick={focusMissionAction} disabled={acceptedMissionAction}>
-              {acceptedMissionAction ? "Added to mission plan" : "Make this my focus"} <ArrowRight size={18} />
+            <button
+              onClick={focusMissionAction}
+              disabled={acceptedMissionAction || !activeMissionAction}
+            >
+              {activeMissionAction ? "Mark action complete" : "Mission complete"} <ArrowRight size={18} />
             </button>
           </article>
         </section>
 
-        <section className="mission-timeline-section" id="mission-timeline" aria-labelledby="mission-timeline-title">
+        <section className="mission-action-plan-section" aria-labelledby="mission-actions-title">
           <div className="mission-section-heading">
-            <div><p className="eyebrow">Mission timeline</p><h2 id="mission-timeline-title">{selectedMission.title} path forward</h2></div>
-            <span>Target {displayDate(selectedMission.targetDate)}</span>
+            <div>
+              <p className="eyebrow">Mission action engine</p>
+              <h2 id="mission-actions-title">Your dynamic action plan</h2>
+            </div>
+            <span>
+              {selectedExecution.progress.completedActions}/{selectedExecution.progress.totalActions} complete
+            </span>
           </div>
-          <div className="mission-timeline-track">
-            {selectedMission.timeline.map((point) => (
-              <article key={point.horizon}>
-                <span>{point.label}</span>
-                <strong>{point.readinessScore}%</strong>
-                <p>{point.milestone}</p>
-                <small>{point.completedActions} actions complete</small>
+          <div className="mission-action-list">
+            {selectedExecution.actionPlan.actions.map((action, index) => (
+              <article className={action.completionStatus.toLowerCase()} key={action.actionId}>
+                <span className="mission-action-order">
+                  {action.completionStatus === "COMPLETED" ? (
+                    <CheckCircle2 size={18} />
+                  ) : action.completionStatus === "LOCKED" ? (
+                    <LockKeyhole size={17} />
+                  ) : action.completionStatus === "IN_PROGRESS" ? (
+                    <Clock3 size={17} />
+                  ) : index + 1}
+                </span>
+                <div>
+                  <div className="mission-action-row">
+                    <strong>{action.title}</strong>
+                    <b>{readinessLevel(action.completionStatus)}</b>
+                  </div>
+                  <p>{action.blockerMessage ?? action.description}</p>
+                  <div className="mission-action-meta">
+                    <span>+{action.readinessGain} readiness</span>
+                    <span>{readinessLevel(action.effort)} effort</span>
+                    <span>Target {displayDate(action.targetDate)}</span>
+                  </div>
+                  <i><b style={{ width: `${action.metricProgressPercentage}%` }} /></i>
+                </div>
               </article>
             ))}
           </div>
+        </section>
+
+        <section className="mission-timeline-section" id="mission-timeline" aria-labelledby="mission-timeline-title">
+          <div className="mission-section-heading">
+            <div><p className="eyebrow">Mission roadmaps</p><h2 id="mission-timeline-title">{selectedMission.title} path forward</h2></div>
+            <span>Target {displayDate(selectedMission.targetDate)}</span>
+          </div>
+          <div className="mission-timeline-track">
+            {selectedExecution.roadmap.stages.map((stage) => (
+              <article key={stage.horizon}>
+                <span>{stage.label}</span>
+                <strong>+{stage.expectedReadinessGrowth}</strong>
+                <p>
+                  {stage.upcomingActions.map((action) => action.title).join(" · ") ||
+                    "Maintain completed actions."}
+                </p>
+                <small>
+                  {stage.completedActions.length} complete · projected {displayDate(stage.projectedCompletionDate)}
+                </small>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="mission-execution-grid">
+          <article className="mission-health-panel">
+            <p className="eyebrow">Mission health</p>
+            <div className={`mission-health-score ${selectedExecution.health.status.toLowerCase()}`}>
+              <strong>{selectedExecution.health.status}</strong>
+              <span>{selectedExecution.health.score}/100</span>
+            </div>
+            {selectedExecution.health.factors.map((factor) => (
+              <div className={factor.triggered ? "triggered" : ""} key={factor.id}>
+                <span>{factor.title}</span>
+                <b>{factor.triggered ? factor.explanation : "Clear"}</b>
+              </div>
+            ))}
+          </article>
+
+          <article className="mission-history-panel">
+            <p className="eyebrow">Mission history</p>
+            <h3>Readiness over time</h3>
+            <div className="mission-history-graph" aria-label="Mission readiness history graph">
+              {selectedExecution.history.points.map((point) => (
+                <div key={point.date}>
+                  <b style={{ height: `${point.readinessScore}%` }} />
+                  <strong>{point.readinessScore}</strong>
+                  <span>{new Date(`${point.date}T00:00:00`).toLocaleDateString("en-US", { month: "short" })}</span>
+                </div>
+              ))}
+            </div>
+            <p>{selectedExecution.history.events[0]?.detail}</p>
+          </article>
+
+          <article className="mission-scenario-panel">
+            <p className="eyebrow">Mission scenarios</p>
+            <h3>Evaluate the decision</h3>
+            {selectedExecution.scenarioImpacts.map((scenario) => (
+              <button
+                key={scenario.scenarioId}
+                onClick={() => {
+                  if (data.scenarios.some((item) => item.id === scenario.scenarioId)) {
+                    chooseScenario(scenario.scenarioId);
+                  }
+                  setShowFinancialDetails(true);
+                }}
+              >
+                <span><strong>{scenario.title}</strong><small>{scenario.summary}</small></span>
+                <b>
+                  {scenario.readinessImpact >= 0 ? "+" : ""}{scenario.readinessImpact} ready ·{" "}
+                  {scenario.timelineImpactMonths >= 0 ? "+" : ""}{scenario.timelineImpactMonths} mo
+                </b>
+              </button>
+            ))}
+          </article>
         </section>
 
         <section className="mission-intelligence-grid" id="mission-analytics">

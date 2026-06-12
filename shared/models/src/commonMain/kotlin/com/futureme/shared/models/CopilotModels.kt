@@ -147,5 +147,6 @@ data class FinancialCopilotContext(
     val currentMonthlyReview: MonthlyFinancialReview,
     val missions: List<Mission>,
     val missionControl: MissionControlSnapshot,
+    val missionExecution: MissionExecutionCenter,
     val missionAnalytics: MissionAnalyticsSnapshot,
 )

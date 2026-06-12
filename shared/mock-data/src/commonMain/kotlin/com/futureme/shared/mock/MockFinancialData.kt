@@ -309,12 +309,6 @@ object MockFinancialData {
             "Mission Coach",
         ),
         SuggestedQuestion(
-            "mission-readiness",
-            "Why is readiness low?",
-            "Why is my readiness low?",
-            "Mission Coach",
-        ),
-        SuggestedQuestion(
             "mission-blocker",
             "Biggest blocker",
             "What is my biggest blocker?",
@@ -322,14 +316,20 @@ object MockFinancialData {
         ),
         SuggestedQuestion(
             "mission-faster",
-            "Become ready faster",
-            "How can I become ready faster?",
+            "Speed up mission",
+            "How can I speed up this mission?",
             "Mission Coach",
         ),
         SuggestedQuestion(
-            "mission-priority",
-            "Prioritize a mission",
-            "Which mission should I prioritize?",
+            "mission-readiness-change",
+            "Readiness change",
+            "Why did readiness change?",
+            "Mission Coach",
+        ),
+        SuggestedQuestion(
+            "mission-track",
+            "Track status",
+            "Am I still on track?",
             "Mission Coach",
         ),
         SuggestedQuestion(

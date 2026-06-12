@@ -27,6 +27,7 @@ import com.futureme.shared.models.MonthlyFinancialReview
 import com.futureme.shared.models.Mission
 import com.futureme.shared.models.MissionAnalyticsSnapshot
 import com.futureme.shared.models.MissionControlSnapshot
+import com.futureme.shared.models.MissionExecutionCenter
 import com.futureme.shared.models.NextBestAction
 import com.futureme.shared.models.OpportunityRecommendation
 import com.futureme.shared.models.ReadinessImprovementPlan
@@ -84,6 +85,7 @@ data class FutureMeContent(
     val analyticsEvents: List<AnalyticsEvent>,
     val missions: List<Mission>,
     val missionControl: MissionControlSnapshot,
+    val missionExecution: MissionExecutionCenter,
     val missionAnalytics: MissionAnalyticsSnapshot,
     val suggestedQuestions: List<SuggestedQuestion>,
     val disclaimer: String,
@@ -153,6 +155,7 @@ class FutureMeViewModel(
                         analyticsEvents = bootstrap.analyticsEvents,
                         missions = bootstrap.missions,
                         missionControl = bootstrap.missionControl,
+                        missionExecution = bootstrap.missionExecution,
                         missionAnalytics = bootstrap.missionAnalytics,
                         suggestedQuestions = bootstrap.suggestedQuestions,
                         disclaimer = bootstrap.disclaimer,
@@ -267,8 +270,16 @@ class FutureMeViewModel(
     }
 
     fun acceptMissionAction(actionId: String) {
-        product.recordAnalyticsEvent("mission_action_completed", actionId)
-        updateContent { it.copy(analyticsEvents = product.analyticsEvents()) }
+        val bootstrap = product.completeMissionAction(actionId)
+        updateContent {
+            it.copy(
+                missions = bootstrap.missions,
+                missionControl = bootstrap.missionControl,
+                missionExecution = bootstrap.missionExecution,
+                missionAnalytics = bootstrap.missionAnalytics,
+                analyticsEvents = bootstrap.analyticsEvents,
+            )
+        }
     }
 
     fun saveDecision() {

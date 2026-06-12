@@ -44,6 +44,12 @@ describe("shared Kotlin/JS product bridge", () => {
     expect(product.missions).toHaveLength(8);
     expect(product.missionControl.activeMissions).toHaveLength(8);
     expect(product.missionControl.nextBestAction.estimatedReadinessIncrease).toBeGreaterThan(0);
+    expect(product.missionExecution.plans).toHaveLength(8);
+    expect(product.missionExecution.plans.every((plan) => plan.actionPlan.actions.length === 4)).toBe(true);
+    expect(product.missionExecution.notifications.length).toBeGreaterThan(0);
+    expect(product.missionExecution.plans[0].roadmap.stages.map((stage) => stage.label)).toEqual([
+      "30 Days", "90 Days", "1 Year",
+    ]);
     expect(product.missionAnalytics.trends).toHaveLength(8);
   });
 

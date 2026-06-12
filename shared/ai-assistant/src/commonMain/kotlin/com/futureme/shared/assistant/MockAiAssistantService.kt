@@ -7,6 +7,7 @@ import com.futureme.shared.models.AssistantResponse
 import com.futureme.shared.models.FinancialProfile
 import com.futureme.shared.models.FinancialCopilotContext
 import com.futureme.shared.models.Mission
+import com.futureme.shared.models.MissionExecutionPlan
 import com.futureme.shared.models.ScenarioResult
 import com.futureme.shared.mock.MockFinancialData
 import com.futureme.shared.scenario.ScenarioEngine
@@ -31,6 +32,37 @@ class MockAiAssistantService(
 
         val matchedMission = missionFor(question, context)
 
+        if ("why" in question && "readiness" in question && "change" in question) {
+            val mission = matchedMission ?: context.missionControl.lowestReadinessMission
+            val plan = executionPlan(mission, context)
+            val first = plan.history.points.first()
+            val latest = plan.history.points.last()
+            val change = latest.readinessScore - first.readinessScore
+            val action = plan.actionPlan.actions.firstOrNull {
+                it.completionStatus.name == "COMPLETED"
+            }
+            return AssistantResponse(
+                answer = "${mission.title} readiness changed by ${signed(change)} points, from " +
+                    "${first.readinessScore}% to ${latest.readinessScore}%. " +
+                    (action?.let { "${it.title} is the clearest completed contributor." }
+                        ?: "Improved metrics are the main contributor; no action milestone is complete yet."),
+                relatedScenarioId = mission.nextAction.relatedScenarioId,
+                suggestedActions = plan.actionPlan.unlockedActions.take(3).map { it.title },
+            )
+        }
+
+        if ("still on track" in question || ("on track" in question && "mission" in question)) {
+            val mission = matchedMission ?: context.missionControl.lowestReadinessMission
+            val plan = executionPlan(mission, context)
+            return AssistantResponse(
+                answer = "${mission.title} health is ${plan.health.status.name.lowercase()} " +
+                    "at ${plan.health.score}/100. ${plan.health.summary} " +
+                    "${plan.progress.summary}",
+                relatedScenarioId = mission.nextAction.relatedScenarioId,
+                suggestedActions = plan.actionPlan.unlockedActions.take(3).map { it.title },
+            )
+        }
+
         if ("which mission" in question && ("prioritize" in question || "first" in question)) {
             val mission = context.missionControl.lowestReadinessMission
             return AssistantResponse(
@@ -44,11 +76,13 @@ class MockAiAssistantService(
 
         if ("biggest blocker" in question) {
             val mission = matchedMission ?: context.missionControl.lowestReadinessMission
+            val plan = executionPlan(mission, context)
+            val blocked = plan.actionPlan.blockedActions.firstOrNull()
             return AssistantResponse(
-                answer = "${mission.title} is ${mission.readinessScore}% ready. " +
-                    "Its biggest blocker is ${mission.blockers.first()}",
+                answer = "${mission.title} is ${mission.readinessScore}% ready. Its biggest blocker is " +
+                    (blocked?.blockerMessage ?: mission.blockers.first()),
                 relatedScenarioId = mission.nextAction.relatedScenarioId,
-                suggestedActions = mission.recommendations.take(3),
+                suggestedActions = plan.actionPlan.unlockedActions.take(3).map { it.title },
             )
         }
 
@@ -64,27 +98,34 @@ class MockAiAssistantService(
             )
         }
 
-        if ("ready faster" in question || ("become ready" in question && "faster" in question)) {
+        if (
+            "ready faster" in question ||
+            "speed up" in question ||
+            ("become ready" in question && "faster" in question)
+        ) {
             val mission = matchedMission ?: context.missionControl.lowestReadinessMission
+            val plan = executionPlan(mission, context)
+            val action = plan.actionPlan.nextAction
             return AssistantResponse(
-                answer = "For ${mission.title}, ${mission.nextAction.title.lowercase()} is the fastest " +
-                    "modeled move. It may add ${mission.nextAction.estimatedReadinessIncrease} readiness " +
-                    "points and shorten the timeline by ${mission.nextAction.estimatedTimelineReductionMonths} months.",
+                answer = "For ${mission.title}, ${action?.title?.lowercase() ?: "clear the current blocker"} " +
+                    "is the fastest modeled move. It may add ${action?.readinessGain ?: 0} readiness points. " +
+                    "Use the ${plan.roadmap.stages[1].upcomingActions.size} upcoming 90-day actions to " +
+                    "shorten the timeline.",
                 relatedScenarioId = mission.nextAction.relatedScenarioId,
-                suggestedActions = mission.recommendations.take(3),
+                suggestedActions = plan.actionPlan.unlockedActions.take(3).map { it.title },
             )
         }
 
         if ("what should i do next" in question) {
-            val action = context.missionControl.nextBestAction
-            val mission = matchedMission ?: context.missions.first { it.nextAction.id == action.id }
-            val missionAction = if (matchedMission == null) action else mission.nextAction
+            val mission = matchedMission ?: context.missionControl.lowestReadinessMission
+            val plan = executionPlan(mission, context)
+            val action = plan.actionPlan.nextAction
             return AssistantResponse(
-                answer = "For ${mission.title}, do this next: ${missionAction.title}. " +
-                    "It may improve readiness by ${missionAction.estimatedReadinessIncrease} points and " +
-                    "reduce the mission timeline by ${missionAction.estimatedTimelineReductionMonths} months.",
-                relatedScenarioId = missionAction.relatedScenarioId,
-                suggestedActions = mission.recommendations.take(3),
+                answer = "For ${mission.title}, do this next: ${action?.title ?: "review the completed plan"}. " +
+                    "It may improve readiness by ${action?.readinessGain ?: 0} points. " +
+                    "${plan.actionPlan.blockedActions.size} actions remain blocked.",
+                relatedScenarioId = mission.nextAction.relatedScenarioId,
+                suggestedActions = plan.actionPlan.unlockedActions.take(3).map { it.title },
             )
         }
 
@@ -316,6 +357,13 @@ class MockAiAssistantService(
             else -> false
         }
     }
+
+    private fun executionPlan(
+        mission: Mission,
+        context: FinancialCopilotContext,
+    ): MissionExecutionPlan = context.missionExecution.plans.first {
+        it.missionId == mission.missionId
+    }
 }
 
 private fun Double.asDollars(): String = "$" + abs(roundToInt()).toString()
@@ -325,3 +373,5 @@ private fun Double.asSignedDollars(): String =
 
 private fun oneDecimal(value: Double): String =
     ((value * 10.0).roundToInt() / 10.0).toString()
+
+private fun signed(value: Int): String = if (value >= 0) "+$value" else value.toString()

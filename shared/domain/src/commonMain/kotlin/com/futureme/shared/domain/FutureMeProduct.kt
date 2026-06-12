@@ -14,6 +14,7 @@ import com.futureme.shared.gps.FinancialGpsEngine
 import com.futureme.shared.insights.ProactiveInsightsEngine
 import com.futureme.shared.lifeevents.LifeEventPlanner
 import com.futureme.shared.mission.MissionInputs
+import com.futureme.shared.mission.MissionExecutionService
 import com.futureme.shared.mission.MissionService
 import com.futureme.shared.mock.MockFinancialDataProvider
 import com.futureme.shared.models.AssistantPrompt
@@ -35,8 +36,10 @@ import com.futureme.shared.models.LifeReadinessResult
 import com.futureme.shared.models.LifeTimelinePoint
 import com.futureme.shared.models.MonthlyFinancialReview
 import com.futureme.shared.models.Mission
+import com.futureme.shared.models.MissionActionStatus
 import com.futureme.shared.models.MissionAnalyticsSnapshot
 import com.futureme.shared.models.MissionControlSnapshot
+import com.futureme.shared.models.MissionExecutionCenter
 import com.futureme.shared.models.NextBestAction
 import com.futureme.shared.models.OpportunityRecommendation
 import com.futureme.shared.models.ProductBootstrap
@@ -73,7 +76,9 @@ class FutureMeProduct {
     private val decisionJournalEngine = DecisionJournalEngine()
     private val futureOutcomeEngine = FutureOutcomeEngine()
     private val missionService = MissionService()
+    private val missionExecutionService = MissionExecutionService()
     private val decisionJournalEntries = decisionJournalEngine.seedEntries().toMutableList()
+    private val completedMissionActionIds = mutableSetOf<String>()
     private val analyticsEventLog = mutableListOf(
         AnalyticsEvent(
             id = "analytics-seed-1",
@@ -209,7 +214,23 @@ class FutureMeProduct {
 
     fun missionControl(): MissionControlSnapshot = copilotContext().missionControl
 
+    fun missionExecution(): MissionExecutionCenter = copilotContext().missionExecution
+
     fun missionAnalytics(): MissionAnalyticsSnapshot = copilotContext().missionAnalytics
+
+    fun completeMissionAction(actionId: String): ProductBootstrap {
+        val action = missionExecution().plans
+            .flatMap { it.actionPlan.actions }
+            .firstOrNull { it.actionId == actionId }
+        requireNotNull(action) { "Unknown mission action: $actionId" }
+        require(
+            action.completionStatus == MissionActionStatus.AVAILABLE ||
+                action.completionStatus == MissionActionStatus.IN_PROGRESS,
+        ) { "Mission action is not currently unlocked: $actionId" }
+        completedMissionActionIds.add(actionId)
+        recordAnalyticsEvent("mission_action_completed", actionId)
+        return bootstrap()
+    }
 
     fun recordAnalyticsEvent(
         typeCode: String,
@@ -257,21 +278,26 @@ class FutureMeProduct {
             readiness = readiness,
             goals = goals,
         )
-        val missions = missionService.missions(
-            MissionInputs(
-                profile = profile(),
-                dashboard = dashboard(),
-                financialGps = gps,
-                goals = goals,
-                lifeEvents = events,
-                moneyLeaks = leaks,
-                readiness = readiness,
-                opportunities = opportunities,
-                simulations = simulations,
-            ),
+        val missionInputs = MissionInputs(
+            profile = profile(),
+            dashboard = dashboard(),
+            financialGps = gps,
+            goals = goals,
+            lifeEvents = events,
+            moneyLeaks = leaks,
+            readiness = readiness,
+            opportunities = opportunities,
+            simulations = simulations,
         )
+        val baseMissions = missionService.missions(missionInputs)
+        val missionExecution = missionExecutionService.build(
+            baseMissions,
+            missionInputs,
+            completedMissionActionIds,
+        )
+        val missions = missionExecutionService.applyExecution(baseMissions, missionExecution)
         val missionControl = missionService.missionControl(missions)
-        val missionAnalytics = missionService.analytics(missions)
+        val missionAnalytics = missionService.analytics(missions, missionExecution)
         return FinancialCopilotContext(
             insights = insightsEngine.generate(dashboard(), leaks, goals),
             financialGps = gps,
@@ -286,6 +312,7 @@ class FutureMeProduct {
             currentMonthlyReview = reviews.first(),
             missions = missions,
             missionControl = missionControl,
+            missionExecution = missionExecution,
             missionAnalytics = missionAnalytics,
         )
     }
@@ -334,6 +361,7 @@ class FutureMeProduct {
             analyticsEvents = analyticsEvents(),
             missions = context.missions,
             missionControl = context.missionControl,
+            missionExecution = context.missionExecution,
             missionAnalytics = context.missionAnalytics,
             suggestedQuestions = suggestedQuestions(),
             designTokens = FutureMeDesignTokens.current,

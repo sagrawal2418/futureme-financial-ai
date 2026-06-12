@@ -41,6 +41,9 @@ object FutureMeWebApi {
     fun saveDecisionJson(scenarioId: String): String =
         json.encodeToString(product.saveDecision(scenarioId))
 
+    fun completeMissionActionJson(actionId: String): String =
+        json.encodeToString(product.completeMissionAction(actionId))
+
     fun decisionJournalJson(): String =
         json.encodeToString(product.decisionJournal())
 }

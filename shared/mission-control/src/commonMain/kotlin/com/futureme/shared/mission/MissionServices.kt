@@ -11,6 +11,7 @@ import com.futureme.shared.models.Mission
 import com.futureme.shared.models.MissionAnalyticsSnapshot
 import com.futureme.shared.models.MissionAnalyticsTrend
 import com.futureme.shared.models.MissionControlSnapshot
+import com.futureme.shared.models.MissionExecutionCenter
 import com.futureme.shared.models.MissionNextAction
 import com.futureme.shared.models.MissionSignal
 import com.futureme.shared.models.MissionStatus
@@ -411,17 +412,28 @@ class MissionService(
         )
     }
 
-    fun analytics(missions: List<Mission>): MissionAnalyticsSnapshot {
+    fun analytics(
+        missions: List<Mission>,
+        execution: MissionExecutionCenter? = null,
+    ): MissionAnalyticsSnapshot {
         val trends = missions.mapIndexed { index, mission ->
-            val change = 3 + index % 5
+            val plan = execution?.plans?.firstOrNull { it.missionId == mission.missionId }
+            val history = plan?.history?.points.orEmpty()
+            val change = if (history.size >= 2) {
+                history.last().readinessScore - history.first().readinessScore
+            } else {
+                3 + index % 5
+            }
             MissionAnalyticsTrend(
                 missionId = mission.missionId,
                 title = mission.title,
-                startingReadinessScore = (mission.readinessScore - change).coerceAtLeast(0),
+                startingReadinessScore = history.firstOrNull()?.readinessScore
+                    ?: (mission.readinessScore - change).coerceAtLeast(0),
                 currentReadinessScore = mission.readinessScore,
                 readinessChange = change,
                 timelineReductionMonths = mission.nextAction.estimatedTimelineReductionMonths,
-                actionsCompleted = if (mission.progressPercentage >= 70) 2 else 1,
+                actionsCompleted = plan?.progress?.completedActions
+                    ?: if (mission.progressPercentage >= 70) 2 else 1,
             )
         }
         return MissionAnalyticsSnapshot(
