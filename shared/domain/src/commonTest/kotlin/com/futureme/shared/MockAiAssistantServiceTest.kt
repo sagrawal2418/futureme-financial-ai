@@ -29,7 +29,7 @@ class MockAiAssistantServiceTest {
     }
 
     @Test
-    fun actionQuestionRecommendsHighInterestDebtPayoff() {
+    fun actionQuestionUsesTheHighestRankedOpportunity() {
         val response = assistant.answer(
             AssistantPrompt("What is one action that improves my 5-year outlook?"),
             MockFinancialData.profile,
@@ -37,8 +37,8 @@ class MockAiAssistantServiceTest {
             context = context,
         )
 
-        assertEquals("pay-off-cards", response.relatedScenarioId)
-        assertTrue(response.answer.contains("credit-card"))
+        assertEquals(context.opportunities.first().relatedScenarioId, response.relatedScenarioId)
+        assertTrue(response.answer.contains("five-year outlook"))
     }
 
     @Test

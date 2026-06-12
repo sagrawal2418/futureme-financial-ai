@@ -1,6 +1,6 @@
 # FutureMe Financial
 
-> FutureMe Financial is an AI-powered Life Readiness Platform that helps families understand how prepared they are for major life decisions.
+> FutureMe Financial is an AI-powered Banking Intelligence and Life Readiness Platform that helps families understand how prepared they are for major decisions and what action matters most next.
 
 [![Product CI](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/product-ci.yml/badge.svg)](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/product-ci.yml)
 [![GitHub Pages](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/sagrawal2418/futureme-financial-ai/actions/workflows/deploy-pages.yml)
@@ -21,6 +21,20 @@ Traditional banking apps explain what already happened: balances, transactions, 
 
 FutureMe models the household as a living financial system. Deterministic engines calculate readiness and future impact; AI translates those results into clear next steps.
 
+## Version 4: Banking Intelligence
+
+- **Financial Opportunity Ranking Engine:** ranks recommendations from debt, investments, money leaks, goals, readiness, Financial GPS, and life events by impact, effort, confidence, and modeled benefit
+- **Single Next Best Action:** answers, “If I can only do one thing this month, what should it be?”
+- **Financial Health Explainability:** reconciles score changes to positive and negative factors
+- **Scenario Impact Heatmap:** shows cash-flow, debt, emergency-fund, retirement, readiness, and risk effects
+- **Monthly Financial Review:** stores wins, risks, opportunities, actions, readiness movement, goal progress, and an AI summary
+- **Financial Decision Journal:** tracks expected versus actual outcomes
+- **What Improved My Future:** attributes modeled future net-worth improvement to prior actions
+- **FutureMe Banking Vision:** a seven-step executive demo for portfolio, leadership, innovation, and patent discussions
+- **Local Analytics:** records scenario, goal, insight, recommendation, readiness, AI, and review events without a remote analytics provider
+
+Android, iOS, and web consume the same banking intelligence models and calculations from `FutureMeProduct`.
+
 ## Version 3: Life Readiness Intelligence
 
 - **Life Readiness Engine:** shared 0-100 readiness scores for home purchase, children, relocation, retirement, business startup, parent support, and education funding
@@ -32,6 +46,21 @@ FutureMe models the household as a living financial system. Deterministic engine
 - **Executive Demo:** a guided dual-income family experience covering home, child, relocation, coaching, and an improvement plan
 
 Android, iOS, and web receive the same `ProductBootstrap` from the Kotlin Multiplatform core. No platform owns a separate readiness or financial formula implementation.
+
+## Why Banks Could Adopt This
+
+Current banking apps focus on transactions: what was spent, where it went, and what the balance is today.
+
+FutureMe focuses on financial decision intelligence:
+
+- Prioritize the one action with the highest modeled customer value
+- Explain score movement and recommendation logic
+- Connect products to customer life decisions rather than generic campaigns
+- Measure whether accepted recommendations improved outcomes
+- Give customers and bankers a shared, auditable planning view
+- Keep calculations deterministic while using AI only for explanation
+
+This creates a path from passive account servicing to proactive financial guidance without making the language model the system of record.
 
 ## Version 2 Foundation
 
@@ -71,6 +100,7 @@ flowchart LR
     CORE --> CALC["Deterministic calculators"]
     CORE --> GPS["Financial GPS"]
     CORE --> READY["Life Readiness Engine"]
+    CORE --> BANK["Banking Intelligence Engines"]
     CORE --> GOALS["Goal engine"]
     CORE --> LEAKS["Money leak detector"]
     CORE --> EVENTS["Life event planner"]
@@ -79,7 +109,7 @@ flowchart LR
 
 The backend never replaces the financial core. Claude receives structured, already-calculated outputs and cannot alter balances, probabilities, or projections.
 
-See [Life Readiness Framework](docs/life-readiness-framework.md), [Architecture](docs/architecture.md), [Client Feature Parity](docs/feature-parity.md), [LLM Architecture](docs/llm-architecture.md), and [Security Architecture](docs/security-architecture.md).
+See [Banking Vision](docs/banking-vision.md), [Future Banking Roadmap](docs/future-banking-roadmap.md), [Life Readiness Framework](docs/life-readiness-framework.md), [Architecture](docs/architecture.md), [Client Feature Parity](docs/feature-parity.md), and [Security Architecture](docs/security-architecture.md).
 
 ## Repository
 
@@ -93,6 +123,7 @@ shared/
 ├── models/                  # Serializable cross-platform contracts
 ├── calculators/             # Pure financial formulas
 ├── life-readiness-engine/   # Readiness, decision impact, plans, and timeline
+├── banking-intelligence/    # Opportunity ranking, explainability, reviews, heatmaps, and outcomes
 ├── scenario-engine/         # Five-year simulation and comparison
 ├── financial-gps/           # Current versus improved trajectory
 ├── goal-engine/             # Goal readiness probability
@@ -128,13 +159,14 @@ Seeded totals:
 
 ## Demo Flow
 
-1. Open the **Life Readiness Dashboard** and compare home, child, retirement, relocation, and parent-support readiness.
-2. Select **Home Purchase Readiness** and review its blockers, trend, confidence, and estimated ready date.
-3. Open the **Readiness Improvement Plan** and show the path from the current score to 85%.
-4. Use the **Life Decision Simulator** to compare buying a home, moving, losing income, having another child, or starting a business.
-5. Ask the **FutureMe AI Coach**, “What is preventing me from buying a home?” and “What should I focus on this month?”
-6. Review the **Life Timeline** from today through five years.
-7. Finish with the guided **Executive Demo Experience**.
+1. Open **My Highest Impact Action** and show the modeled five-year value.
+2. Review the ranked opportunities and explain why the top action wins.
+3. Show **Why My Score Changed** and its factor-level point impacts.
+4. Use the **Life Decision Simulator** and review its six-dimension heatmap.
+5. Save the decision and compare expected versus actual outcomes in the journal.
+6. Open the **Monthly Financial Review** and **What Improved My Future?**
+7. Ask the AI Coach, “If I can only do one thing this month, what should it be?”
+8. Finish with the seven-step **FutureMe Banking Vision** demo.
 
 The coach explains shared structured output; it does not perform financial arithmetic.
 
@@ -214,7 +246,7 @@ cd ../.. && python3 -m unittest discover -s backend/tests -v
 
 ## Test Coverage
 
-Shared tests cover formulas, nine scenario families, readiness scoring and thresholds, improvement plans, decision impacts, timeline projections, proactive insights, Financial GPS, goal probability, life-event planning, money-leak detection, coach grounding, and 90-day demo-data reconciliation.
+Shared tests cover formulas, nine scenario families, readiness, opportunity ranking, next-best-action selection, score explainability, heatmaps, monthly reviews, decision journaling, analytics, outcome attribution, coach grounding, and 90-day demo-data reconciliation.
 
 Backend tests cover:
 
@@ -223,21 +255,13 @@ Backend tests cover:
 - Mock Plaid data and token handling
 - Financial data normalization
 
-Web tests verify the generated Kotlin/JS bridge. A client parity contract test guards the synchronized Version 3 capability set. GitHub Actions builds Android, web, the native iOS simulator app, and the backend provider suite.
+Web tests verify the generated Kotlin/JS bridge. A client parity contract test guards the synchronized product capability set. GitHub Actions builds Android, web, the native iOS simulator app, and the backend provider suite.
 
 ## Roadmap
 
-Version 4 priorities:
+The next stages add governed data connectivity, recommendation policy controls, banker-assisted workflows, and measurable outcome learning.
 
-1. Editable synchronized profiles and custom goal inputs
-2. Versioned assumption sets and Monte Carlo confidence bands
-3. Authenticated backend persistence with consent and audit events
-4. Plaid Sandbox integration behind token vaulting
-5. Claude evaluation harness, prompt registry, and citation UI
-6. Real-time cash-flow, rate, and goal-drift alerts
-7. Banker-assisted and white-label enterprise workflows
-
-See [docs/roadmap.md](docs/roadmap.md).
+See [Future Banking Roadmap](docs/future-banking-roadmap.md) and [Engineering Roadmap](docs/roadmap.md).
 
 ## Privacy
 

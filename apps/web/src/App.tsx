@@ -35,7 +35,10 @@ import {
   askFutureMe,
   bootstrapProduct,
   compareScenarios,
+  recordAnalyticsEvent,
+  saveDecision,
   simulateScenario,
+  type DecisionJournalEntry,
   type ProductBootstrap,
   type ReadinessCategory,
   type Scenario,
@@ -100,6 +103,9 @@ function App() {
   const [showAllInsights, setShowAllInsights] = useState(false);
   const [showAllScenarios, setShowAllScenarios] = useState(false);
   const [showFinancialDetails, setShowFinancialDetails] = useState(false);
+  const [acceptedAction, setAcceptedAction] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(true);
+  const [decisionJournal, setDecisionJournal] = useState<DecisionJournalEntry[]>([]);
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -119,6 +125,7 @@ function App() {
     setLoadState({ status: "loading" });
     try {
       const data = bootstrapProduct();
+      setDecisionJournal(data.decisionJournal);
       setLoadState({ status: "content", data });
     } catch {
       setLoadState({
@@ -169,6 +176,10 @@ function App() {
   const decisionSimulation =
     data.decisionSimulations.find((item) => item.scenarioId === selected.id) ??
     data.decisionSimulations[0];
+  const scenarioHeatmap =
+    data.scenarioImpactHeatmaps.find((item) => item.scenarioId === selected.id) ??
+    data.scenarioImpactHeatmaps[0];
+  const currentReview = data.monthlyReviews[0];
   const selectedReadiness =
     data.readiness.find((item) => item.category === selectedReadinessCategory) ??
     data.readiness[0];
@@ -196,6 +207,21 @@ function App() {
     setAssistantOpen(true);
   };
 
+  const chooseScenario = (scenarioId: string) => {
+    setSelectedId(scenarioId);
+    recordAnalyticsEvent("scenario_created", scenarioId);
+  };
+
+  const acceptHighestAction = () => {
+    recordAnalyticsEvent("recommendation_accepted", data.nextBestAction.recommendationId);
+    setAcceptedAction(true);
+  };
+
+  const saveSelectedDecision = () => {
+    const entry = saveDecision(selected.id);
+    setDecisionJournal((current) => [entry, ...current.filter((item) => item.id !== entry.id)]);
+  };
+
   return (
     <div className="app-shell">
       <aside className={`sidebar ${mobileMenu ? "open" : ""}`}>
@@ -207,8 +233,10 @@ function App() {
           <X size={20} />
         </button>
         <nav>
-          <a className="active" href="#readiness"><BarChart3 size={19} />Readiness</a>
+          <a className="active" href="#banking-intelligence"><BarChart3 size={19} />Top action</a>
+          <a href="#readiness"><ShieldCheck size={19} />Readiness</a>
           <a href="#scenarios"><Sparkles size={19} />Decision simulator</a>
+          <a href="#monthly-review"><RefreshCw size={19} />Monthly review</a>
           <a href="#timeline"><TrendingUp size={19} />Life timeline</a>
           <a href="#improvement-plan"><PiggyBank size={19} />Improvement plan</a>
           <a href="#compare"><WalletCards size={19} />Compare</a>
@@ -266,8 +294,65 @@ function App() {
         <div className="offline-banner" role="status">
           <ShieldCheck size={16} />
           <span>Shared readiness engine active. Demo data stays local.</span>
-          <strong>Version 3</strong>
+          <strong>Version 4</strong>
         </div>
+
+        <section className="next-action-card" id="banking-intelligence" aria-labelledby="next-action-title">
+          <div>
+            <p className="eyebrow light">My highest impact action</p>
+            <h2 id="next-action-title">{data.nextBestAction.title}</h2>
+            <p>{data.nextBestAction.callout}</p>
+          </div>
+          <div className="next-action-stats">
+            <span><b>{data.nextBestAction.impactScore}</b> impact</span>
+            <span><b>{data.nextBestAction.confidenceScore}%</b> confidence</span>
+            <span><b>{money(data.nextBestAction.fiveYearImpact, true)}</b> at 5 years</span>
+          </div>
+          <button className="next-action-button" onClick={acceptHighestAction} disabled={acceptedAction}>
+            {acceptedAction ? <><ShieldCheck size={18} />Added to my plan</> : <>Make this my focus <ArrowRight size={18} /></>}
+          </button>
+        </section>
+
+        <section className="banking-grid" aria-label="Banking intelligence">
+          <article className="opportunity-panel">
+            <div className="section-title compact">
+              <div><p className="eyebrow">Ranked opportunities</p><h2>What matters next</h2></div>
+            </div>
+            {data.opportunities.slice(0, 4).map((opportunity) => (
+              <div className="opportunity-row" key={opportunity.id}>
+                <span>{opportunity.priorityRanking}</span>
+                <div>
+                  <strong>{opportunity.title}</strong>
+                  <small>{money(opportunity.fiveYearBenefitEstimate)} potential over 5 years</small>
+                </div>
+                <b>{opportunity.impactScore}</b>
+              </div>
+            ))}
+          </article>
+
+          <article className="explainability-panel">
+            <p className="eyebrow">Why my score changed</p>
+            <div className="score-change">
+              <span>{data.financialExplainability.previousScore}</span>
+              <ArrowRight size={20} />
+              <strong>{data.financialExplainability.currentScore}</strong>
+              <b className={data.financialExplainability.netChange >= 0 ? "positive" : "negative"}>
+                {data.financialExplainability.netChange >= 0 ? "+" : ""}{data.financialExplainability.netChange}
+              </b>
+            </div>
+            <p>{data.financialExplainability.summary}</p>
+            <div className="factor-list">
+              {data.financialExplainability.factors.slice(0, 4).map((factor) => (
+                <div key={factor.id}>
+                  <span>{factor.title}</span>
+                  <b className={factor.sentiment.toLowerCase()}>
+                    {factor.pointImpact > 0 ? "+" : ""}{factor.pointImpact}
+                  </b>
+                </div>
+              ))}
+            </div>
+          </article>
+        </section>
 
         <section className="readiness-section" id="readiness" aria-labelledby="readiness-title">
           <div className="readiness-heading">
@@ -290,7 +375,10 @@ function App() {
                 <button
                   className={`readiness-card ${item.category === selectedReadiness.category ? "active" : ""}`}
                   key={item.id}
-                  onClick={() => setSelectedReadinessCategory(item.category)}
+                  onClick={() => {
+                    setSelectedReadinessCategory(item.category);
+                    recordAnalyticsEvent("readiness_viewed", item.category);
+                  }}
                   aria-pressed={item.category === selectedReadiness.category}
                 >
                   <div className="readiness-card-top">
@@ -638,7 +726,7 @@ function App() {
                   className="primary-button"
                   onClick={() => {
                     const scenarioId = event.suggestedScenarioIds[0];
-                    if (scenarioId) setSelectedId(scenarioId);
+                    if (scenarioId) chooseScenario(scenarioId);
                     document.querySelector("#scenarios")?.scrollIntoView({ behavior: "smooth" });
                   }}
                 >
@@ -683,7 +771,7 @@ function App() {
                 key={item.id}
                 scenario={item}
                 active={item.id === selected.id}
-                onClick={() => setSelectedId(item.id)}
+                onClick={() => chooseScenario(item.id)}
               />
             ))}
           </div>
@@ -706,6 +794,26 @@ function App() {
               <Impact label="Five-year impact" value={signedMoney(decisionSimulation.fiveYearNetWorthImpact)} positive={decisionSimulation.fiveYearNetWorthImpact >= 0} />
               <Impact label="Risk change" value={`${decisionSimulation.riskChange >= 0 ? "+" : ""}${decisionSimulation.riskChange} pts`} positive={decisionSimulation.riskChange <= 0} />
               <Impact label="Timeline change" value={`${decisionSimulation.timelineChangeMonths >= 0 ? "+" : ""}${decisionSimulation.timelineChangeMonths} mo`} positive={decisionSimulation.timelineChangeMonths <= 0} />
+            </div>
+          </article>
+
+          <article className="heatmap-panel" aria-labelledby="heatmap-title">
+            <div className="section-title compact">
+              <div>
+                <p className="eyebrow">Scenario impact heatmap</p>
+                <h2 id="heatmap-title">{scenarioHeatmap.title}</h2>
+              </div>
+              <button className="secondary-button" onClick={saveSelectedDecision}>
+                Save decision
+              </button>
+            </div>
+            <div className="impact-heatmap">
+              {scenarioHeatmap.cells.map((cell) => (
+                <div className={cell.sentiment.toLowerCase()} key={cell.dimension}>
+                  <span>{readinessLevel(cell.dimension)}</span>
+                  <strong>{cell.label}</strong>
+                </div>
+              ))}
             </div>
           </article>
 
@@ -734,6 +842,63 @@ function App() {
               ))}
             </div>
           </article>
+        </section>
+
+        <section className="monthly-review-section" id="monthly-review" aria-labelledby="monthly-review-title">
+          <div className="section-title">
+            <div>
+              <p className="eyebrow">Monthly financial review</p>
+              <h2 id="monthly-review-title">{currentReview.label}</h2>
+            </div>
+            <button
+              className="secondary-button"
+              onClick={() => {
+                const next = !reviewOpen;
+                setReviewOpen(next);
+                if (next) recordAnalyticsEvent("monthly_review_opened", currentReview.id);
+              }}
+            >
+              {reviewOpen ? "Hide review" : "Open review"}
+            </button>
+          </div>
+          {reviewOpen && (
+            <div className="review-layout">
+              <article className="review-summary">
+                <p>{currentReview.aiSummary}</p>
+                <div className="review-columns">
+                  <div><span>Win</span><strong>{currentReview.wins[0]}</strong></div>
+                  <div><span>Risk</span><strong>{currentReview.risks[0]}</strong></div>
+                  <div><span>Next</span><strong>{currentReview.recommendedActions[0]}</strong></div>
+                </div>
+                <small>{data.monthlyReviews.length} monthly reviews stored locally</small>
+              </article>
+              <article className="journal-panel">
+                <p className="eyebrow">Financial decision journal</p>
+                {decisionJournal.slice(0, 3).map((entry) => (
+                  <div className="journal-row" key={entry.id}>
+                    <div><strong>{entry.title}</strong><small>{entry.decisionDate}</small></div>
+                    <span className={entry.status.toLowerCase()}>{readinessLevel(entry.status)}</span>
+                    <b>{money(entry.actualFiveYearImpact ?? entry.expectedFiveYearImpact, true)}</b>
+                  </div>
+                ))}
+              </article>
+            </div>
+          )}
+        </section>
+
+        <section className="future-improvements" aria-labelledby="future-improvements-title">
+          <div className="section-title">
+            <div><p className="eyebrow">What improved my future?</p><h2 id="future-improvements-title">Actions creating the most value</h2></div>
+          </div>
+          <div className="contribution-grid">
+            {data.futureOutcomeContributions.slice(0, 4).map((contribution) => (
+              <article key={contribution.id}>
+                <span>{contribution.sharePercentage}% of modeled improvement</span>
+                <strong>{contribution.title}</strong>
+                <b>{money(contribution.fiveYearContribution)} at 5 years</b>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="section-block comparison-section" id="compare">
@@ -779,29 +944,30 @@ function App() {
 
         <section className="executive-demo" id="demo" aria-labelledby="demo-title">
           <div className="demo-persona">
-            <p className="eyebrow light">Executive demo experience</p>
-            <h2 id="demo-title">{data.executiveDemo.personaTitle}</h2>
-            <p>{data.executiveDemo.personaSummary}</p>
+            <p className="eyebrow light">Executive banking demo</p>
+            <h2 id="demo-title">{data.bankingVisionDemo.title}</h2>
+            <p>{data.bankingVisionDemo.subtitle}</p>
             <strong className="persona-summary">
-              {data.executiveDemo.personaFacts.slice(0, 2).join(" · ")}
+              {data.bankingVisionDemo.audiences.join(" · ")}
             </strong>
           </div>
           <div className="demo-flow">
-            <p className="eyebrow">Five-minute product story</p>
-            {data.executiveDemo.steps.map((step) => (
+            <p className="eyebrow">Seven-step product story</p>
+            {data.bankingVisionDemo.steps.map((step) => (
               <button
                 key={step.order}
                 onClick={() => {
-                  if (step.category) setSelectedReadinessCategory(step.category);
-                  if (step.order === 4) submitQuestion(step.coachPrompt);
-                  else {
-                    document.querySelector(step.order === 3 ? "#scenarios" : "#readiness")
-                      ?.scrollIntoView({ behavior: "smooth" });
-                  }
+                  if (step.order === 4) submitQuestion("If I can only do one thing this month, what should it be?");
+                  const target = step.order === 7
+                    ? "#monthly-review"
+                    : step.order >= 5
+                      ? "#banking-intelligence"
+                      : "#readiness";
+                  document.querySelector(target)?.scrollIntoView({ behavior: "smooth" });
                 }}
               >
                 <span>{step.order}</span>
-                <div><strong>{step.title}</strong></div>
+                <div><strong>{step.title}</strong><small>{step.focusTarget}</small></div>
                 <ArrowRight size={16} />
               </button>
             ))}

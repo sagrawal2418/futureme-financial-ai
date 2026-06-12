@@ -44,10 +44,16 @@ fun DashboardScreen(
     onOpenLifeEvents: () -> Unit,
     onOpenMoneyLeaks: () -> Unit,
     onImproveOutlook: () -> Unit,
+    onAcceptRecommendation: () -> Unit,
 ) {
     val dashboard = content.dashboard
     val profile = content.profile
     Column {
+        HighestImpactActionCard(
+            content = content,
+            onAccept = onAcceptRecommendation,
+        )
+
         LifeReadinessPreview(
             content = content,
             onOpenReadiness = onOpenReadiness,
@@ -183,6 +189,64 @@ fun DashboardScreen(
             }
         }
         Spacer(Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun HighestImpactActionCard(
+    content: FutureMeContent,
+    onAccept: () -> Unit,
+) {
+    val action = content.nextBestAction
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                "MY HIGHEST IMPACT ACTION",
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.72f),
+                style = MaterialTheme.typography.labelSmall,
+            )
+            Text(
+                action.title,
+                color = MaterialTheme.colorScheme.onPrimary,
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+            Text(
+                action.callout,
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.82f),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    "${action.impactScore} impact",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+                Text(
+                    "${action.confidenceScore}% confidence",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+                Text(
+                    "${compactMoney(action.fiveYearImpact)} / 5Y",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+            Button(
+                onClick = onAccept,
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+            ) {
+                Text("Make this my focus")
+            }
+        }
     }
 }
 

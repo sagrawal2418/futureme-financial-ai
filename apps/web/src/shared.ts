@@ -278,6 +278,140 @@ export interface ExecutiveDemoExperience {
   steps: ExecutiveDemoStep[];
 }
 
+export type OpportunitySource =
+  | "MONEY_LEAK"
+  | "DEBT"
+  | "INVESTMENT"
+  | "GOAL"
+  | "READINESS"
+  | "FINANCIAL_GPS"
+  | "LIFE_EVENT";
+
+export interface OpportunityRecommendation {
+  id: string;
+  title: string;
+  description: string;
+  source: OpportunitySource;
+  impactScore: number;
+  effortScore: number;
+  confidenceScore: number;
+  annualBenefitEstimate: number;
+  fiveYearBenefitEstimate: number;
+  priorityRanking: number;
+  monthlyCommitment: number;
+  relatedScenarioId: string | null;
+}
+
+export interface NextBestAction {
+  recommendationId: string;
+  title: string;
+  description: string;
+  callout: string;
+  monthlyCommitment: number;
+  fiveYearImpact: number;
+  impactScore: number;
+  confidenceScore: number;
+}
+
+export type ImpactSentiment = "POSITIVE" | "NEUTRAL" | "NEGATIVE";
+export type ImpactDimension =
+  | "CASH_FLOW"
+  | "DEBT"
+  | "EMERGENCY_FUND"
+  | "RETIREMENT"
+  | "READINESS"
+  | "RISK";
+
+export interface ExplainabilityFactor {
+  id: string;
+  title: string;
+  description: string;
+  pointImpact: number;
+  sentiment: ImpactSentiment;
+}
+
+export interface FinancialExplainability {
+  previousScore: number;
+  currentScore: number;
+  netChange: number;
+  factors: ExplainabilityFactor[];
+  summary: string;
+}
+
+export interface ScenarioImpactHeatmap {
+  scenarioId: string;
+  title: string;
+  cells: {
+    dimension: ImpactDimension;
+    sentiment: ImpactSentiment;
+    score: number;
+    label: string;
+  }[];
+}
+
+export interface MonthlyFinancialReview {
+  id: string;
+  month: string;
+  label: string;
+  generatedDate: string;
+  wins: string[];
+  risks: string[];
+  opportunities: string[];
+  recommendedActions: string[];
+  readinessChanges: string[];
+  goalProgress: string[];
+  aiSummary: string;
+}
+
+export interface DecisionJournalEntry {
+  id: string;
+  type: string;
+  title: string;
+  decisionDate: string;
+  expectedMonthlyImpact: number;
+  actualMonthlyImpact: number | null;
+  expectedFiveYearImpact: number;
+  actualFiveYearImpact: number | null;
+  status: "PLANNED" | "TRACKING" | "AHEAD" | "ON_TRACK" | "BEHIND";
+  notes: string;
+  relatedScenarioId: string | null;
+}
+
+export interface FutureOutcomeContribution {
+  id: string;
+  title: string;
+  description: string;
+  fiveYearContribution: number;
+  sharePercentage: number;
+  source: OpportunitySource;
+}
+
+export interface BankingVisionDemo {
+  title: string;
+  subtitle: string;
+  audiences: string[];
+  steps: {
+    order: number;
+    title: string;
+    description: string;
+    focusTarget: string;
+  }[];
+}
+
+export interface AnalyticsEvent {
+  id: string;
+  type:
+    | "SCENARIO_CREATED"
+    | "GOAL_ADDED"
+    | "INSIGHT_VIEWED"
+    | "RECOMMENDATION_ACCEPTED"
+    | "READINESS_VIEWED"
+    | "AI_QUESTION_ASKED"
+    | "MONTHLY_REVIEW_OPENED";
+  occurredAt: string;
+  properties: { name: string; value: string }[];
+}
+
 export interface Transaction {
   id: string;
   postedDate: string;
@@ -308,6 +442,15 @@ export interface ProductBootstrap {
   decisionSimulations: LifeDecisionSimulation[];
   lifeTimeline: LifeTimelinePoint[];
   executiveDemo: ExecutiveDemoExperience;
+  opportunities: OpportunityRecommendation[];
+  nextBestAction: NextBestAction;
+  financialExplainability: FinancialExplainability;
+  scenarioImpactHeatmaps: ScenarioImpactHeatmap[];
+  monthlyReviews: MonthlyFinancialReview[];
+  decisionJournal: DecisionJournalEntry[];
+  futureOutcomeContributions: FutureOutcomeContribution[];
+  bankingVisionDemo: BankingVisionDemo;
+  analyticsEvents: AnalyticsEvent[];
   suggestedQuestions: SuggestedQuestion[];
   designTokens: {
     spacing: Record<string, number>;
@@ -352,3 +495,12 @@ export const askFutureMe = (
   parse<AssistantResponse>(
     api.askJson(question, latestScenarioId ?? null),
   );
+
+export const recordAnalyticsEvent = (
+  typeCode: string,
+  subjectId = "",
+): AnalyticsEvent =>
+  parse<AnalyticsEvent>(api.recordAnalyticsEventJson(typeCode, subjectId));
+
+export const saveDecision = (scenarioId: string): DecisionJournalEntry =>
+  parse<DecisionJournalEntry>(api.saveDecisionJson(scenarioId));

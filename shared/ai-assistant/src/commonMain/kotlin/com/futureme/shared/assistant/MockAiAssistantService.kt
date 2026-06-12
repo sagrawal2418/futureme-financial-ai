@@ -85,32 +85,27 @@ class MockAiAssistantService(
         }
 
         if ("decision" in question && ("improves" in question || "best" in question)) {
-            val best = context.decisionSimulations.maxByOrNull {
-                it.readinessImpact * 5_000.0 + it.fiveYearNetWorthImpact
-            }
+            val best = context.opportunities.firstOrNull()
             return AssistantResponse(
-                answer = "${best?.title ?: "Pay off credit cards"} creates the strongest " +
-                    "modeled improvement. It changes readiness by " +
-                    "${best?.readinessImpact?.let { if (it >= 0) "+$it" else "$it" } ?: "+0"} points " +
-                    "and five-year net worth by ${best?.fiveYearNetWorthImpact?.asSignedDollars() ?: "$0"}.",
-                relatedScenarioId = best?.scenarioId,
-                suggestedActions = best?.recommendedActions.orEmpty().take(3),
+                answer = "${best?.title ?: "Pay off high-interest debt"} ranks first after " +
+                    "weighing impact, effort, and confidence. The modeled five-year benefit is " +
+                    "${best?.fiveYearBenefitEstimate?.asDollars() ?: "$0"}.",
+                relatedScenarioId = best?.relatedScenarioId,
+                suggestedActions = context.opportunities.take(3).map { it.title },
             )
         }
 
-        if ("focus" in question && ("month" in question || "now" in question)) {
-            val weakest = context.readiness.minByOrNull { it.readinessScore }
-            val debtAction = "Direct an additional $300 to high-interest debt."
+        if (
+            ("focus" in question && ("month" in question || "now" in question)) ||
+            ("one thing" in question && "month" in question)
+        ) {
+            val action = context.nextBestAction
             return AssistantResponse(
-                answer = "This month, make debt reduction the first move. $debtAction " +
-                    "That improves cash flow, lowers risk, and strengthens " +
-                    "${weakest?.title?.lowercase() ?: "your weakest readiness category"}.",
-                relatedScenarioId = "pay-off-cards",
-                suggestedActions = listOf(
-                    debtAction,
-                    "Keep six months of essential expenses liquid.",
-                    weakest?.recommendedActions?.firstOrNull() ?: "Review the readiness dashboard.",
-                ),
+                answer = "${action.callout} ${action.description}",
+                relatedScenarioId = context.opportunities.firstOrNull {
+                    it.id == action.recommendationId
+                }?.relatedScenarioId,
+                suggestedActions = context.opportunities.take(3).map { it.title },
             )
         }
 
@@ -206,20 +201,13 @@ class MockAiAssistantService(
         }
 
         if ("one action" in question) {
-            val payoff = scenarioEngine.simulate(
-                profile,
-                requireNotNull(MockFinancialData.scenario("pay-off-cards")),
-            )
+            val action = context.nextBestAction
             return AssistantResponse(
-                answer = "Paying off the credit-card balance is the strongest immediate action. " +
-                    "It improves monthly cash flow by ${payoff.monthlyCashFlowImpact.asDollars()} " +
-                    "and removes a 20.99% APR obligation while keeping " +
-                    "${oneDecimal(payoff.emergencyFundMonths)} months of runway.",
-                relatedScenarioId = "pay-off-cards",
-                suggestedActions = listOf(
-                    "Review the payoff tradeoffs",
-                    "Redirect the former debt payment into investing after payoff",
-                ),
+                answer = action.callout + " " + action.description,
+                relatedScenarioId = context.opportunities.firstOrNull {
+                    it.id == action.recommendationId
+                }?.relatedScenarioId,
+                suggestedActions = context.opportunities.take(3).map { it.title },
             )
         }
 
