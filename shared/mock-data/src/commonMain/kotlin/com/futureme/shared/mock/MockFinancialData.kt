@@ -303,43 +303,59 @@ object MockFinancialData {
 
     val suggestedQuestions = listOf(
         SuggestedQuestion(
-            "next-best-action",
-            "Highest-impact action",
-            "If I can only do one thing this month, what should it be?",
-            "Banking intelligence",
+            "mission-next-action",
+            "What should I do next?",
+            "What should I do next?",
+            "Mission Coach",
+        ),
+        SuggestedQuestion(
+            "mission-readiness",
+            "Why is readiness low?",
+            "Why is my readiness low?",
+            "Mission Coach",
+        ),
+        SuggestedQuestion(
+            "mission-blocker",
+            "Biggest blocker",
+            "What is my biggest blocker?",
+            "Mission Coach",
+        ),
+        SuggestedQuestion(
+            "mission-faster",
+            "Become ready faster",
+            "How can I become ready faster?",
+            "Mission Coach",
+        ),
+        SuggestedQuestion(
+            "mission-priority",
+            "Prioritize a mission",
+            "Which mission should I prioritize?",
+            "Mission Coach",
         ),
         SuggestedQuestion(
             "home-blockers",
+            "Home mission",
+            "What is preventing my Home Mission from succeeding?",
+            "Mission Coach",
+        ),
+        SuggestedQuestion(
+            "home-purchase-blockers",
             "Home blockers",
             "What is preventing me from buying a home?",
-            "Readiness",
+            "Mission Coach",
         ),
         SuggestedQuestion(
-            "child-ready",
-            "Child readiness",
-            "How can I become ready for another child?",
-            "Readiness",
-        ),
-        SuggestedQuestion(
-            "best-decision",
-            "Best decision",
-            "What decision improves my future the most?",
-            "Strategy",
-        ),
-        SuggestedQuestion(
-            "weakest",
+            "weakest-readiness",
             "Weakest readiness",
             "What is my weakest readiness category?",
-            "Strategy",
+            "Mission Coach",
         ),
         SuggestedQuestion(
-            "this-month",
+            "monthly-focus",
             "This month's focus",
             "What should I focus on this month?",
-            "Action plan",
+            "Mission Coach",
         ),
-        SuggestedQuestion("leak", "Biggest money leak", "What is my biggest money leak?", "Insights"),
-        SuggestedQuestion("outlook", "Improve my outlook", "How can I improve my 5-year outlook?", "GPS"),
     )
 
     fun scenario(id: String): Scenario? = scenarios.firstOrNull { it.id == id }

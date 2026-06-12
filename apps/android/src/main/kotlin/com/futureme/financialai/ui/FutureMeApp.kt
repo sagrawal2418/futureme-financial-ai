@@ -31,13 +31,13 @@ import com.futureme.financialai.ui.screens.AssistantScreen
 import com.futureme.financialai.ui.screens.BankingIntelligenceScreen
 import com.futureme.financialai.ui.screens.CopilotHubScreen
 import com.futureme.financialai.ui.screens.ComparisonScreen
-import com.futureme.financialai.ui.screens.DashboardScreen
 import com.futureme.financialai.ui.screens.LifeReadinessDashboardScreen
 import com.futureme.financialai.ui.screens.LifeTimelineScreen
 import com.futureme.financialai.ui.screens.LoadingScreen
 import com.futureme.financialai.ui.screens.MessageScreen
 import com.futureme.financialai.ui.screens.MoneyLeakScreen
 import com.futureme.financialai.ui.screens.MonthlyReviewScreen
+import com.futureme.financialai.ui.screens.MissionControlScreen
 import com.futureme.financialai.ui.screens.ScenarioDetailScreen
 import com.futureme.financialai.ui.screens.ScenarioListScreen
 
@@ -64,6 +64,7 @@ fun FutureMeApp(viewModel: FutureMeViewModel) {
             onCompare = viewModel::compare,
             onAskAssistant = viewModel::askAssistant,
             onAcceptRecommendation = viewModel::acceptRecommendation,
+            onAcceptMissionAction = viewModel::acceptMissionAction,
             onSaveDecision = viewModel::saveDecision,
         )
     }
@@ -80,6 +81,7 @@ private fun ContentScaffold(
     ) -> Unit,
     onAskAssistant: (String) -> Unit,
     onAcceptRecommendation: () -> Unit,
+    onAcceptMissionAction: (String) -> Unit,
     onSaveDecision: () -> Unit,
 ) {
     Scaffold(
@@ -107,11 +109,11 @@ private fun ContentScaffold(
                 containerColor = MaterialTheme.colorScheme.surface,
             ) {
                 listOf(
-                    FutureMeScreen.DASHBOARD to "Overview",
+                    FutureMeScreen.DASHBOARD to "Mission",
+                    FutureMeScreen.TIMELINE to "Timeline",
                     FutureMeScreen.BANKING to "Actions",
                     FutureMeScreen.SCENARIOS to "Simulate",
-                    FutureMeScreen.READINESS to "Ready",
-                    FutureMeScreen.REVIEW to "Review",
+                    FutureMeScreen.ASSISTANT to "Coach",
                 ).forEach { (screen, label) ->
                     NavigationBarItem(
                         selected = content.screen == screen,
@@ -146,18 +148,13 @@ private fun ContentScaffold(
             }
             item {
                 when (content.screen) {
-                    FutureMeScreen.DASHBOARD -> DashboardScreen(
+                    FutureMeScreen.DASHBOARD -> MissionControlScreen(
                         content = content,
-                        onScenarioClick = onScenarioClick,
-                        onOpenAssistant = { onNavigate(FutureMeScreen.ASSISTANT) },
-                        onOpenReadiness = { onNavigate(FutureMeScreen.READINESS) },
-                        onOpenScenarios = { onNavigate(FutureMeScreen.SCENARIOS) },
-                        onOpenLifeEvents = { onNavigate(FutureMeScreen.LIFE_EVENTS) },
-                        onOpenMoneyLeaks = { onNavigate(FutureMeScreen.MONEY_LEAKS) },
-                        onImproveOutlook = {
-                            onAskAssistant("How can I improve my 5-year outlook?")
-                        },
-                        onAcceptRecommendation = onAcceptRecommendation,
+                        onOpenTimeline = { onNavigate(FutureMeScreen.TIMELINE) },
+                        onOpenActions = { onNavigate(FutureMeScreen.BANKING) },
+                        onOpenSimulator = { onNavigate(FutureMeScreen.SCENARIOS) },
+                        onOpenCoach = { onNavigate(FutureMeScreen.ASSISTANT) },
+                        onAcceptAction = onAcceptMissionAction,
                     )
                     FutureMeScreen.BANKING -> BankingIntelligenceScreen(
                         content = content,

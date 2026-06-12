@@ -24,6 +24,9 @@ import com.futureme.shared.models.LifeReadinessResult
 import com.futureme.shared.models.LifeTimelinePoint
 import com.futureme.shared.models.MoneyLeak
 import com.futureme.shared.models.MonthlyFinancialReview
+import com.futureme.shared.models.Mission
+import com.futureme.shared.models.MissionAnalyticsSnapshot
+import com.futureme.shared.models.MissionControlSnapshot
 import com.futureme.shared.models.NextBestAction
 import com.futureme.shared.models.OpportunityRecommendation
 import com.futureme.shared.models.ReadinessImprovementPlan
@@ -79,6 +82,9 @@ data class FutureMeContent(
     val futureOutcomeContributions: List<FutureOutcomeContribution>,
     val bankingVisionDemo: BankingVisionDemo,
     val analyticsEvents: List<AnalyticsEvent>,
+    val missions: List<Mission>,
+    val missionControl: MissionControlSnapshot,
+    val missionAnalytics: MissionAnalyticsSnapshot,
     val suggestedQuestions: List<SuggestedQuestion>,
     val disclaimer: String,
     val selectedScenario: Scenario? = null,
@@ -87,8 +93,8 @@ data class FutureMeContent(
     val messages: List<ChatMessage> = listOf(
         ChatMessage(
             id = 0L,
-            text = "Tell me which life decision matters next. I will identify the blockers, " +
-                "tradeoffs, and highest-leverage action.",
+            text = "Tell me which mission matters now. I will explain the blocker, timeline, " +
+                "and highest-impact action.",
             isUser = false,
         ),
     ),
@@ -145,6 +151,9 @@ class FutureMeViewModel(
                         futureOutcomeContributions = bootstrap.futureOutcomeContributions,
                         bankingVisionDemo = bootstrap.bankingVisionDemo,
                         analyticsEvents = bootstrap.analyticsEvents,
+                        missions = bootstrap.missions,
+                        missionControl = bootstrap.missionControl,
+                        missionAnalytics = bootstrap.missionAnalytics,
                         suggestedQuestions = bootstrap.suggestedQuestions,
                         disclaimer = bootstrap.disclaimer,
                         comparison = product.compare("move-to-texas", "stay-in-new-jersey"),
@@ -254,6 +263,11 @@ class FutureMeViewModel(
             "recommendation_accepted",
             current.nextBestAction.recommendationId,
         )
+        updateContent { it.copy(analyticsEvents = product.analyticsEvents()) }
+    }
+
+    fun acceptMissionAction(actionId: String) {
+        product.recordAnalyticsEvent("mission_action_completed", actionId)
         updateContent { it.copy(analyticsEvents = product.analyticsEvents()) }
     }
 

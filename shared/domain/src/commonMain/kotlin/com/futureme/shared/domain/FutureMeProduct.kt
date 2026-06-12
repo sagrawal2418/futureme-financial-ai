@@ -13,6 +13,8 @@ import com.futureme.shared.goals.GoalProbabilityEngine
 import com.futureme.shared.gps.FinancialGpsEngine
 import com.futureme.shared.insights.ProactiveInsightsEngine
 import com.futureme.shared.lifeevents.LifeEventPlanner
+import com.futureme.shared.mission.MissionInputs
+import com.futureme.shared.mission.MissionService
 import com.futureme.shared.mock.MockFinancialDataProvider
 import com.futureme.shared.models.AssistantPrompt
 import com.futureme.shared.models.AssistantResponse
@@ -32,6 +34,9 @@ import com.futureme.shared.models.LifeDecisionSimulation
 import com.futureme.shared.models.LifeReadinessResult
 import com.futureme.shared.models.LifeTimelinePoint
 import com.futureme.shared.models.MonthlyFinancialReview
+import com.futureme.shared.models.Mission
+import com.futureme.shared.models.MissionAnalyticsSnapshot
+import com.futureme.shared.models.MissionControlSnapshot
 import com.futureme.shared.models.NextBestAction
 import com.futureme.shared.models.OpportunityRecommendation
 import com.futureme.shared.models.ProductBootstrap
@@ -67,6 +72,7 @@ class FutureMeProduct {
     private val monthlyReviewEngine = MonthlyFinancialReviewEngine()
     private val decisionJournalEngine = DecisionJournalEngine()
     private val futureOutcomeEngine = FutureOutcomeEngine()
+    private val missionService = MissionService()
     private val decisionJournalEntries = decisionJournalEngine.seedEntries().toMutableList()
     private val analyticsEventLog = mutableListOf(
         AnalyticsEvent(
@@ -80,6 +86,21 @@ class FutureMeProduct {
             type = AnalyticsEventType.INSIGHT_VIEWED,
             occurredAt = "2026-06-10T18:22:00-04:00",
             properties = listOf(AnalyticsProperty("insight", "high-interest-debt")),
+        ),
+        AnalyticsEvent(
+            id = "analytics-seed-3",
+            type = AnalyticsEventType.MISSION_CREATED,
+            occurredAt = "2026-06-01T09:00:00-04:00",
+            properties = listOf(AnalyticsProperty("missionId", "mission-home")),
+        ),
+        AnalyticsEvent(
+            id = "analytics-seed-4",
+            type = AnalyticsEventType.MISSION_READINESS_IMPROVED,
+            occurredAt = "2026-06-11T08:30:00-04:00",
+            properties = listOf(
+                AnalyticsProperty("missionId", "mission-debt-free"),
+                AnalyticsProperty("points", "5"),
+            ),
         ),
     )
     private var analyticsSequence = analyticsEventLog.size + 1
@@ -184,6 +205,12 @@ class FutureMeProduct {
 
     fun analyticsEvents(): List<AnalyticsEvent> = analyticsEventLog.toList()
 
+    fun missions(): List<Mission> = copilotContext().missions
+
+    fun missionControl(): MissionControlSnapshot = copilotContext().missionControl
+
+    fun missionAnalytics(): MissionAnalyticsSnapshot = copilotContext().missionAnalytics
+
     fun recordAnalyticsEvent(
         typeCode: String,
         subjectId: String = "",
@@ -230,6 +257,21 @@ class FutureMeProduct {
             readiness = readiness,
             goals = goals,
         )
+        val missions = missionService.missions(
+            MissionInputs(
+                profile = profile(),
+                dashboard = dashboard(),
+                financialGps = gps,
+                goals = goals,
+                lifeEvents = events,
+                moneyLeaks = leaks,
+                readiness = readiness,
+                opportunities = opportunities,
+                simulations = simulations,
+            ),
+        )
+        val missionControl = missionService.missionControl(missions)
+        val missionAnalytics = missionService.analytics(missions)
         return FinancialCopilotContext(
             insights = insightsEngine.generate(dashboard(), leaks, goals),
             financialGps = gps,
@@ -242,6 +284,9 @@ class FutureMeProduct {
             opportunities = opportunities,
             nextBestAction = opportunityRankingEngine.nextBestAction(opportunities),
             currentMonthlyReview = reviews.first(),
+            missions = missions,
+            missionControl = missionControl,
+            missionAnalytics = missionAnalytics,
         )
     }
 
@@ -287,6 +332,9 @@ class FutureMeProduct {
             futureOutcomeContributions = futureOutcomeContributions(),
             bankingVisionDemo = bankingVision(),
             analyticsEvents = analyticsEvents(),
+            missions = context.missions,
+            missionControl = context.missionControl,
+            missionAnalytics = context.missionAnalytics,
             suggestedQuestions = suggestedQuestions(),
             designTokens = FutureMeDesignTokens.current,
             disclaimer = DISCLAIMER,

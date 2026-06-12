@@ -23,7 +23,6 @@ import {
   Sparkles,
   Sun,
   TrendingUp,
-  WalletCards,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -39,6 +38,7 @@ import {
   saveDecision,
   simulateScenario,
   type DecisionJournalEntry,
+  type MissionType,
   type ProductBootstrap,
   type ReadinessCategory,
   type Scenario,
@@ -86,12 +86,27 @@ const scenarioIcon = (type: ScenarioType) => {
   }
 };
 
+const missionIcon = (type: MissionType) => {
+  const props = { size: 20, strokeWidth: 1.9 };
+  switch (type) {
+    case "BUY_HOME": return <Home {...props} />;
+    case "HAVE_CHILD": return <Baby {...props} />;
+    case "RELOCATE": return <MoveRight {...props} />;
+    case "RETIRE_EARLY": return <TrendingUp {...props} />;
+    case "BECOME_DEBT_FREE": return <CreditCard {...props} />;
+    case "BUILD_EMERGENCY_FUND": return <ShieldCheck {...props} />;
+    case "SUPPORT_PARENTS": return <Landmark {...props} />;
+    case "START_BUSINESS": return <BriefcaseBusiness {...props} />;
+  }
+};
+
 function App() {
   const [loadState, setLoadState] = useState<
     | { status: "loading" }
     | { status: "error"; message: string }
     | { status: "content"; data: ProductBootstrap }
   >({ status: "loading" });
+  const [selectedMissionId, setSelectedMissionId] = useState("mission-home");
   const [selectedId, setSelectedId] = useState("move-to-texas");
   const [leftId, setLeftId] = useState("move-to-texas");
   const [rightId, setRightId] = useState("stay-in-new-jersey");
@@ -104,13 +119,14 @@ function App() {
   const [showAllScenarios, setShowAllScenarios] = useState(false);
   const [showFinancialDetails, setShowFinancialDetails] = useState(false);
   const [acceptedAction, setAcceptedAction] = useState(false);
+  const [acceptedMissionAction, setAcceptedMissionAction] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(true);
   const [decisionJournal, setDecisionJournal] = useState<DecisionJournalEntry[]>([]);
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 0,
-      text: "Tell me which life decision matters next. I will identify the blockers, tradeoffs, and highest-leverage action.",
+      text: "Tell me which mission matters now. I will explain the blocker, timeline, and highest-impact action.",
       isUser: false,
     },
   ]);
@@ -161,6 +177,9 @@ function App() {
   }
 
   const { data } = loadState;
+  const selectedMission =
+    data.missions.find((mission) => mission.missionId === selectedMissionId) ??
+    data.missionControl.activeMissions[0];
   const selectable = data.scenarios;
   if (selectable.length < 2) {
     return <EmptyState onRetry={loadDashboard} />;
@@ -197,7 +216,16 @@ function App() {
   const submitQuestion = (prompt: string) => {
     const normalized = prompt.trim();
     if (!normalized) return;
-    const response = askFutureMe(normalized, selected.id);
+    const shouldScopeToMission = [
+      "what should i do next",
+      "biggest blocker",
+      "why is my readiness low",
+      "ready faster",
+    ].some((phrase) => normalized.toLowerCase().includes(phrase));
+    const coachPrompt = shouldScopeToMission
+      ? `${normalized} Focus on my ${selectedMission.title} mission.`
+      : normalized;
+    const response = askFutureMe(coachPrompt, selected.id);
     setMessages((current) => [
       ...current,
       { id: Date.now(), text: normalized, isUser: true },
@@ -217,6 +245,11 @@ function App() {
     setAcceptedAction(true);
   };
 
+  const focusMissionAction = () => {
+    recordAnalyticsEvent("mission_action_completed", selectedMission.nextAction.id);
+    setAcceptedMissionAction(true);
+  };
+
   const saveSelectedDecision = () => {
     const entry = saveDecision(selected.id);
     setDecisionJournal((current) => [entry, ...current.filter((item) => item.id !== entry.id)]);
@@ -233,13 +266,10 @@ function App() {
           <X size={20} />
         </button>
         <nav>
-          <a className="active" href="#banking-intelligence"><BarChart3 size={19} />Top action</a>
-          <a href="#readiness"><ShieldCheck size={19} />Readiness</a>
-          <a href="#scenarios"><Sparkles size={19} />Decision simulator</a>
-          <a href="#monthly-review"><RefreshCw size={19} />Monthly review</a>
-          <a href="#timeline"><TrendingUp size={19} />Life timeline</a>
-          <a href="#improvement-plan"><PiggyBank size={19} />Improvement plan</a>
-          <a href="#compare"><WalletCards size={19} />Compare</a>
+          <a className="active" href="#mission-control"><BarChart3 size={19} />Mission Control</a>
+          <a href="#active-missions"><ShieldCheck size={19} />Active missions</a>
+          <a href="#mission-timeline"><TrendingUp size={19} />Mission timeline</a>
+          <a href="#mission-analytics"><BarChart3 size={19} />Mission analytics</a>
           <button
             className="nav-button"
             onClick={() => {
@@ -248,9 +278,9 @@ function App() {
             }}
             aria-expanded={showFinancialDetails}
           >
-            <CircleDollarSign size={19} />Financial details
+            <CircleDollarSign size={19} />Supporting services
           </button>
-          <button className="nav-button" onClick={() => setAssistantOpen(true)}><MessageCircle size={19} />AI coach</button>
+          <button className="nav-button" onClick={() => setAssistantOpen(true)}><MessageCircle size={19} />Mission Coach</button>
         </nav>
         <div className="sidebar-spacer" />
         <div className="privacy-card">
@@ -273,8 +303,8 @@ function App() {
             <Menu size={22} />
           </button>
           <div>
-            <p className="eyebrow">Life readiness intelligence</p>
-            <h1>How ready are you for your next life decision?</h1>
+            <p className="eyebrow">Mission Control</p>
+            <h1>Your path to the next major life decision</h1>
           </div>
           <div className="header-actions">
             <button className="icon-button" aria-label="Notifications"><Bell size={19} /></button>
@@ -285,18 +315,188 @@ function App() {
             >
               {darkMode ? <Sun size={19} /> : <Moon size={19} />}
             </button>
-            <button className="primary-button" aria-label="Open FutureMe AI coach" onClick={() => setAssistantOpen(true)}>
-              <Sparkles size={17} />Ask your coach
+            <button className="primary-button" aria-label="Open FutureMe Mission Coach" onClick={() => setAssistantOpen(true)}>
+              <Sparkles size={17} />Ask Mission Coach
             </button>
           </div>
         </header>
 
         <div className="offline-banner" role="status">
           <ShieldCheck size={16} />
-          <span>Shared readiness engine active. Demo data stays local.</span>
-          <strong>Version 4</strong>
+          <span>Mission engines active. Demo data stays local.</span>
+          <strong>Mission first</strong>
         </div>
 
+        <section className="mission-control-hero" id="mission-control" aria-labelledby="mission-control-title">
+          <div className="mission-hero-copy">
+            <p className="eyebrow light">Mission Control</p>
+            <h2 id="mission-control-title">What are you preparing for?</h2>
+            <p>See readiness, blockers, your next action, and the path forward.</p>
+          </div>
+          <div className="mission-hero-score">
+            <span>Overall progress</span>
+            <strong>{data.missionControl.missionProgressPercentage}%</strong>
+            <div><i style={{ width: `${data.missionControl.missionProgressPercentage}%` }} /></div>
+          </div>
+          <div className="mission-hero-extremes">
+            <div>
+              <span>Most ready</span>
+              <strong>{data.missionControl.highestReadinessMission.title}</strong>
+              <b>{data.missionControl.highestReadinessMission.readinessScore}%</b>
+            </div>
+            <div>
+              <span>Needs focus</span>
+              <strong>{data.missionControl.lowestReadinessMission.title}</strong>
+              <b>{data.missionControl.lowestReadinessMission.readinessScore}%</b>
+            </div>
+          </div>
+        </section>
+
+        <section className="mission-section" id="active-missions" aria-labelledby="active-missions-title">
+          <div className="mission-section-heading">
+            <div>
+              <p className="eyebrow">Active missions</p>
+              <h2 id="active-missions-title">Choose the decision that matters now</h2>
+            </div>
+            <span>{data.missionControl.activeMissions.length} active</span>
+          </div>
+          <div className="mission-card-grid">
+            {data.missionControl.activeMissions.map((mission) => (
+              <button
+                className={`mission-card ${mission.missionId === selectedMission.missionId ? "active" : ""}`}
+                key={mission.missionId}
+                onClick={() => {
+                  setSelectedMissionId(mission.missionId);
+                  setAcceptedMissionAction(false);
+                  recordAnalyticsEvent("readiness_viewed", mission.missionId);
+                }}
+                aria-pressed={mission.missionId === selectedMission.missionId}
+              >
+                <span className="mission-card-icon">{missionIcon(mission.missionType)}</span>
+                <span className="mission-card-copy">
+                  <strong>{mission.title}</strong>
+                  <small>{readinessLevel(mission.status)}</small>
+                </span>
+                <b>{mission.readinessScore}</b>
+                <span className="mission-card-progress"><i style={{ width: `${mission.progressPercentage}%` }} /></span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="mission-detail-grid" aria-label={`${selectedMission.title} mission detail`}>
+          <article className="mission-readiness-panel">
+            <div className="mission-detail-title">
+              <div className="mission-score-ring">
+                <strong>{selectedMission.readinessScore}</strong>
+                <span>ready</span>
+              </div>
+              <div>
+                <p className="eyebrow">Mission readiness · {readinessLevel(selectedMission.status)}</p>
+                <h2>{selectedMission.title}</h2>
+                <p>{selectedMission.description}</p>
+              </div>
+            </div>
+            <div className="mission-factor-grid">
+              {selectedMission.readinessFactors.map((factor) => (
+                <div key={factor.category}>
+                  <span>{factor.title.replace(" readiness", "")}</span>
+                  <strong>{factor.score}%</strong>
+                  <i><b style={{ width: `${factor.score}%` }} /></i>
+                </div>
+              ))}
+            </div>
+            <div className="mission-blocker">
+              <AlertCircle size={18} />
+              <div><span>Biggest blocker</span><strong>{selectedMission.blockers[0]}</strong></div>
+            </div>
+          </article>
+
+          <article className="mission-action-panel">
+            <p className="eyebrow light">Next best action</p>
+            <h2>{selectedMission.nextAction.title}</h2>
+            <p>{selectedMission.nextAction.description}</p>
+            <div className="mission-action-impact">
+              <div><span>Readiness</span><strong>+{selectedMission.nextAction.estimatedReadinessIncrease}</strong></div>
+              <div><span>Timeline</span><strong>-{selectedMission.nextAction.estimatedTimelineReductionMonths} mo</strong></div>
+              <div><span>5-year value</span><strong>{money(selectedMission.nextAction.fiveYearBenefitEstimate, true)}</strong></div>
+            </div>
+            <button onClick={focusMissionAction} disabled={acceptedMissionAction}>
+              {acceptedMissionAction ? "Added to mission plan" : "Make this my focus"} <ArrowRight size={18} />
+            </button>
+          </article>
+        </section>
+
+        <section className="mission-timeline-section" id="mission-timeline" aria-labelledby="mission-timeline-title">
+          <div className="mission-section-heading">
+            <div><p className="eyebrow">Mission timeline</p><h2 id="mission-timeline-title">{selectedMission.title} path forward</h2></div>
+            <span>Target {displayDate(selectedMission.targetDate)}</span>
+          </div>
+          <div className="mission-timeline-track">
+            {selectedMission.timeline.map((point) => (
+              <article key={point.horizon}>
+                <span>{point.label}</span>
+                <strong>{point.readinessScore}%</strong>
+                <p>{point.milestone}</p>
+                <small>{point.completedActions} actions complete</small>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="mission-intelligence-grid" id="mission-analytics">
+          <article>
+            <p className="eyebrow">Mission risks</p>
+            {data.missionControl.risks.map((risk) => (
+              <button key={risk.id} onClick={() => setSelectedMissionId(risk.missionId)}>
+                <AlertCircle size={17} />
+                <span><strong>{risk.title}</strong><small>{risk.description}</small></span>
+                <b>{risk.impactLabel}</b>
+              </button>
+            ))}
+          </article>
+          <article>
+            <p className="eyebrow">Mission opportunities</p>
+            {data.missionControl.opportunities.map((opportunity) => (
+              <button key={opportunity.id} onClick={() => setSelectedMissionId(opportunity.missionId)}>
+                <TrendingUp size={17} />
+                <span><strong>{opportunity.title}</strong><small>{opportunity.description}</small></span>
+                <b>{opportunity.impactLabel}</b>
+              </button>
+            ))}
+          </article>
+          <article className="mission-analytics-panel">
+            <p className="eyebrow">Mission analytics</p>
+            <div className="mission-analytics-stats">
+              <div><strong>{data.missionAnalytics.readinessImprovements}</strong><span>readiness gains</span></div>
+              <div><strong>{data.missionAnalytics.actionsCompleted}</strong><span>actions done</span></div>
+              <div><strong>{data.missionAnalytics.timelineImprovements}</strong><span>months saved</span></div>
+            </div>
+            {data.missionAnalytics.trends.slice(0, 3).map((trend) => (
+              <div className="mission-trend" key={trend.missionId}>
+                <span>{trend.title}</span><b>+{trend.readinessChange} pts</b>
+              </div>
+            ))}
+          </article>
+        </section>
+
+        <section className="supporting-services-toggle" aria-labelledby="supporting-services-title">
+          <div>
+            <p className="eyebrow">Supporting services</p>
+            <h2 id="supporting-services-title">Open the financial intelligence behind each mission</h2>
+          </div>
+          <button
+            className="secondary-button"
+            onClick={() => setShowFinancialDetails((current) => !current)}
+            aria-expanded={showFinancialDetails}
+          >
+            {showFinancialDetails ? "Hide supporting services" : "View supporting services"}
+            <ChevronDown className={showFinancialDetails ? "rotated" : ""} size={18} />
+          </button>
+        </section>
+
+        {showFinancialDetails && (
+          <div className="supporting-services">
         <section className="next-action-card" id="banking-intelligence" aria-labelledby="next-action-title">
           <div>
             <p className="eyebrow light">My highest impact action</p>
@@ -973,6 +1173,8 @@ function App() {
             ))}
           </div>
         </section>
+          </div>
+        )}
 
         <footer>
           <ShieldCheck size={15} />
@@ -1002,15 +1204,15 @@ function App() {
           >
             <header>
               <div>
-                <p className="eyebrow">FutureMe AI coach</p>
-                <h2 id="assistant-title">Your financial strategist</h2>
+                <p className="eyebrow">FutureMe Mission Coach</p>
+                <h2 id="assistant-title">Move the mission forward</h2>
               </div>
               <button className="icon-button" onClick={() => setAssistantOpen(false)} aria-label="Close assistant">
                 <X size={19} />
               </button>
             </header>
             <p className="assistant-context">
-              Grounded in shared readiness, risk, and scenario results. Current decision: <strong>{selected.title}</strong>.
+              Grounded in readiness, blockers, timelines, and risk. Current mission: <strong>{selectedMission.title}</strong>.
             </p>
             <div className="suggestion-chips" aria-label="Suggested questions">
               {data.suggestedQuestions.map((suggestion) => (
@@ -1033,12 +1235,12 @@ function App() {
                 submitQuestion(question);
               }}
             >
-              <label className="sr-only" htmlFor="assistant-question">Financial strategist question</label>
+              <label className="sr-only" htmlFor="assistant-question">Mission Coach question</label>
               <textarea
                 id="assistant-question"
                 value={question}
                 onChange={(event) => setQuestion(event.target.value)}
-                placeholder="Ask what is blocking your next life decision"
+                placeholder="Ask what will move this mission forward"
                 rows={2}
               />
               <button type="submit" disabled={!question.trim()} aria-label="Ask FutureMe AI coach">

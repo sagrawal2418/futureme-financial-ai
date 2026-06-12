@@ -41,6 +41,10 @@ describe("shared Kotlin/JS product bridge", () => {
     expect(product.nextBestAction.recommendationId).toBe(product.opportunities[0].id);
     expect(product.scenarioImpactHeatmaps).toHaveLength(product.scenarios.length);
     expect(product.bankingVisionDemo.steps).toHaveLength(7);
+    expect(product.missions).toHaveLength(8);
+    expect(product.missionControl.activeMissions).toHaveLength(8);
+    expect(product.missionControl.nextBestAction.estimatedReadinessIncrease).toBeGreaterThan(0);
+    expect(product.missionAnalytics.trends).toHaveLength(8);
   });
 
   it("returns projections and explainable risk from the shared engine", () => {

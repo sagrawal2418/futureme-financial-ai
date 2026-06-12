@@ -42,6 +42,9 @@ struct FutureMeDashboardContent {
     let futureOutcomeContributions: [FutureOutcomeContribution]
     let bankingVisionDemo: BankingVisionDemo
     let analyticsEvents: [AnalyticsEvent]
+    let missions: [Mission]
+    let missionControl: MissionControlSnapshot
+    let missionAnalytics: MissionAnalyticsSnapshot
     let suggestions: [SuggestedQuestion]
     let messages: [AssistantMessage]
     let disclaimer: String
@@ -121,11 +124,14 @@ final class FutureMeViewModel: ObservableObject {
                 futureOutcomeContributions: bootstrap.futureOutcomeContributions,
                 bankingVisionDemo: bootstrap.bankingVisionDemo,
                 analyticsEvents: bootstrap.analyticsEvents,
+                missions: bootstrap.missions,
+                missionControl: bootstrap.missionControl,
+                missionAnalytics: bootstrap.missionAnalytics,
                 suggestions: bootstrap.suggestedQuestions,
                 messages: [
                     AssistantMessage(
                         id: UUID(),
-                        text: "Tell me which life decision matters next. I will identify the blockers, tradeoffs, and highest-leverage action.",
+                        text: "Tell me which mission matters now. I will explain the blocker, timeline, and highest-impact action.",
                         isUser: false
                     ),
                 ],
@@ -171,6 +177,9 @@ final class FutureMeViewModel: ObservableObject {
                 futureOutcomeContributions: content.futureOutcomeContributions,
                 bankingVisionDemo: content.bankingVisionDemo,
                 analyticsEvents: product.analyticsEvents(),
+                missions: content.missions,
+                missionControl: content.missionControl,
+                missionAnalytics: content.missionAnalytics,
                 suggestions: content.suggestions,
                 messages: content.messages,
                 disclaimer: content.disclaimer
@@ -214,6 +223,9 @@ final class FutureMeViewModel: ObservableObject {
                 futureOutcomeContributions: content.futureOutcomeContributions,
                 bankingVisionDemo: content.bankingVisionDemo,
                 analyticsEvents: content.analyticsEvents,
+                missions: content.missions,
+                missionControl: content.missionControl,
+                missionAnalytics: content.missionAnalytics,
                 suggestions: content.suggestions,
                 messages: content.messages,
                 disclaimer: content.disclaimer
@@ -266,6 +278,9 @@ final class FutureMeViewModel: ObservableObject {
                 futureOutcomeContributions: content.futureOutcomeContributions,
                 bankingVisionDemo: content.bankingVisionDemo,
                 analyticsEvents: product.analyticsEvents(),
+                missions: content.missions,
+                missionControl: content.missionControl,
+                missionAnalytics: content.missionAnalytics,
                 suggestions: content.suggestions,
                 messages: messages,
                 disclaimer: content.disclaimer
@@ -280,6 +295,17 @@ final class FutureMeViewModel: ObservableObject {
         _ = product.recordAnalyticsEvent(
             typeCode: "recommendation_accepted",
             subjectId: content.nextBestAction.recommendationId
+        )
+        replace(content, analyticsEvents: product.analyticsEvents())
+    }
+
+    func acceptMissionAction(_ actionId: String) {
+        guard case let .content(content) = state else {
+            return
+        }
+        _ = product.recordAnalyticsEvent(
+            typeCode: "mission_action_completed",
+            subjectId: actionId
         )
         replace(content, analyticsEvents: product.analyticsEvents())
     }
@@ -329,6 +355,9 @@ final class FutureMeViewModel: ObservableObject {
                 futureOutcomeContributions: content.futureOutcomeContributions,
                 bankingVisionDemo: content.bankingVisionDemo,
                 analyticsEvents: analyticsEvents ?? content.analyticsEvents,
+                missions: content.missions,
+                missionControl: content.missionControl,
+                missionAnalytics: content.missionAnalytics,
                 suggestions: content.suggestions,
                 messages: content.messages,
                 disclaimer: content.disclaimer

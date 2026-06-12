@@ -145,4 +145,7 @@ data class FinancialCopilotContext(
     val opportunities: List<OpportunityRecommendation>,
     val nextBestAction: NextBestAction,
     val currentMonthlyReview: MonthlyFinancialReview,
+    val missions: List<Mission>,
+    val missionControl: MissionControlSnapshot,
+    val missionAnalytics: MissionAnalyticsSnapshot,
 )
