@@ -125,19 +125,19 @@ private struct ProductHomeTab: View {
                     ProductSignalCard(
                         eyebrow: "READINESS CHANGE",
                         title: "\(content.financialExplainability.netChange >= 0 ? "+" : "")\(content.financialExplainability.netChange) points",
-                        body: content.financialExplainability.summary,
+                        detail: content.financialExplainability.summary,
                         systemImage: "arrow.up.right"
                     )
                     ProductSignalCard(
                         eyebrow: "BIGGEST RISK",
                         title: content.missionControl.risks.first?.title ?? "No critical risk",
-                        body: content.missionControl.risks.first?.description ?? "No new risk was modeled.",
+                        detail: content.missionControl.risks.first?.description ?? "No new risk was modeled.",
                         systemImage: "exclamationmark.triangle"
                     )
                     ProductSignalCard(
                         eyebrow: "BIGGEST OPPORTUNITY",
                         title: content.missionControl.opportunities.first?.title ?? "Stay on plan",
-                        body: content.missionControl.opportunities.first?.description
+                        detail: content.missionControl.opportunities.first?.description
                             ?? "Continue the current action plan.",
                         systemImage: "lightbulb"
                     )
@@ -190,7 +190,7 @@ private struct ProductHomeTab: View {
 private struct ProductSignalCard: View {
     let eyebrow: String
     let title: String
-    let body: String
+    let detail: String
     let systemImage: String
 
     var body: some View {
@@ -206,7 +206,7 @@ private struct ProductSignalCard: View {
                 Text(title)
                     .font(.headline)
                     .foregroundStyle(AppTheme.ink)
-                Text(body)
+                Text(detail)
                     .font(.caption)
                     .foregroundStyle(AppTheme.muted)
             }
