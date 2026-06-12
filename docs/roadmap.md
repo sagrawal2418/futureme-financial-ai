@@ -10,20 +10,26 @@
 - Five-horizon Life Timeline
 - Guided Executive Demo Experience
 
-## Version 4: Connected Twin
+## Version 4: Banking Intelligence
+
+- Financial opportunity ranking and one next-best action
+- Financial health explainability and scenario heatmaps
+- Monthly financial review history
+- Decision journal with expected versus actual outcomes
+- Future outcome attribution
+- Local analytics event model
+- FutureMe Banking Vision executive demo
+
+## Version 5: Connected and Governed Banking
 
 - Editable profile and custom goal inputs across all clients
 - Authenticated sync and encrypted persistence
 - Plaid Sandbox through backend token vaulting
 - Claude transport with prompt registry and evaluation datasets
-- Assumption versioning and Monte Carlo ranges
+- Assumption versioning and recommendation policy controls
 - Real-time insight delivery and alert preferences
-
-## Version 5: Intelligent Banking
-
 - Core banking and CRM adapters
 - Banker-assisted planning sessions
-- Explainable next-best-action orchestration
 - Product eligibility and prequalification handoffs
 - White-label themes and multi-tenant policy
 

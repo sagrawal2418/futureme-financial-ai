@@ -303,6 +303,12 @@ object MockFinancialData {
 
     val suggestedQuestions = listOf(
         SuggestedQuestion(
+            "next-best-action",
+            "Highest-impact action",
+            "If I can only do one thing this month, what should it be?",
+            "Banking intelligence",
+        ),
+        SuggestedQuestion(
             "home-blockers",
             "Home blockers",
             "What is preventing me from buying a home?",

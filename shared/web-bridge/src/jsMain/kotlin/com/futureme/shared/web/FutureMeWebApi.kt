@@ -34,4 +34,13 @@ object FutureMeWebApi {
                 ),
             ),
         )
+
+    fun recordAnalyticsEventJson(typeCode: String, subjectId: String): String =
+        json.encodeToString(product.recordAnalyticsEvent(typeCode, subjectId))
+
+    fun saveDecisionJson(scenarioId: String): String =
+        json.encodeToString(product.saveDecision(scenarioId))
+
+    fun decisionJournalJson(): String =
+        json.encodeToString(product.decisionJournal())
 }

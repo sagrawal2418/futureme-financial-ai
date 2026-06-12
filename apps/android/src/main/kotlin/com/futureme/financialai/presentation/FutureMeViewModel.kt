@@ -7,9 +7,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.futureme.shared.domain.FutureMeProduct
 import com.futureme.shared.models.AssistantPrompt
+import com.futureme.shared.models.AnalyticsEvent
+import com.futureme.shared.models.BankingVisionDemo
 import com.futureme.shared.models.DashboardSnapshot
+import com.futureme.shared.models.DecisionJournalEntry
 import com.futureme.shared.models.FinancialProfile
 import com.futureme.shared.models.FinancialGpsResult
+import com.futureme.shared.models.FinancialExplainability
+import com.futureme.shared.models.FutureOutcomeContribution
 import com.futureme.shared.models.GoalProbabilityResult
 import com.futureme.shared.models.Insight
 import com.futureme.shared.models.ExecutiveDemoExperience
@@ -18,15 +23,20 @@ import com.futureme.shared.models.LifeEventPlan
 import com.futureme.shared.models.LifeReadinessResult
 import com.futureme.shared.models.LifeTimelinePoint
 import com.futureme.shared.models.MoneyLeak
+import com.futureme.shared.models.MonthlyFinancialReview
+import com.futureme.shared.models.NextBestAction
+import com.futureme.shared.models.OpportunityRecommendation
 import com.futureme.shared.models.ReadinessImprovementPlan
 import com.futureme.shared.models.Scenario
 import com.futureme.shared.models.ScenarioComparison
+import com.futureme.shared.models.ScenarioImpactHeatmap
 import com.futureme.shared.models.ScenarioResult
 import com.futureme.shared.models.SuggestedQuestion
 import com.futureme.shared.models.UserIdentity
 
 enum class FutureMeScreen {
     DASHBOARD,
+    BANKING,
     READINESS,
     TIMELINE,
     SCENARIOS,
@@ -34,6 +44,7 @@ enum class FutureMeScreen {
     COMPARISON,
     LIFE_EVENTS,
     MONEY_LEAKS,
+    REVIEW,
     ASSISTANT,
 }
 
@@ -59,6 +70,15 @@ data class FutureMeContent(
     val decisionSimulations: List<LifeDecisionSimulation>,
     val lifeTimeline: List<LifeTimelinePoint>,
     val executiveDemo: ExecutiveDemoExperience,
+    val opportunities: List<OpportunityRecommendation>,
+    val nextBestAction: NextBestAction,
+    val financialExplainability: FinancialExplainability,
+    val scenarioImpactHeatmaps: List<ScenarioImpactHeatmap>,
+    val monthlyReviews: List<MonthlyFinancialReview>,
+    val decisionJournal: List<DecisionJournalEntry>,
+    val futureOutcomeContributions: List<FutureOutcomeContribution>,
+    val bankingVisionDemo: BankingVisionDemo,
+    val analyticsEvents: List<AnalyticsEvent>,
     val suggestedQuestions: List<SuggestedQuestion>,
     val disclaimer: String,
     val selectedScenario: Scenario? = null,
@@ -116,6 +136,15 @@ class FutureMeViewModel(
                         decisionSimulations = bootstrap.decisionSimulations,
                         lifeTimeline = bootstrap.lifeTimeline,
                         executiveDemo = bootstrap.executiveDemo,
+                        opportunities = bootstrap.opportunities,
+                        nextBestAction = bootstrap.nextBestAction,
+                        financialExplainability = bootstrap.financialExplainability,
+                        scenarioImpactHeatmaps = bootstrap.scenarioImpactHeatmaps,
+                        monthlyReviews = bootstrap.monthlyReviews,
+                        decisionJournal = bootstrap.decisionJournal,
+                        futureOutcomeContributions = bootstrap.futureOutcomeContributions,
+                        bankingVisionDemo = bootstrap.bankingVisionDemo,
+                        analyticsEvents = bootstrap.analyticsEvents,
                         suggestedQuestions = bootstrap.suggestedQuestions,
                         disclaimer = bootstrap.disclaimer,
                         comparison = product.compare("move-to-texas", "stay-in-new-jersey"),
@@ -128,6 +157,11 @@ class FutureMeViewModel(
     }
 
     fun navigate(screen: FutureMeScreen) {
+        when (screen) {
+            FutureMeScreen.READINESS -> product.recordAnalyticsEvent("readiness_viewed")
+            FutureMeScreen.REVIEW -> product.recordAnalyticsEvent("monthly_review_opened")
+            else -> Unit
+        }
         updateContent { it.copy(screen = screen) }
     }
 
@@ -135,6 +169,7 @@ class FutureMeViewModel(
         runCatching {
             product.simulate(scenario.id)
         }.onSuccess { result ->
+            product.recordAnalyticsEvent("scenario_created", scenario.id)
             updateContent {
                 it.copy(
                     selectedScenario = scenario,
@@ -209,6 +244,27 @@ class FutureMeViewModel(
                     isUser = false,
                 ),
                 screen = FutureMeScreen.ASSISTANT,
+            )
+        }
+    }
+
+    fun acceptRecommendation() {
+        val current = (uiState as? FutureMeUiState.Content)?.data ?: return
+        product.recordAnalyticsEvent(
+            "recommendation_accepted",
+            current.nextBestAction.recommendationId,
+        )
+        updateContent { it.copy(analyticsEvents = product.analyticsEvents()) }
+    }
+
+    fun saveDecision() {
+        val current = (uiState as? FutureMeUiState.Content)?.data ?: return
+        val scenarioId = current.selectedScenario?.id ?: return
+        product.saveDecision(scenarioId)
+        updateContent {
+            it.copy(
+                decisionJournal = product.decisionJournal(),
+                analyticsEvents = product.analyticsEvents(),
             )
         }
     }

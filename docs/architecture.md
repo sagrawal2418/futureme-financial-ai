@@ -11,6 +11,7 @@ FutureMe Financial uses native Android and iOS presentation, React on web, and o
 | `shared/models` | Serializable profile, account, transaction, insight, goal, event, scenario, readiness, timeline, GPS, and coach contracts |
 | `shared/calculators` | Pure formulas |
 | `shared/life-readiness-engine` | Readiness scoring, improvement plans, decision impact, and life timeline |
+| `shared/banking-intelligence` | Opportunity ranking, explainability, heatmaps, reviews, journal entries, and outcome attribution |
 | `shared/scenario-engine` | Five-year projection and comparison policy |
 | `shared/financial-gps` | Current versus improved trajectory |
 | `shared/goal-engine` | Deterministic goal-readiness probability |
@@ -42,6 +43,7 @@ flowchart TB
 
     P --> S["Scenario engine"]
     P --> R["Life Readiness Engine"]
+    P --> BI["Banking Intelligence"]
     P --> G["Financial GPS"]
     P --> GO["Goal engine"]
     P --> M["Money leak detector"]

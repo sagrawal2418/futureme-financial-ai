@@ -33,6 +33,15 @@ struct FutureMeDashboardContent {
     let decisionSimulations: [LifeDecisionSimulation]
     let lifeTimeline: [LifeTimelinePoint]
     let executiveDemo: ExecutiveDemoExperience
+    let opportunities: [OpportunityRecommendation]
+    let nextBestAction: NextBestAction
+    let financialExplainability: FinancialExplainability
+    let scenarioImpactHeatmaps: [ScenarioImpactHeatmap]
+    let monthlyReviews: [MonthlyFinancialReview]
+    let decisionJournal: [DecisionJournalEntry]
+    let futureOutcomeContributions: [FutureOutcomeContribution]
+    let bankingVisionDemo: BankingVisionDemo
+    let analyticsEvents: [AnalyticsEvent]
     let suggestions: [SuggestedQuestion]
     let messages: [AssistantMessage]
     let disclaimer: String
@@ -103,6 +112,15 @@ final class FutureMeViewModel: ObservableObject {
                 decisionSimulations: bootstrap.decisionSimulations,
                 lifeTimeline: bootstrap.lifeTimeline,
                 executiveDemo: bootstrap.executiveDemo,
+                opportunities: bootstrap.opportunities,
+                nextBestAction: bootstrap.nextBestAction,
+                financialExplainability: bootstrap.financialExplainability,
+                scenarioImpactHeatmaps: bootstrap.scenarioImpactHeatmaps,
+                monthlyReviews: bootstrap.monthlyReviews,
+                decisionJournal: bootstrap.decisionJournal,
+                futureOutcomeContributions: bootstrap.futureOutcomeContributions,
+                bankingVisionDemo: bootstrap.bankingVisionDemo,
+                analyticsEvents: bootstrap.analyticsEvents,
                 suggestions: bootstrap.suggestedQuestions,
                 messages: [
                     AssistantMessage(
@@ -124,6 +142,7 @@ final class FutureMeViewModel: ObservableObject {
             return
         }
 
+        _ = product.recordAnalyticsEvent(typeCode: "scenario_created", subjectId: scenario.id)
         state = .content(
             FutureMeDashboardContent(
                 displayName: content.displayName,
@@ -143,6 +162,15 @@ final class FutureMeViewModel: ObservableObject {
                 decisionSimulations: content.decisionSimulations,
                 lifeTimeline: content.lifeTimeline,
                 executiveDemo: content.executiveDemo,
+                opportunities: content.opportunities,
+                nextBestAction: content.nextBestAction,
+                financialExplainability: content.financialExplainability,
+                scenarioImpactHeatmaps: content.scenarioImpactHeatmaps,
+                monthlyReviews: content.monthlyReviews,
+                decisionJournal: content.decisionJournal,
+                futureOutcomeContributions: content.futureOutcomeContributions,
+                bankingVisionDemo: content.bankingVisionDemo,
+                analyticsEvents: product.analyticsEvents(),
                 suggestions: content.suggestions,
                 messages: content.messages,
                 disclaimer: content.disclaimer
@@ -177,6 +205,15 @@ final class FutureMeViewModel: ObservableObject {
                 decisionSimulations: content.decisionSimulations,
                 lifeTimeline: content.lifeTimeline,
                 executiveDemo: content.executiveDemo,
+                opportunities: content.opportunities,
+                nextBestAction: content.nextBestAction,
+                financialExplainability: content.financialExplainability,
+                scenarioImpactHeatmaps: content.scenarioImpactHeatmaps,
+                monthlyReviews: content.monthlyReviews,
+                decisionJournal: content.decisionJournal,
+                futureOutcomeContributions: content.futureOutcomeContributions,
+                bankingVisionDemo: content.bankingVisionDemo,
+                analyticsEvents: content.analyticsEvents,
                 suggestions: content.suggestions,
                 messages: content.messages,
                 disclaimer: content.disclaimer
@@ -220,8 +257,80 @@ final class FutureMeViewModel: ObservableObject {
                 decisionSimulations: content.decisionSimulations,
                 lifeTimeline: content.lifeTimeline,
                 executiveDemo: content.executiveDemo,
+                opportunities: content.opportunities,
+                nextBestAction: content.nextBestAction,
+                financialExplainability: content.financialExplainability,
+                scenarioImpactHeatmaps: content.scenarioImpactHeatmaps,
+                monthlyReviews: content.monthlyReviews,
+                decisionJournal: content.decisionJournal,
+                futureOutcomeContributions: content.futureOutcomeContributions,
+                bankingVisionDemo: content.bankingVisionDemo,
+                analyticsEvents: product.analyticsEvents(),
                 suggestions: content.suggestions,
                 messages: messages,
+                disclaimer: content.disclaimer
+            )
+        )
+    }
+
+    func acceptRecommendation() {
+        guard case let .content(content) = state else {
+            return
+        }
+        _ = product.recordAnalyticsEvent(
+            typeCode: "recommendation_accepted",
+            subjectId: content.nextBestAction.recommendationId
+        )
+        replace(content, analyticsEvents: product.analyticsEvents())
+    }
+
+    func saveDecision() {
+        guard case let .content(content) = state else {
+            return
+        }
+        _ = product.saveDecision(scenarioId: content.selected.id)
+        replace(
+            content,
+            decisionJournal: product.decisionJournal(),
+            analyticsEvents: product.analyticsEvents()
+        )
+    }
+
+    private func replace(
+        _ content: FutureMeDashboardContent,
+        decisionJournal: [DecisionJournalEntry]? = nil,
+        analyticsEvents: [AnalyticsEvent]? = nil
+    ) {
+        state = .content(
+            FutureMeDashboardContent(
+                displayName: content.displayName,
+                householdName: content.householdName,
+                dashboard: content.dashboard,
+                scenarios: content.scenarios,
+                selected: content.selected,
+                result: content.result,
+                comparison: content.comparison,
+                insights: content.insights,
+                financialGps: content.financialGps,
+                goals: content.goals,
+                lifeEvents: content.lifeEvents,
+                moneyLeaks: content.moneyLeaks,
+                readiness: content.readiness,
+                readinessPlans: content.readinessPlans,
+                decisionSimulations: content.decisionSimulations,
+                lifeTimeline: content.lifeTimeline,
+                executiveDemo: content.executiveDemo,
+                opportunities: content.opportunities,
+                nextBestAction: content.nextBestAction,
+                financialExplainability: content.financialExplainability,
+                scenarioImpactHeatmaps: content.scenarioImpactHeatmaps,
+                monthlyReviews: content.monthlyReviews,
+                decisionJournal: decisionJournal ?? content.decisionJournal,
+                futureOutcomeContributions: content.futureOutcomeContributions,
+                bankingVisionDemo: content.bankingVisionDemo,
+                analyticsEvents: analyticsEvents ?? content.analyticsEvents,
+                suggestions: content.suggestions,
+                messages: content.messages,
                 disclaimer: content.disclaimer
             )
         )

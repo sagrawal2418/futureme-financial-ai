@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.futureme.shared.models.Scenario
 import com.futureme.shared.models.LifeDecisionSimulation
 import com.futureme.shared.models.ScenarioResult
+import com.futureme.shared.models.ScenarioImpactHeatmap
 import com.futureme.financialai.ui.components.ImpactTile
 import com.futureme.financialai.ui.components.InsightCard
 import com.futureme.financialai.ui.components.ProjectionCard
@@ -65,6 +66,8 @@ fun ScenarioDetailScreen(
     simulation: LifeDecisionSimulation,
     onBack: () -> Unit,
     onCompare: () -> Unit,
+    heatmap: ScenarioImpactHeatmap,
+    onSaveDecision: () -> Unit,
 ) {
     Column {
         OutlinedButton(
@@ -110,6 +113,11 @@ fun ScenarioDetailScreen(
             modifier = Modifier.padding(top = 14.dp),
         )
 
+        ScenarioImpactHeatmapCard(
+            heatmap = heatmap,
+            modifier = Modifier.padding(top = 14.dp),
+        )
+
         ProjectionCard(
             result = result,
             headline = "Projected net worth",
@@ -149,6 +157,12 @@ fun ScenarioDetailScreen(
                 },
         ) {
             Text("Compare scenarios")
+        }
+        OutlinedButton(
+            onClick = onSaveDecision,
+            modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+        ) {
+            Text("Save to decision journal")
         }
         Spacer(Modifier.height(24.dp))
     }

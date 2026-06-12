@@ -28,6 +28,7 @@ import com.futureme.financialai.presentation.FutureMeUiState
 import com.futureme.financialai.presentation.FutureMeViewModel
 import com.futureme.financialai.ui.components.Eyebrow
 import com.futureme.financialai.ui.screens.AssistantScreen
+import com.futureme.financialai.ui.screens.BankingIntelligenceScreen
 import com.futureme.financialai.ui.screens.CopilotHubScreen
 import com.futureme.financialai.ui.screens.ComparisonScreen
 import com.futureme.financialai.ui.screens.DashboardScreen
@@ -36,6 +37,7 @@ import com.futureme.financialai.ui.screens.LifeTimelineScreen
 import com.futureme.financialai.ui.screens.LoadingScreen
 import com.futureme.financialai.ui.screens.MessageScreen
 import com.futureme.financialai.ui.screens.MoneyLeakScreen
+import com.futureme.financialai.ui.screens.MonthlyReviewScreen
 import com.futureme.financialai.ui.screens.ScenarioDetailScreen
 import com.futureme.financialai.ui.screens.ScenarioListScreen
 
@@ -61,6 +63,8 @@ fun FutureMeApp(viewModel: FutureMeViewModel) {
             onScenarioClick = viewModel::openScenario,
             onCompare = viewModel::compare,
             onAskAssistant = viewModel::askAssistant,
+            onAcceptRecommendation = viewModel::acceptRecommendation,
+            onSaveDecision = viewModel::saveDecision,
         )
     }
 }
@@ -75,6 +79,8 @@ private fun ContentScaffold(
         com.futureme.shared.models.Scenario,
     ) -> Unit,
     onAskAssistant: (String) -> Unit,
+    onAcceptRecommendation: () -> Unit,
+    onSaveDecision: () -> Unit,
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -102,10 +108,10 @@ private fun ContentScaffold(
             ) {
                 listOf(
                     FutureMeScreen.DASHBOARD to "Overview",
-                    FutureMeScreen.READINESS to "Ready",
+                    FutureMeScreen.BANKING to "Actions",
                     FutureMeScreen.SCENARIOS to "Simulate",
-                    FutureMeScreen.TIMELINE to "Timeline",
-                    FutureMeScreen.LIFE_EVENTS to "Plan",
+                    FutureMeScreen.READINESS to "Ready",
+                    FutureMeScreen.REVIEW to "Review",
                 ).forEach { (screen, label) ->
                     NavigationBarItem(
                         selected = content.screen == screen,
@@ -151,6 +157,12 @@ private fun ContentScaffold(
                         onImproveOutlook = {
                             onAskAssistant("How can I improve my 5-year outlook?")
                         },
+                        onAcceptRecommendation = onAcceptRecommendation,
+                    )
+                    FutureMeScreen.BANKING -> BankingIntelligenceScreen(
+                        content = content,
+                        onAcceptRecommendation = onAcceptRecommendation,
+                        onAskAssistant = onAskAssistant,
                     )
                     FutureMeScreen.READINESS -> LifeReadinessDashboardScreen(
                         content = content,
@@ -168,6 +180,10 @@ private fun ContentScaffold(
                         },
                         onBack = { onNavigate(FutureMeScreen.SCENARIOS) },
                         onCompare = { onNavigate(FutureMeScreen.COMPARISON) },
+                        heatmap = content.scenarioImpactHeatmaps.first {
+                            it.scenarioId == content.selectedScenario?.id
+                        },
+                        onSaveDecision = onSaveDecision,
                     )
                     FutureMeScreen.COMPARISON -> ComparisonScreen(
                         comparison = content.comparison,
@@ -184,6 +200,7 @@ private fun ContentScaffold(
                         onOpenMoneyLeaks = { onNavigate(FutureMeScreen.MONEY_LEAKS) },
                     )
                     FutureMeScreen.MONEY_LEAKS -> MoneyLeakScreen(content.moneyLeaks)
+                    FutureMeScreen.REVIEW -> MonthlyReviewScreen(content)
                     FutureMeScreen.ASSISTANT -> AssistantScreen(
                         messages = content.messages,
                         suggestions = content.suggestedQuestions,

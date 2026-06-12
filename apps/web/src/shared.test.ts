@@ -4,6 +4,8 @@ import {
   askFutureMe,
   bootstrapProduct,
   compareScenarios,
+  recordAnalyticsEvent,
+  saveDecision,
   simulateScenario,
 } from "./shared";
 
@@ -35,6 +37,10 @@ describe("shared Kotlin/JS product bridge", () => {
       0, 6, 12, 36, 60,
     ]);
     expect(product.executiveDemo.steps).toHaveLength(5);
+    expect(product.opportunities.length).toBeGreaterThanOrEqual(8);
+    expect(product.nextBestAction.recommendationId).toBe(product.opportunities[0].id);
+    expect(product.scenarioImpactHeatmaps).toHaveLength(product.scenarios.length);
+    expect(product.bankingVisionDemo.steps).toHaveLength(7);
   });
 
   it("returns projections and explainable risk from the shared engine", () => {
@@ -54,5 +60,14 @@ describe("shared Kotlin/JS product bridge", () => {
       comparison.right.scenario.id,
     ]).toContain(comparison.preferredScenarioId);
     expect(response.answer).toContain("Move to Austin");
+  });
+
+  it("stores local banking events and decisions through the shared product", () => {
+    const event = recordAnalyticsEvent("recommendation_accepted", "top-action");
+    const decision = saveDecision("pay-off-cards");
+
+    expect(event.type).toBe("RECOMMENDATION_ACCEPTED");
+    expect(decision.relatedScenarioId).toBe("pay-off-cards");
+    expect(decision.status).toBe("PLANNED");
   });
 });

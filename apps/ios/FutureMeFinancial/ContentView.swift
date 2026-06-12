@@ -28,7 +28,9 @@ struct ContentView: View {
                 content: content,
                 onSelect: viewModel.select,
                 onCompare: viewModel.compare,
-                onAsk: viewModel.ask
+                onAsk: viewModel.ask,
+                onAcceptRecommendation: viewModel.acceptRecommendation,
+                onSaveDecision: viewModel.saveDecision
             )
         }
     }
@@ -39,6 +41,8 @@ private struct DashboardTabs: View {
     let onSelect: (ScenarioCardModel) -> Void
     let onCompare: (ScenarioCardModel, ScenarioCardModel) -> Void
     let onAsk: (String) -> Void
+    let onAcceptRecommendation: () -> Void
+    let onSaveDecision: () -> Void
     @State private var selectedTab = 0
 
     var body: some View {
@@ -47,8 +51,13 @@ private struct DashboardTabs: View {
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         Header(name: content.displayName, householdName: content.householdName)
+                        HighestImpactActionCard(
+                            action: content.nextBestAction,
+                            onAccept: onAcceptRecommendation
+                        )
+                            .padding(.horizontal, 20)
                         ReadinessHeroCard(readiness: content.readiness) {
-                            selectedTab = 1
+                            selectedTab = 3
                         }
                             .padding(.horizontal, 20)
                         HealthCard(dashboard: content.dashboard)
@@ -127,6 +136,28 @@ private struct DashboardTabs: View {
             .tabItem { Label("Overview", systemImage: "chart.bar.fill") }
             .tag(0)
 
+            BankingIntelligenceTab(
+                content: content,
+                onAccept: onAcceptRecommendation,
+                onAsk: { question in
+                    selectedTab = 4
+                    onAsk(question)
+                }
+            )
+                .tabItem { Label("Banking", systemImage: "chart.bar.doc.horizontal") }
+                .tag(1)
+
+            ScenarioListTab(
+                scenarios: content.scenarios,
+                selected: content.selected,
+                simulations: content.decisionSimulations,
+                heatmaps: content.scenarioImpactHeatmaps,
+                onSelect: onSelect,
+                onSaveDecision: onSaveDecision
+            )
+                .tabItem { Label("Simulator", systemImage: "sparkles") }
+                .tag(2)
+
             PlanningTab(
                 content: content,
                 onPlanScenario: { scenarioId in
@@ -134,7 +165,7 @@ private struct DashboardTabs: View {
                         return
                     }
                     onSelect(scenario)
-                    selectedTab = 0
+                    selectedTab = 2
                 },
                 onAsk: { question in
                     selectedTab = 4
@@ -142,25 +173,6 @@ private struct DashboardTabs: View {
                 }
             )
                 .tabItem { Label("Readiness", systemImage: "target") }
-                .tag(1)
-
-            ScenarioListTab(
-                scenarios: content.scenarios,
-                selected: content.selected,
-                simulations: content.decisionSimulations,
-                onSelect: onSelect,
-                openOverview: { selectedTab = 0 }
-            )
-                .tabItem { Label("Simulator", systemImage: "sparkles") }
-                .tag(2)
-
-            ComparisonTab(
-                comparison: content.comparison,
-                scenarios: content.scenarios,
-                disclaimer: content.disclaimer,
-                onCompare: onCompare
-            )
-                .tabItem { Label("Compare", systemImage: "rectangle.split.2x1") }
                 .tag(3)
 
             AssistantTab(
@@ -172,6 +184,65 @@ private struct DashboardTabs: View {
                 .tag(4)
         }
         .tint(AppTheme.positive)
+    }
+}
+
+private struct HighestImpactActionCard: View {
+    let action: NextBestAction
+    let onAccept: () -> Void
+    @State private var accepted = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 13) {
+            Eyebrow("MY HIGHEST IMPACT ACTION", light: true)
+            Text(action.title)
+                .font(.title2.bold())
+                .foregroundStyle(.white)
+            Text(action.callout)
+                .font(.body)
+                .foregroundStyle(Color(red: 201 / 255, green: 221 / 255, blue: 213 / 255))
+            HStack(spacing: 8) {
+                ImpactPill(value: "\(action.impactScore)", label: "IMPACT")
+                ImpactPill(value: "\(action.confidenceScore)%", label: "CONFIDENCE")
+                ImpactPill(value: moneyCompact(action.fiveYearImpact), label: "AT 5 YEARS")
+            }
+            Button {
+                onAccept()
+                accepted = true
+            } label: {
+                Label(
+                    accepted ? "Added to my plan" : "Make this my focus",
+                    systemImage: accepted ? "checkmark.circle.fill" : "arrow.right.circle.fill"
+                )
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(AppTheme.mint)
+            .foregroundStyle(AppTheme.forest)
+            .disabled(accepted)
+        }
+        .padding(20)
+        .futureMeCard(fill: AppTheme.forest, showsBorder: false)
+    }
+}
+
+private struct ImpactPill: View {
+    let value: String
+    let label: String
+
+    var body: some View {
+        VStack(spacing: 2) {
+            Text(value)
+                .font(.headline)
+                .foregroundStyle(.white)
+            Text(label)
+                .font(.system(size: 8, weight: .bold))
+                .foregroundStyle(Color(red: 163 / 255, green: 194 / 255, blue: 181 / 255))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background(Color.white.opacity(0.07))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 
@@ -1035,15 +1106,261 @@ private struct StateView: View {
     }
 }
 
+private struct BankingIntelligenceTab: View {
+    let content: FutureMeDashboardContent
+    let onAccept: () -> Void
+    let onAsk: (String) -> Void
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    HighestImpactActionCard(
+                        action: content.nextBestAction,
+                        onAccept: onAccept
+                    )
+
+                    SectionTitle(
+                        eyebrow: "RANKED OPPORTUNITIES",
+                        title: "What matters next"
+                    )
+                    ForEach(Array(content.opportunities.prefix(5)), id: \.id) { opportunity in
+                        HStack(spacing: 12) {
+                            Text("\(opportunity.priorityRanking)")
+                                .font(.headline)
+                                .foregroundStyle(AppTheme.positive)
+                                .frame(width: 36, height: 36)
+                                .background(AppTheme.softMint)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(opportunity.title)
+                                    .font(.subheadline.bold())
+                                    .foregroundStyle(AppTheme.ink)
+                                Text(
+                                    money(opportunity.fiveYearBenefitEstimate)
+                                        + " potential over 5 years"
+                                )
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.muted)
+                            }
+                            Spacer()
+                            Text("\(opportunity.impactScore)")
+                                .font(.headline)
+                                .foregroundStyle(AppTheme.positive)
+                        }
+                        .padding(15)
+                        .futureMeCard()
+                    }
+
+                    ExplainabilityCard(explanation: content.financialExplainability)
+
+                    if let review = content.monthlyReviews.first {
+                        MonthlyReviewCard(review: review)
+                    }
+
+                    SectionTitle(
+                        eyebrow: "FINANCIAL DECISION JOURNAL",
+                        title: "Expected versus actual"
+                    )
+                    ForEach(content.decisionJournal, id: \.id) { entry in
+                        VStack(alignment: .leading, spacing: 7) {
+                            HStack {
+                                Text(entry.title)
+                                    .font(.subheadline.bold())
+                                    .foregroundStyle(AppTheme.ink)
+                                Spacer()
+                                Text(entry.status.name.replacingOccurrences(of: "_", with: " "))
+                                    .font(.system(size: 8, weight: .bold))
+                                    .foregroundStyle(AppTheme.positive)
+                            }
+                            Text(
+                                "Expected \(moneyCompact(entry.expectedFiveYearImpact)) · "
+                                    + "Actual \(entry.actualFiveYearImpact.map { moneyCompact($0.doubleValue) } ?? "Tracking")"
+                            )
+                            .font(.caption)
+                            .foregroundStyle(AppTheme.muted)
+                        }
+                        .padding(15)
+                        .futureMeCard()
+                    }
+
+                    SectionTitle(
+                        eyebrow: "WHAT IMPROVED MY FUTURE?",
+                        title: "Top value contributors"
+                    )
+                    ForEach(Array(content.futureOutcomeContributions.prefix(4)), id: \.id) { contribution in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(contribution.title)
+                                    .font(.subheadline.bold())
+                                    .foregroundStyle(AppTheme.ink)
+                                Text("\(contribution.sharePercentage)% of modeled improvement")
+                                    .font(.caption)
+                                    .foregroundStyle(AppTheme.muted)
+                            }
+                            Spacer()
+                            Text(moneyCompact(contribution.fiveYearContribution))
+                                .font(.headline)
+                                .foregroundStyle(AppTheme.positive)
+                        }
+                        .padding(15)
+                        .futureMeCard()
+                    }
+
+                    Button {
+                        onAsk("If I can only do one thing this month, what should it be?")
+                    } label: {
+                        Label("Ask my financial strategist", systemImage: "sparkles")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(AppTheme.forest)
+
+                    BankingVisionCard(demo: content.bankingVisionDemo)
+                }
+                .padding(20)
+            }
+            .background(AppTheme.canvas)
+            .navigationTitle("Banking")
+        }
+    }
+}
+
+private struct ExplainabilityCard: View {
+    let explanation: FinancialExplainability
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 11) {
+            Eyebrow("WHY MY SCORE CHANGED")
+            HStack(spacing: 9) {
+                Text("\(explanation.previousScore)")
+                    .font(.title.bold())
+                    .foregroundStyle(AppTheme.muted)
+                Image(systemName: "arrow.right")
+                    .foregroundStyle(AppTheme.muted)
+                Text("\(explanation.currentScore)")
+                    .font(.title.bold())
+                    .foregroundStyle(AppTheme.ink)
+                Text("\(explanation.netChange >= 0 ? "+" : "")\(explanation.netChange)")
+                    .font(.caption.bold())
+                    .foregroundStyle(explanation.netChange >= 0 ? AppTheme.positive : AppTheme.warning)
+            }
+            Text(explanation.summary)
+                .font(.caption)
+                .foregroundStyle(AppTheme.muted)
+            ForEach(explanation.factors, id: \.id) { factor in
+                HStack {
+                    Text(factor.title)
+                        .font(.caption)
+                        .foregroundStyle(AppTheme.ink)
+                    Spacer()
+                    Text("\(factor.pointImpact > 0 ? "+" : "")\(factor.pointImpact)")
+                        .font(.caption.bold())
+                        .foregroundStyle(
+                            factor.sentiment.name == "POSITIVE"
+                                ? AppTheme.positive
+                                : AppTheme.warning
+                        )
+                }
+            }
+        }
+        .padding(18)
+        .futureMeCard()
+    }
+}
+
+private struct MonthlyReviewCard: View {
+    let review: MonthlyFinancialReview
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 11) {
+            SectionTitle(
+                eyebrow: "MONTHLY FINANCIAL REVIEW",
+                title: review.label
+            )
+            Text(review.aiSummary)
+                .font(.body)
+                .foregroundStyle(AppTheme.ink)
+            ReviewLine(label: "WIN", value: review.wins.first ?? "No new win recorded.")
+            ReviewLine(label: "RISK", value: review.risks.first ?? "No new risk recorded.")
+            ReviewLine(
+                label: "NEXT",
+                value: review.recommendedActions.first ?? "Continue the current plan."
+            )
+        }
+        .padding(18)
+        .futureMeCard(fill: AppTheme.softMint, showsBorder: false)
+    }
+}
+
+private struct ReviewLine: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Eyebrow(label)
+            Text(value)
+                .font(.caption)
+                .foregroundStyle(AppTheme.ink)
+        }
+        .padding(11)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppTheme.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+private struct BankingVisionCard: View {
+    let demo: BankingVisionDemo
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionTitle(
+                eyebrow: "EXECUTIVE BANKING DEMO",
+                title: demo.title
+            )
+            Text(demo.subtitle)
+                .font(.caption)
+                .foregroundStyle(AppTheme.muted)
+            ForEach(demo.steps, id: \.order) { step in
+                HStack(spacing: 11) {
+                    Text("\(step.order)")
+                        .font(.caption.bold())
+                        .foregroundStyle(AppTheme.positive)
+                        .frame(width: 30, height: 30)
+                        .background(AppTheme.softMint)
+                        .clipShape(RoundedRectangle(cornerRadius: 9))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(step.title)
+                            .font(.subheadline.bold())
+                            .foregroundStyle(AppTheme.ink)
+                        Text(step.focusTarget)
+                            .font(.caption2)
+                            .foregroundStyle(AppTheme.muted)
+                    }
+                }
+            }
+        }
+        .padding(18)
+        .futureMeCard()
+    }
+}
+
 private struct ScenarioListTab: View {
     let scenarios: [ScenarioCardModel]
     let selected: ScenarioCardModel
     let simulations: [LifeDecisionSimulation]
+    let heatmaps: [ScenarioImpactHeatmap]
     let onSelect: (ScenarioCardModel) -> Void
-    let openOverview: () -> Void
+    let onSaveDecision: () -> Void
 
     private var selectedSimulation: LifeDecisionSimulation? {
         simulations.first { $0.scenarioId == selected.id }
+    }
+
+    private var selectedHeatmap: ScenarioImpactHeatmap? {
+        heatmaps.first { $0.scenarioId == selected.id }
     }
 
     var body: some View {
@@ -1058,10 +1375,16 @@ private struct ScenarioListTab: View {
                     if let selectedSimulation {
                         LifeDecisionImpactCard(simulation: selectedSimulation)
                     }
+                    if let selectedHeatmap {
+                        ScenarioHeatmapCard(heatmap: selectedHeatmap)
+                        Button("Save to decision journal", action: onSaveDecision)
+                            .buttonStyle(.borderedProminent)
+                            .tint(AppTheme.forest)
+                            .frame(maxWidth: .infinity)
+                    }
                     ForEach(scenarios) { scenario in
                         Button {
                             onSelect(scenario)
-                            openOverview()
                         } label: {
                             HStack(spacing: 14) {
                                 Text(scenario.code)
@@ -1097,6 +1420,51 @@ private struct ScenarioListTab: View {
             .background(AppTheme.canvas)
             .navigationTitle("Simulator")
         }
+    }
+}
+
+private struct ScenarioHeatmapCard: View {
+    let heatmap: ScenarioImpactHeatmap
+    private let columns = [
+        GridItem(.flexible(), spacing: 8),
+        GridItem(.flexible(), spacing: 8),
+    ]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Eyebrow("SCENARIO IMPACT HEATMAP")
+            Text(heatmap.title)
+                .font(.title3.bold())
+                .foregroundStyle(AppTheme.ink)
+            LazyVGrid(columns: columns, spacing: 8) {
+                ForEach(heatmap.cells, id: \.dimension.name) { cell in
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(cell.dimension.name.replacingOccurrences(of: "_", with: " "))
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundStyle(AppTheme.muted)
+                        Text(cell.label)
+                            .font(.caption.bold())
+                            .foregroundStyle(heatmapColor(cell.sentiment))
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 58, alignment: .leading)
+                    .padding(11)
+                    .background(heatmapColor(cell.sentiment).opacity(0.10))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+            }
+        }
+        .padding(18)
+        .futureMeCard()
+    }
+
+    private func heatmapColor(_ sentiment: ImpactSentiment) -> Color {
+        if sentiment.name == "POSITIVE" {
+            return AppTheme.positive
+        }
+        if sentiment.name == "NEGATIVE" {
+            return AppTheme.warning
+        }
+        return AppTheme.muted
     }
 }
 

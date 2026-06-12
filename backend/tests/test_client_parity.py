@@ -15,12 +15,19 @@ CLIENT_SOURCES = {
 }
 
 CAPABILITY_MARKERS = {
+    "highest impact action": ("highest impact action",),
+    "ranked opportunities": ("ranked opportunities",),
+    "financial health explainability": ("why my score changed",),
+    "scenario impact heatmap": ("scenario impact heatmap",),
+    "monthly financial review": ("monthly financial review",),
+    "decision journal": ("decision journal",),
+    "future outcome attribution": ("what improved my future",),
     "life readiness dashboard": ("life readiness dashboard",),
     "readiness improvement plan": ("readiness improvement plan",),
     "life decision simulator": ("life decision simulator", "readiness impact"),
     "life timeline": ("life timeline",),
     "ai coach": ("ai coach",),
-    "executive demo": ("executive demo",),
+    "executive banking demo": ("executive banking demo",),
     "proactive insights": ("proactive insights",),
     "financial gps trajectory": (
         "financial gps",
@@ -41,7 +48,7 @@ CAPABILITY_MARKERS = {
 
 
 class ClientFeatureParityTest(unittest.TestCase):
-    def test_every_client_exposes_the_version_three_capability_contract(self) -> None:
+    def test_every_client_exposes_the_product_capability_contract(self) -> None:
         for client, paths in CLIENT_SOURCES.items():
             source = "\n".join(
                 path.read_text(encoding="utf-8")

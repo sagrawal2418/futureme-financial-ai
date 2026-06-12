@@ -2,10 +2,19 @@
 
 FutureMe treats Android, iOS, and web as three native presentations of one product, not three independent products. Every financial value and recommendation input comes from `FutureMeProduct`; platform code owns only interaction and rendering.
 
-## Version 3 Contract
+## Version 4 Contract
 
 | Capability | Android | iOS | Web |
 | --- | --- | --- | --- |
+| Highest-impact action | Dashboard and Actions screen | Overview and Banking tab | Dashboard top card |
+| Ranked opportunities | Actions screen | Banking tab | Banking intelligence panel |
+| Financial health explainability | Factor-level Actions card | Factor-level Banking card | Score change panel |
+| Scenario impact heatmap | Scenario detail | Simulator | Inline simulator heatmap |
+| Monthly financial review | Review screen | Banking tab | Monthly review section |
+| Decision journal | Review screen and scenario save | Banking tab and simulator save | Review section and simulator save |
+| What improved my future | Actions screen | Banking tab | Outcome contribution cards |
+| FutureMe Banking Vision | Seven-step Actions demo | Seven-step Banking demo | Seven-step executive demo |
+| Local analytics events | Shared product session | Shared product session | Shared product session |
 | Life readiness dashboard | Dedicated dashboard and overview preview | Dedicated Readiness tab and overview hero | Dedicated responsive dashboard |
 | Seven readiness categories | Shared engine output | Shared engine output | Shared engine output |
 | Readiness detail | Score, level, trend, blockers, confidence, ready date | Score, level, trend, blockers, confidence, ready date | Score, level, trend, blockers, confidence, ready date |

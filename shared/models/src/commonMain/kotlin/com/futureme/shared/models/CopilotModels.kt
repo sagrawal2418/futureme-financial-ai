@@ -142,4 +142,7 @@ data class FinancialCopilotContext(
     val readiness: List<LifeReadinessResult>,
     val readinessPlans: List<ReadinessImprovementPlan>,
     val decisionSimulations: List<LifeDecisionSimulation>,
+    val opportunities: List<OpportunityRecommendation>,
+    val nextBestAction: NextBestAction,
+    val currentMonthlyReview: MonthlyFinancialReview,
 )
